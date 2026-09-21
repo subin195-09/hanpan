@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>한 판 놀이방</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;500;700&display=swap">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #ECEEF0;
+    --surface: #F7F8F9;
+    --ink: #171B20;
+    --ink-soft: #57616D;
+    --line: #C9CFD6;
+    --accent: #B4431F;
+    --on-ink: #F7F8F9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101316;
+      --surface: #191D22;
+      --ink: #E5E9ED;
+      --ink-soft: #96A1AD;
+      --line: #2B323A;
+      --accent: #F08A5D;
+      --on-ink: #101316;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #101316;
+    --surface: #191D22;
+    --ink: #E5E9ED;
+    --ink-soft: #96A1AD;
+    --line: #2B323A;
+    --accent: #F08A5D;
+    --on-ink: #101316;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1rem/1.6 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .page {
+    max-width: 1040px;
+    margin-inline: auto;
+    padding-inline: 16px;
+    padding-block: 36px 56px;
+    display: grid;
+    gap: 36px;
+  }
+  .masthead { display: grid; gap: 6px; }
+  h1 {
+    margin: 0;
+    font: 400 3rem/1.05 "Black Han Sans", "Gothic A1", "Apple SD Gothic Neo", sans-serif;
+    letter-spacing: 0.01em;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+  .masthead p { margin: 0; color: var(--ink-soft); max-width: 36em; }
+
+  .games {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 28px;
+  }
+  .game { display: grid; gap: 14px; align-content: start; }
+  .game a.board {
+    display: block;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25), 0 12px 24px rgba(0, 0, 0, 0.16);
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .game a.board svg { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+  @media (hover: hover) {
+    .game a.board:hover { transform: translateY(-4px); box-shadow: 0 7px 0 rgba(0, 0, 0, 0.22), 0 18px 30px rgba(0, 0, 0, 0.2); }
+  }
+  .game a:focus-visible, .btn:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .game-text { display: grid; gap: 6px; }
+  .game h2 { margin: 0; font: 400 1.6rem/1.2 "Black Han Sans", "Gothic A1", sans-serif; }
+  .game h2 a { color: inherit; text-decoration: none; }
+  .game p { margin: 0; color: var(--ink-soft); font-size: 0.9375rem; }
+  .meta { font-size: 0.8125rem; color: var(--ink-soft); }
+  .go {
+    justify-self: start;
+    margin-top: 4px;
+    padding: 9px 18px;
+    border-radius: 4px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-weight: 700;
+    font-size: 0.875rem;
+    text-decoration: none;
+  }
+  @media (max-width: 760px) {
+    h1 { font-size: 2.3rem; }
+    .games { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+    .game { grid-template-columns: 112px minmax(0, 1fr); gap: 16px; align-items: start; }
+    .game h2 { font-size: 1.35rem; }
+  }
+
+  /* 초대 코드로 참가 */
+  .joinbox {
+    display: grid;
+    gap: 12px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .joinbox h2 { margin: 0; font-size: 1rem; font-weight: 700; }
+  .joinbox p { margin: 0; font-size: 0.875rem; color: var(--ink-soft); max-width: 40em; }
+  .join-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+  .seg-row {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label { padding: 9px 14px; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
+  #code {
+    width: 11.5rem;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink);
+    font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  #code::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "Gothic A1", system-ui, sans-serif; }
+  #code:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .btn {
+    appearance: none;
+    padding: 9px 20px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font: 700 0.875rem/1.2 "Gothic A1", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  #join-msg { min-height: 1.4em; color: var(--ink); font-weight: 500; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .game a.board { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <h1><em>한 판</em> 놀이방</h1>
+    <p>혼자서는 AI와, 같이 있으면 한 화면에서, 떨어져 있으면 초대 링크로. 설치도 로그인도 없이 바로 한 판 둡니다.</p>
+  </header>
+
+  <ul class="games">
+    <li class="game">
+      <a class="board" id="thumb-reversi" data-game="reversi" href="https://soobin-ff.github.io/reversi-hanpan/" aria-label="리버시 시작하기"></a>
+      <div class="game-text">
+        <h2><a data-game="reversi" href="https://soobin-ff.github.io/reversi-hanpan/">리버시</a></h2>
+        <p>상대 돌을 사이에 끼워 뒤집는 8×8 전략 게임. 마지막 한 수까지 역전이 나옵니다.</p>
+        <span class="meta">한 판 10~15분 · 수읽기</span>
+        <a class="go" data-game="reversi" href="https://soobin-ff.github.io/reversi-hanpan/">시작하기</a>
+      </div>
+    </li>
+    <li class="game">
+      <a class="board" id="thumb-omok" data-game="omok" href="https://soobin-ff.github.io/omok-hanpan/" aria-label="오목 시작하기"></a>
+      <div class="game-text">
+        <h2><a data-game="omok" href="https://soobin-ff.github.io/omok-hanpan/">오목</a></h2>
+        <p>15×15 판에서 돌 다섯 개를 먼저 한 줄로 이으면 승리. 규칙은 쉽고 승부는 빠릅니다.</p>
+        <span class="meta">한 판 5~10분 · 수읽기</span>
+        <a class="go" data-game="omok" href="https://soobin-ff.github.io/omok-hanpan/">시작하기</a>
+      </div>
+    </li>
+    <li class="game">
+      <a class="board" id="thumb-yut" data-game="yut" href="https://soobin-ff.github.io/yut-hanpan/" aria-label="윷놀이 시작하기"></a>
+      <div class="game-text">
+        <h2><a data-game="yut" href="https://soobin-ff.github.io/yut-hanpan/">윷놀이</a></h2>
+        <p>윷을 던져 말 네 개를 먼저 내보내는 놀이. 업고, 잡고, 빽도에 울고 웃습니다.</p>
+        <span class="meta">한 판 10~20분 · 운 반 전략 반</span>
+        <a class="go" data-game="yut" href="https://soobin-ff.github.io/yut-hanpan/">시작하기</a>
+      </div>
+    </li>
+  </ul>
+
+  <section class="joinbox" aria-labelledby="join-title">
+    <h2 id="join-title">초대 코드로 참가</h2>
+    <p>친구가 방을 만들고 6자리 코드를 알려 줬다면, 게임을 고르고 코드를 넣으세요. 초대 링크를 받았다면 링크만 누르면 됩니다.</p>
+    <div class="join-row">
+      <div class="seg-row" role="radiogroup" aria-label="게임">
+        <input type="radio" name="join-game" id="jg-reversi" value="reversi" checked><label for="jg-reversi">리버시</label>
+        <input type="radio" name="join-game" id="jg-omok" value="omok"><label for="jg-omok">오목</label>
+        <input type="radio" name="join-game" id="jg-yut" value="yut"><label for="jg-yut">윷놀이</label>
+      </div>
+      <input type="text" id="code" maxlength="6" placeholder="방 코드 6자리" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="방 코드">
+      <button type="button" class="btn" id="join">참가</button>
+    </div>
+    <p id="join-msg" role="status"></p>
+  </section>
+</div>
+
+<script>
+(() => {
+  // 웹에서는 같은 계정의 이웃 사이트로, 파일로 열었을 때는 이웃 폴더로 간다
+  const GAMES = {
+    reversi: { web: '../reversi-hanpan/', local: '../reversi/index.html' },
+    omok: { web: '../omok-hanpan/', local: '../omok/index.html' },
+    yut: { web: '../yut-hanpan/', local: '../yut/index.html' }
+  };
+  const isFile = location.protocol === 'file:';
+  const urlOf = g => (isFile ? GAMES[g].local : GAMES[g].web);
+  document.querySelectorAll('a[data-game]').forEach(a => { a.href = urlOf(a.dataset.game); });
+
+  // ---------- 판 그림 ----------
+  const NS = 'http://www.w3.org/2000/svg';
+  function svg(hostId) {
+    const s = document.createElementNS(NS, 'svg');
+    s.setAttribute('viewBox', '0 0 100 100');
+    s.setAttribute('aria-hidden', 'true');
+    document.getElementById(hostId).appendChild(s);
+    return (tag, attrs) => {
+      const n = document.createElementNS(NS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      s.appendChild(n);
+      return n;
+    };
+  }
+  function stone(add, x, y, r, dark) {
+    add('circle', { cx: x + 0.4, cy: y + 0.8, r, fill: 'rgba(0,0,0,0.35)' });
+    add('circle', { cx: x, cy: y, r, fill: dark ? '#15191C' : '#F3F0E6' });
+    add('circle', { cx: x - r * 0.3, cy: y - r * 0.35, r: r * 0.28, fill: dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.9)' });
+  }
+
+  // 리버시: 초록 판 위 중반전
+  {
+    const add = svg('thumb-reversi');
+    add('rect', { width: 100, height: 100, fill: '#103A29' });
+    add('rect', { x: 6, y: 6, width: 88, height: 88, fill: '#1F6B4A' });
+    for (let i = 0; i <= 8; i++) {
+      add('line', { x1: 6 + i * 11, y1: 6, x2: 6 + i * 11, y2: 94, stroke: '#134631', 'stroke-width': 0.6 });
+      add('line', { x1: 6, y1: 6 + i * 11, x2: 94, y2: 6 + i * 11, stroke: '#134631', 'stroke-width': 0.6 });
+    }
+    const rows = ['........', '..WB....', '..BBBW..', '.WBWBB..', '..BWWW..', '..BWB...', '...B....', '........'];
+    rows.forEach((row, y) => [...row].forEach((c, x) => {
+      if (c !== '.') stone(add, 11.5 + x * 11, 11.5 + y * 11, 4.3, c === 'B');
+    }));
+  }
+  // 오목: 나무 판, 흑의 대각선 넷
+  {
+    const add = svg('thumb-omok');
+    add('rect', { width: 100, height: 100, fill: '#DDB36C' });
+    for (let i = 0; i < 9; i++) {
+      add('line', { x1: 10 + i * 10, y1: 10, x2: 10 + i * 10, y2: 90, stroke: '#4A3316', 'stroke-width': 0.6 });
+      add('line', { x1: 10, y1: 10 + i * 10, x2: 90, y2: 10 + i * 10, stroke: '#4A3316', 'stroke-width': 0.6 });
+    }
+    add('circle', { cx: 50, cy: 50, r: 1.4, fill: '#4A3316' });
+    const B = [[3, 6], [4, 5], [5, 4], [6, 3], [4, 3], [3, 3]], Wt = [[2, 7], [4, 4], [5, 5], [5, 3], [3, 4], [6, 5]];
+    B.forEach(([x, y]) => stone(add, 10 + x * 10, 10 + y * 10, 4.4, true));
+    Wt.forEach(([x, y]) => stone(add, 10 + x * 10, 10 + y * 10, 4.4, false));
+    add('circle', { cx: 80, cy: 30, r: 1.5, fill: '#C0341D' });
+  }
+  // 윷놀이: 말판과 홍·청 말
+  {
+    const add = svg('thumb-yut');
+    add('rect', { width: 100, height: 100, fill: '#E6D7B0' });
+    add('path', { d: 'M88 88 V12 H12 V88 Z M88 12 L12 88 M12 12 L88 88', fill: 'none', stroke: '#4B3A1C', 'stroke-width': 0.6, opacity: 0.55 });
+    const pts = [];
+    for (let i = 0; i < 20; i++) {
+      const k = i % 5, d = 15.2 * k;
+      pts.push(i < 5 ? [88, 88 - d] : i < 10 ? [88 - d, 12] : i < 15 ? [12, 12 + d] : [12 + d, 88]);
+    }
+    const t = 38 / 3;
+    for (const s of [1, 2, 4, 5]) { pts.push([88 - t * s, 12 + t * s]); pts.push([12 + t * s, 12 + t * s]); }
+    pts.push([50, 50]);
+    const big = p => (p[0] === 12 || p[0] === 88) && (p[1] === 12 || p[1] === 88) || (p[0] === 50 && p[1] === 50);
+    pts.forEach(p => {
+      add('circle', { cx: p[0], cy: p[1], r: big(p) ? 5 : 2.9, fill: '#E6D7B0', stroke: '#4B3A1C', 'stroke-width': 0.7 });
+      if (big(p)) add('circle', { cx: p[0], cy: p[1], r: 1.5, fill: '#4B3A1C' });
+    });
+    const piece = (x, y, color) => {
+      add('circle', { cx: x + 0.4, cy: y + 0.9, r: 4.6, fill: 'rgba(0,0,0,0.35)' });
+      add('circle', { cx: x, cy: y, r: 4.6, fill: color, stroke: '#FFFFFF', 'stroke-width': 1 });
+    };
+    piece(88, 42.4, '#C8372D'); piece(88, 39.4, '#C8372D');
+    piece(50, 50, '#2A5DAA');
+    piece(42.4, 12, '#C8372D');
+    piece(12, 57.6, '#2A5DAA');
+  }
+
+  // ---------- 초대 코드로 참가 ----------
+  const codeEl = document.getElementById('code'), msg = document.getElementById('join-msg');
+  function join() {
+    const code = codeEl.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length !== 6) { msg.textContent = '방 코드 6자리를 입력해 주세요.'; codeEl.focus(); return; }
+    const game = document.querySelector('input[name="join-game"]:checked').value;
+    location.href = urlOf(game) + '?room=' + code;
+  }
+  document.getElementById('join').addEventListener('click', join);
+  codeEl.addEventListener('keydown', e => { if (e.key === 'Enter') join(); });
+})();
+</script>
+</body>
+</html>

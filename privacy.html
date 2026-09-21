@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>개인정보처리방침 · 한 판 놀이방</title>
+<meta name="description" content="한 판 놀이방이 어떤 정보를 다루고 어디에 저장하는지 안내합니다.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  :root { --ground: #ECEEF0; --ink: #171B20; --ink-soft: #57616D; --line: #C9CFD6; --accent: #B4431F; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ground: #101316; --ink: #E5E9ED; --ink-soft: #96A1AD; --line: #2B323A; --accent: #F08A5D; }
+  }
+  :root[data-theme="dark"] { --ground: #101316; --ink: #E5E9ED; --ink-soft: #96A1AD; --line: #2B323A; --accent: #F08A5D; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1rem/1.75 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .page { max-width: 44rem; margin-inline: auto; padding-inline: 16px; padding-block: 36px 56px; display: grid; gap: 20px; }
+  h1 { margin: 0; font: 400 2.2rem/1.15 "Black Han Sans", "Gothic A1", sans-serif; text-wrap: balance; }
+  h2 { margin: 12px 0 0; font-size: 1.0625rem; font-weight: 700; }
+  p, ul { margin: 0; }
+  ul { padding-left: 1.2em; display: grid; gap: 6px; }
+  .lede { color: var(--ink-soft); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="home" href="index.html">← 한 판 놀이방</a>
+  <h1>개인정보처리방침</h1>
+  <p class="lede">한 판 놀이방은 회원 가입이 없고, 이름·이메일·전화번호 같은 개인정보를 받지 않습니다. 아래는 사이트가 동작하면서 다루는 정보 전부입니다.</p>
+
+  <h2>이 기기에만 저장되는 정보</h2>
+  <p>진행 중인 판, 고른 모드와 난이도, 온라인 방 코드는 브라우저의 저장 공간(localStorage)에만 저장됩니다. 서버로 전송되지 않으며, 브라우저의 사이트 데이터를 지우면 함께 사라집니다.</p>
+
+  <h2>온라인 2인 대전</h2>
+  <ul>
+    <li>온라인 대전은 두 사람의 브라우저가 서로 직접 연결(WebRTC)되는 방식입니다. 연결 과정의 특성상 상대방의 기기와 중계 서버에 내 IP 주소가 전달될 수 있습니다.</li>
+    <li>처음에 서로를 찾기 위해 공개 PeerJS 중계 서버(0.peerjs.com)를 거칩니다. 이때 전달되는 것은 방 코드로 만든 임시 접속 이름과 연결 정보뿐이며, 판의 내용은 두 브라우저 사이에서만 오갑니다.</li>
+    <li>방 코드는 방을 나가거나 페이지를 닫으면 더 이상 쓰이지 않습니다.</li>
+  </ul>
+
+  <h2>외부에서 불러오는 파일</h2>
+  <p>글꼴(Google Fonts)과 연결 라이브러리(jsDelivr)를 외부 서버에서 불러옵니다. 이 과정에서 해당 서버에 일반적인 접속 기록(IP 주소, 브라우저 종류)이 남을 수 있습니다.</p>
+
+  <h2>광고와 방문 통계</h2>
+  <p>사이트에 광고(Google AdSense)나 방문 통계(Google Analytics)를 게재·사용하는 경우, Google을 비롯한 제3자 업체가 쿠키를 사용해 이용자의 이전 방문 기록을 바탕으로 광고를 보여 줄 수 있습니다. 이용자는 <a href="https://adssettings.google.com" rel="noopener">Google 광고 설정</a>에서 맞춤 광고를 끌 수 있습니다. 광고와 통계가 켜져 있지 않은 동안에는 관련 스크립트를 전혀 불러오지 않습니다.</p>
+
+  <h2>문의</h2>
+  <p>이 방침에 대한 문의는 사이트 저장소의 이슈로 남겨 주세요. 방침이 바뀌면 이 페이지에 반영합니다.</p>
+</div>
+<script src="shared/config.js"></script>
+<script src="shared/site.js"></script>
+</body>
+</html>

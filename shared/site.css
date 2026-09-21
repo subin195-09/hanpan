@@ -1,0 +1,27 @@
+/* 한 판 놀이방 — 모든 페이지 공통 스타일. 색은 각 페이지의 토큰(--ink-soft, --line)을 쓴다. */
+.home {
+  flex-basis: 100%;
+  justify-self: start;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+}
+.home:hover { text-decoration: underline; }
+.home:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 0.8125rem;
+}
+.site-footer a { color: var(--ink-soft); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.site-footer a:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+
+/* 광고 자리: config.js 에 슬롯 번호가 들어오기 전에는 hidden 으로 공간을 차지하지 않는다 */
+.ad-slot { display: grid; gap: 4px; min-width: 0; overflow: hidden; }
+.ad-label { font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--ink-soft); }

@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오목 한 판</title>
+<meta name="description" content="설치 없이 브라우저에서 바로 두는 오목. AI 대전, 한 화면 2인, 초대 링크로 하는 온라인 2인 대전.">
+<meta property="og:title" content="오목 한 판">
+<meta property="og:description" content="설치 없이 브라우저에서 바로 두는 오목. AI 대전, 한 화면 2인, 초대 링크로 하는 온라인 2인 대전.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="thumb.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #E6EAEE;
+    --surface: #F4F6F8;
+    --ink: #1A222D;
+    --ink-soft: #566373;
+    --line: #C5CDD6;
+    --accent: #2B4C7E;
+    --on-ink: #F4F6F8;
+    --wood: #DDB36C;
+    --wood-edge: #B98A45;
+    --wood-line: #4A3316;
+    --seal: #C0341D;
+    --stone-black: #14171B;
+    --stone-black-hi: #4A5058;
+    --stone-white: #F5F3EC;
+    --stone-white-lo: #C9C5B8;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #11151B;
+      --surface: #1A2028;
+      --ink: #E3E8EE;
+      --ink-soft: #94A1B0;
+      --line: #2C3540;
+      --accent: #8FB0E3;
+      --on-ink: #11151B;
+      --wood: #C9A15C;
+      --wood-edge: #8E6A33;
+      --wood-line: #3B2810;
+      --seal: #E0492F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #11151B;
+    --surface: #1A2028;
+    --ink: #E3E8EE;
+    --ink-soft: #94A1B0;
+    --line: #2C3540;
+    --accent: #8FB0E3;
+    --on-ink: #11151B;
+    --wood: #C9A15C;
+    --wood-edge: #8E6A33;
+    --wood-line: #3B2810;
+    --seal: #E0492F;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1rem/1.6 "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .page {
+    max-width: 1060px;
+    margin-inline: auto;
+    padding-inline: 16px;
+    padding-block: 28px 48px;
+    display: grid;
+    gap: 22px;
+  }
+  .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+  h1 {
+    margin: 0;
+    font: 700 2.25rem/1.15 "Gowun Batang", "Nanum Myeongjo", "Batang", serif;
+    letter-spacing: -0.01em;
+  }
+  .masthead p { margin: 0; color: var(--ink-soft); }
+
+  .table {
+    display: grid;
+    grid-template-columns: minmax(0, 600px) minmax(260px, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 840px) {
+    .table { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    h1 { font-size: 1.75rem; }
+  }
+  .play { display: grid; gap: 12px; }
+
+  /* 대국자 */
+  .players {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+  }
+  .side {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-self: start;
+    padding-bottom: 3px;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    color: var(--ink-soft);
+  }
+  .side.right { justify-self: end; }
+  .side.active { color: var(--ink); border-bottom-color: var(--seal); }
+  .moves {
+    font: 500 0.875rem/1 "JetBrains Mono", ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+  }
+  .dot {
+    display: inline-block;
+    width: 0.85em;
+    height: 0.85em;
+    border-radius: 50%;
+    flex: none;
+  }
+  .dot.black { background: var(--stone-black); box-shadow: 0 0 0 1px var(--stone-black-hi); }
+  .dot.white { background: var(--stone-white); box-shadow: 0 0 0 1px var(--stone-white-lo); }
+
+  .status { margin: 0; min-height: 1.6em; font-weight: 500; }
+  .status.final { font: 700 1.25rem/1.4 "Gowun Batang", "Nanum Myeongjo", "Batang", serif; }
+
+  /* 판 */
+  .goban {
+    display: grid;
+    grid-template-columns: 1.3rem minmax(0, 1fr) 0.5rem;
+    grid-template-rows: 1.3rem auto 0.5rem;
+    max-width: 100%;
+    background:
+      repeating-linear-gradient(92deg, rgba(90, 55, 10, 0.05) 0 2px, transparent 2px 9px),
+      var(--wood);
+    border: 1px solid var(--wood-edge);
+    border-radius: 4px;
+    box-shadow: 0 3px 0 var(--wood-edge), 0 10px 22px rgba(0, 0, 0, 0.18);
+    font: 500 0.625rem/1 "JetBrains Mono", ui-monospace, Menlo, monospace;
+    color: var(--wood-line);
+  }
+  .files {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    align-items: center;
+    text-align: center;
+  }
+  .ranks {
+    grid-row: 2;
+    grid-column: 1;
+    display: grid;
+    grid-template-rows: repeat(15, 1fr);
+    align-items: center;
+    justify-items: center;
+  }
+  .board {
+    grid-row: 2;
+    grid-column: 2;
+    aspect-ratio: 1;
+    max-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(15, minmax(0, 1fr));
+    grid-template-rows: repeat(15, minmax(0, 1fr));
+    --ghost: var(--stone-black);
+  }
+  .board[data-turn="white"] { --ghost: var(--stone-white); }
+  .cell {
+    appearance: none;
+    position: relative;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    cursor: default;
+    font: inherit;
+    color: inherit;
+  }
+  /* 교차점을 지나는 가로·세로 줄. 가장자리 칸은 반쪽만 */
+  .cell::before, .cell::after {
+    content: "";
+    position: absolute;
+    background: var(--wood-line);
+    pointer-events: none;
+  }
+  .cell::before { left: 0; right: 0; top: calc(50% - 0.5px); height: 1px; }
+  .cell::after { top: 0; bottom: 0; left: calc(50% - 0.5px); width: 1px; }
+  .cell:nth-child(15n+1)::before { left: 50%; }
+  .cell:nth-child(15n)::before { right: 50%; }
+  .cell:nth-child(-n+15)::after { top: 50%; }
+  .cell:nth-child(n+211)::after { bottom: 50%; }
+  .star {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    margin: -3.5px 0 0 -3.5px;
+    border-radius: 50%;
+    background: var(--wood-line);
+    pointer-events: none;
+  }
+  .cell.open { cursor: pointer; }
+  .cell:focus-visible { outline: 2px solid var(--seal); outline-offset: -2px; z-index: 2; }
+  .stone {
+    position: absolute;
+    inset: 6%;
+    z-index: 1;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.12s, transform 0.16s ease-out;
+    pointer-events: none;
+  }
+  .cell.black .stone, .cell.white .stone {
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 1.5px 2.5px rgba(0, 0, 0, 0.45);
+  }
+  .cell.black .stone { background: radial-gradient(circle at 35% 30%, var(--stone-black-hi), var(--stone-black) 60%); }
+  .cell.white .stone { background: radial-gradient(circle at 35% 30%, #FFFFFF, var(--stone-white) 55%, var(--stone-white-lo)); }
+  @media (hover: hover) {
+    .cell.open:hover .stone { opacity: 0.45; transform: none; background: var(--ghost); }
+  }
+  .cell.last .stone::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26%;
+    height: 26%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--seal);
+  }
+  .cell.win .stone { box-shadow: 0 0 0 3px var(--seal), 0 1.5px 2.5px rgba(0, 0, 0, 0.45); }
+  .keys { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+
+  /* 옆 패널 */
+  .panel { display: grid; gap: 22px; }
+  .panel section { display: grid; gap: 12px; }
+  .panel section + section { padding-top: 22px; border-top: 1px solid var(--line); }
+  h2 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+  legend { padding: 0; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; }
+  .seg-row {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label {
+    flex: 1 1 auto;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 500; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn {
+    appearance: none;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font: 500 0.875rem/1.2 "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .btn.primary { background: var(--ink); color: var(--on-ink); }
+  .btn.small { padding: 6px 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  #online-msg { color: var(--ink); font-weight: 500; }
+  #lobby, #room { display: grid; gap: 10px; }
+  .join { display: flex; gap: 8px; }
+  .join input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink);
+    font: 500 1rem/1.2 "JetBrains Mono", ui-monospace, Menlo, monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font-family: "Noto Sans KR", system-ui, sans-serif; font-size: 0.875rem; }
+  .join input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .room-code strong { font: 500 1.75rem/1.1 "JetBrains Mono", ui-monospace, Menlo, monospace; letter-spacing: 0.18em; }
+
+  .log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 190px;
+    overflow-y: auto;
+    columns: 3 84px;
+    column-gap: 12px;
+    font: 400 0.875rem/1.9 "JetBrains Mono", ui-monospace, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .log li { display: flex; align-items: center; gap: 6px; break-inside: avoid; }
+  .log .n { color: var(--ink-soft); min-width: 2em; text-align: right; }
+  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  details ul { margin: 10px 0 0; padding-left: 1.2em; color: var(--ink-soft); display: grid; gap: 4px; max-width: 38em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stone { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <a class="home" id="home-link" href="../index.html">← 한 판 놀이방</a>
+    <h1>오목 한 판</h1>
+    <p>같은 색 돌 다섯 개를 먼저 한 줄로 이으면 이깁니다.</p>
+  </header>
+
+  <main class="table">
+    <div class="play">
+      <div class="players">
+        <div class="side" id="side-black"><span class="dot black"></span><span id="who-black">흑</span></div>
+        <div class="moves"><span id="move-count">0</span>수</div>
+        <div class="side right" id="side-white"><span id="who-white">백</span><span class="dot white"></span></div>
+      </div>
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+
+      <div class="goban">
+        <div class="files" aria-hidden="true" id="files"></div>
+        <div class="ranks" aria-hidden="true" id="ranks"></div>
+        <div class="board" id="board" role="group" aria-label="오목판, 15×15"></div>
+      </div>
+      <p class="keys">키보드: 방향키로 교차점 이동, Enter로 착수</p>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>대국 설정</h2>
+        <fieldset>
+          <legend>상대</legend>
+          <div class="seg-row">
+            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
+            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면 2인</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-online" hidden></fieldset>
+        <fieldset id="fs-human">
+          <legend>내 돌</legend>
+          <div class="seg-row">
+            <input type="radio" name="human" id="human-black" value="1"><label for="human-black">흑 (선공)</label>
+            <input type="radio" name="human" id="human-white" value="2"><label for="human-white">백 (후공)</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-level">
+          <legend>AI 난이도</legend>
+          <div class="seg-row">
+            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
+            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
+            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="btn primary" id="btn-new">새 게임</button>
+          <button type="button" class="btn" id="btn-undo">한 수 무르기</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>기보</h2>
+        <p class="log-empty" id="log-empty">아직 둔 수가 없습니다.</p>
+        <ol class="log" id="log" hidden></ol>
+      </section>
+
+      <section>
+        <details>
+          <summary>규칙 보기</summary>
+          <ul>
+            <li>흑이 먼저 두고, 번갈아 가며 줄이 만나는 교차점에 돌을 놓습니다.</li>
+            <li>가로·세로·대각선 어느 방향이든 같은 색 돌 다섯 개를 먼저 이으면 이깁니다.</li>
+            <li>이 판은 자유 규칙입니다. 3-3·4-4 금수가 없고, 여섯 개 이상(장목)을 이어도 승리입니다.</li>
+            <li>225칸이 모두 찰 때까지 다섯 개가 나오지 않으면 무승부입니다.</li>
+            <li>첫 수는 보통 한가운데 천원(H8)에 둡니다.</li>
+          </ul>
+        </details>
+      </section>
+      <div class="ad-slot" data-ad="game-side" hidden></div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/online.js"></script>
+<script src="../shared/site.js"></script>
+<script>
+(() => {
+  const N = 15, SIZE = N * N, CENTER = 7 * N + 7;
+  const BLACK = 1, WHITE = 2;
+  const DIRS = [[1, 0], [0, 1], [1, 1], [1, -1]];
+  const STARS = [3 * N + 3, 3 * N + 11, CENTER, 11 * N + 3, 11 * N + 11];
+  const STORE_KEY = 'omok-standalone-v1';
+
+  const $ = id => document.getElementById(id);
+  const boardEl = $('board'), statusEl = $('status'), logEl = $('log');
+  const colorName = p => (p === BLACK ? '흑' : '백');
+  const coord = pos => 'ABCDEFGHIJKLMNO'[pos % N] + (N - Math.floor(pos / N));
+  const inside = (x, y) => x >= 0 && x < N && y >= 0 && y < N;
+
+  // ---------- 규칙 ----------
+  function findFive(b, pos, p) {
+    const x0 = pos % N, y0 = Math.floor(pos / N);
+    for (const [dx, dy] of DIRS) {
+      const line = [pos];
+      for (const s of [1, -1]) {
+        let x = x0 + dx * s, y = y0 + dy * s;
+        while (inside(x, y) && b[y * N + x] === p) { line.push(y * N + x); x += dx * s; y += dy * s; }
+      }
+      if (line.length >= 5) return line;
+    }
+    return null;
+  }
+
+  // ---------- AI ----------
+  // 다섯 칸짜리 창(window)을 모두 미리 만들어 두고, 한 색만 들어 있는 창의 돌 수로 형세를 잰다
+  const WINDOWS = [];
+  const WINDOWS_AT = Array.from({ length: SIZE }, () => []);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) for (const [dx, dy] of DIRS) {
+    if (!inside(x + dx * 4, y + dy * 4)) continue;
+    const w = [];
+    for (let i = 0; i < 5; i++) w.push((y + dy * i) * N + x + dx * i);
+    for (const c of w) WINDOWS_AT[c].push(WINDOWS.length);
+    WINDOWS.push(w);
+  }
+  const ATTACK = [1, 12, 120, 1500, 1000000];   // 내 돌이 k개 있는 창에 하나 더 놓는 가치
+  const DEFEND = [0, 8, 90, 1200, 200000];      // 상대 돌이 k개 있는 창을 막는 가치
+
+  function cellValue(b, pos, p, defendScale) {
+    let v = 0;
+    for (const wi of WINDOWS_AT[pos]) {
+      let mine = 0, theirs = 0;
+      for (const c of WINDOWS[wi]) { if (b[c] === p) mine++; else if (b[c]) theirs++; }
+      if (!theirs) v += ATTACK[mine];
+      else if (!mine) v += theirs === 4 ? DEFEND[4] : DEFEND[theirs] * defendScale;
+    }
+    return v;
+  }
+  function candidates(b) {
+    const seen = new Uint8Array(SIZE), out = [];
+    for (let pos = 0; pos < SIZE; pos++) {
+      if (!b[pos]) continue;
+      const x0 = pos % N, y0 = Math.floor(pos / N);
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
+        const x = x0 + dx, y = y0 + dy;
+        if (!inside(x, y)) continue;
+        const c = y * N + x;
+        if (!b[c] && !seen[c]) { seen[c] = 1; out.push(c); }
+      }
+    }
+    return out.length ? out : (b[CENTER] ? [] : [CENTER]);
+  }
+  function ranked(b, p, limit, defendScale) {
+    const list = candidates(b).map(pos => ({ pos, v: cellValue(b, pos, p, defendScale) }));
+    list.sort((a, c) => c.v - a.v);
+    return limit ? list.slice(0, limit) : list;
+  }
+  const E_MINE = [0, 1, 10, 110, 10000], E_THEIRS = [0, 1, 12, 140, 3000];
+  function evalBoard(b, p) {
+    let s = 0;
+    for (const w of WINDOWS) {
+      let mine = 0, theirs = 0;
+      for (const c of w) { if (b[c] === p) mine++; else if (b[c]) theirs++; }
+      if (mine && theirs) continue;
+      if (mine) s += E_MINE[Math.min(mine, 4)]; else if (theirs) s -= E_THEIRS[Math.min(theirs, 4)];
+    }
+    return s;
+  }
+  function search(b, p, depth, alpha, beta) {
+    if (depth === 0) return evalBoard(b, p);
+    const moves = ranked(b, p, depth >= 3 ? 9 : 7, 1);
+    if (!moves.length) return 0;
+    let best = -Infinity;
+    for (const m of moves) {
+      b[m.pos] = p;
+      const v = findFive(b, m.pos, p) ? 10000000 + depth : -search(b, 3 - p, depth - 1, -beta, -alpha);
+      b[m.pos] = 0;
+      if (v > best) best = v;
+      if (v > alpha) alpha = v;
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+  function chooseMove(b, p, level) {
+    const list = ranked(b, p, 0, level === 'easy' ? 0.55 : 1);
+    if (!list.length) return -1;
+    if (list[0].v >= DEFEND[4]) return list[0].pos;           // 바로 이기거나, 반드시 막아야 하는 자리
+    if (level === 'easy') {
+      const top = list.slice(0, 6).map(m => ({ pos: m.pos, v: m.v * (0.5 + Math.random()) }));
+      top.sort((a, c) => c.v - a.v);
+      return top[0].pos;
+    }
+    if (level === 'normal') {
+      const ties = list.filter(m => m.v >= list[0].v * 0.97);
+      return ties[Math.floor(Math.random() * ties.length)].pos;
+    }
+    let best = -Infinity, pick = list[0].pos;
+    for (const m of list.slice(0, 10)) {
+      b[m.pos] = p;
+      const v = findFive(b, m.pos, p) ? 10000000 : -search(b, 3 - p, 3, -Infinity, Infinity);
+      b[m.pos] = 0;
+      if (v > best) { best = v; pick = m.pos; }
+    }
+    return pick;
+  }
+
+  // ---------- 상태 ----------
+  const S = {
+    board: [], turn: BLACK, mode: 'ai', human: BLACK, level: 'normal',
+    log: [], last: -1, over: false, winner: 0, win: []
+  };
+  // 온라인 2인: 방·연결·동기화는 shared/online.js 가 맡는다. 방장 = 흑, 참가자 = 백
+  const O = Hanpan.createOnline({
+    id: 'omok',
+    seats: { host: BLACK, guest: WHITE, none: 0 },
+    text: { host: '방장 · 흑(선공)', guest: '참가자 · 백(후공)', note: '방장이 흑(선공), 참가자가 백입니다.' },
+    isOnline: () => S.mode === 'online',
+    setOnline: () => { S.mode = 'online'; },
+    onNewRoom: () => resetBoard(),
+    getState: () => ({ board: S.board, turn: S.turn, log: S.log, last: S.last, over: S.over, winner: S.winner, win: S.win }),
+    onState: g => { if (!adoptGame(g)) return; render(); save(); },
+    render: () => render(),
+    save: () => save()
+  });
+  let aiTimer = 0;
+  let focusIdx = CENTER;
+
+  function resetBoard() {
+    S.board = new Array(SIZE).fill(0);
+    S.turn = BLACK; S.log = []; S.last = -1; S.over = false; S.winner = 0; S.win = [];
+  }
+  function save() {
+    try {
+      const d = JSON.parse(JSON.stringify(S));
+      if (S.mode === 'online' && O.code && O.role) d.room = { code: O.code, role: O.role };
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; }
+  }
+  const validPos = v => Number.isInteger(v) && v >= 0 && v < SIZE;
+  function adoptGame(d) {
+    if (!d || !Array.isArray(d.board) || d.board.length !== SIZE) return false;
+    S.board = d.board.map(v => (v === 1 || v === 2 ? v : 0));
+    S.turn = d.turn === WHITE ? WHITE : BLACK;
+    S.log = Array.isArray(d.log) ? d.log.filter(e => e && validPos(e.pos)).map(e => ({ p: e.p === WHITE ? WHITE : BLACK, pos: e.pos })) : [];
+    S.last = validPos(d.last) ? d.last : -1;
+    S.over = !!d.over;
+    S.winner = d.winner === BLACK || d.winner === WHITE ? d.winner : 0;
+    S.win = Array.isArray(d.win) ? d.win.filter(validPos) : [];
+    return true;
+  }
+  function adopt(d) {
+    if (!d || typeof d !== 'object' || !d.mode) return false;
+    S.mode = ['ai', '2p', 'online'].includes(d.mode) ? d.mode : 'ai';
+    S.human = d.human === WHITE ? WHITE : BLACK;
+    S.level = ['easy', 'normal', 'hard'].includes(d.level) ? d.level : 'normal';
+    if (!adoptGame(d)) resetBoard();
+    return true;
+  }
+  function isHumanTurn() {
+    if (S.over) return false;
+    if (S.mode === 'online') return O.status === 'live' && S.turn === O.my;
+    return S.mode === '2p' || S.turn === S.human;
+  }
+  function roleOf(p) {
+    if (S.mode === 'ai') return p === S.human ? '당신' : 'AI';
+    if (S.mode === 'online' && O.my) return p === O.my ? '나' : '상대';
+    return '';
+  }
+
+  // ---------- 진행 ----------
+  function play(pos) {
+    if (S.over || S.board[pos]) return;
+    const p = S.turn;
+    S.board[pos] = p;
+    S.log.push({ p, pos });
+    S.last = pos;
+    const five = findFive(S.board, pos, p);
+    if (five) { S.over = true; S.winner = p; S.win = five; }
+    else if (S.log.length >= SIZE) { S.over = true; S.winner = 0; }
+    else S.turn = 3 - p;
+    render();
+    save();
+    if (S.mode === 'online') O.send(); else scheduleAI();
+  }
+  function scheduleAI() {
+    clearTimeout(aiTimer);
+    if (S.over || S.mode !== 'ai' || S.turn === S.human) return;
+    aiTimer = setTimeout(() => {
+      const pos = chooseMove(S.board.slice(), S.turn, S.level);
+      if (pos >= 0) play(pos);
+    }, 450);
+  }
+  function newGame() {
+    if (S.mode === 'online' && O.status !== 'live') return;
+    clearTimeout(aiTimer);
+    resetBoard();
+    render();
+    save();
+    if (S.mode === 'online') O.send(); else scheduleAI();
+  }
+  function undo() {
+    if (!S.log.length || S.mode === 'online') return;
+    clearTimeout(aiTimer);
+    do {
+      const e = S.log.pop();
+      S.board[e.pos] = 0;
+      S.turn = e.p;
+    } while (S.mode === 'ai' && S.turn !== S.human && S.log.length);
+    S.last = S.log.length ? S.log[S.log.length - 1].pos : -1;
+    S.over = false; S.winner = 0; S.win = [];
+    render();
+    save();
+    scheduleAI();
+  }
+
+  // ---------- 모드 전환 ----------
+  function setMode(mode) {
+    if (S.mode === 'online') O.leave();
+    clearTimeout(aiTimer);
+    S.mode = mode;
+    if (mode === 'online') {
+      resetBoard();
+      render();
+      save();
+    } else {
+      newGame();
+    }
+  }
+
+  // ---------- 화면 ----------
+  const cells = [];
+  function buildBoard() {
+    for (const ch of 'ABCDEFGHIJKLMNO') { const s = document.createElement('span'); s.textContent = ch; $('files').appendChild(s); }
+    for (let r = N; r >= 1; r--) { const s = document.createElement('span'); s.textContent = r; $('ranks').appendChild(s); }
+    for (let i = 0; i < SIZE; i++) {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'cell';
+      c.tabIndex = i === focusIdx ? 0 : -1;
+      if (STARS.includes(i)) { const st = document.createElement('i'); st.className = 'star'; c.appendChild(st); }
+      const stone = document.createElement('span');
+      stone.className = 'stone';
+      c.appendChild(stone);
+      c.addEventListener('click', () => { if (isHumanTurn()) play(i); });
+      c.addEventListener('focus', () => setFocus(i, false));
+      boardEl.appendChild(c);
+      cells.push(c);
+    }
+    boardEl.addEventListener('keydown', e => {
+      const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      const x = Math.min(N - 1, Math.max(0, focusIdx % N + step[0]));
+      const y = Math.min(N - 1, Math.max(0, Math.floor(focusIdx / N) + step[1]));
+      setFocus(y * N + x, true);
+    });
+  }
+  function setFocus(i, move) {
+    cells[focusIdx].tabIndex = -1;
+    focusIdx = i;
+    cells[i].tabIndex = 0;
+    if (move) cells[i].focus();
+  }
+
+  function render() {
+    const online = S.mode === 'online';
+    const canPlay = isHumanTurn();
+    const win = new Set(S.win);
+    boardEl.dataset.turn = S.turn === BLACK ? 'black' : 'white';
+    cells.forEach((c, i) => {
+      const v = S.board[i];
+      c.className = 'cell' + (v === BLACK ? ' black' : v === WHITE ? ' white' : canPlay ? ' open' : '') +
+        (S.last === i ? ' last' : '') + (win.has(i) ? ' win' : '');
+      c.setAttribute('aria-label', coord(i) + ', ' + (v ? colorName(v) + ' 돌' : '빈 교차점'));
+    });
+
+    // 대국자
+    const rb = roleOf(BLACK), rw = roleOf(WHITE);
+    $('who-black').textContent = '흑' + (rb ? ' · ' + rb : '');
+    $('who-white').textContent = '백' + (rw ? ' · ' + rw : '');
+    $('side-black').classList.toggle('active', !S.over && S.turn === BLACK);
+    $('side-white').classList.toggle('active', !S.over && S.turn === WHITE);
+    $('move-count').textContent = S.log.length;
+
+    // 상태 문구
+    let text;
+    const connText = online ? O.statusText() : null;
+    if (connText) {
+      text = connText;
+    } else if (S.over) {
+      const tail = ' (' + S.log.length + '수)';
+      if (!S.winner) text = '무승부 — 판이 가득 찼습니다.';
+      else if (S.mode === 'ai') text = (S.winner === S.human ? '이겼습니다! ' : '졌습니다. ') + colorName(S.winner) + ' 오목 완성' + tail;
+      else if (online) text = (S.winner === O.my ? '이겼습니다! ' : '졌습니다. ') + colorName(S.winner) + ' 오목 완성' + tail;
+      else text = colorName(S.winner) + ' 승리 — 오목 완성' + tail;
+    } else if (online) {
+      text = S.turn === O.my ? '당신(' + colorName(S.turn) + ') 차례입니다.' : '상대(' + colorName(S.turn) + ')의 수를 기다리는 중…';
+    } else if (S.mode === 'ai' && S.turn !== S.human) {
+      text = 'AI(' + colorName(S.turn) + ')가 수를 읽는 중…';
+    } else if (S.mode === 'ai') {
+      text = '당신(' + colorName(S.turn) + ') 차례입니다.';
+    } else {
+      text = colorName(S.turn) + ' 차례입니다.';
+    }
+    statusEl.textContent = text;
+    statusEl.classList.toggle('final', S.over && (!online || O.status === 'live'));
+
+    // 기보
+    logEl.textContent = '';
+    S.log.forEach((e, idx) => {
+      const li = document.createElement('li');
+      const num = document.createElement('span');
+      num.className = 'n';
+      num.textContent = idx + 1;
+      const dot = document.createElement('span');
+      dot.className = 'dot ' + (e.p === BLACK ? 'black' : 'white');
+      const mv = document.createElement('span');
+      mv.textContent = coord(e.pos);
+      li.append(num, dot, mv);
+      logEl.appendChild(li);
+    });
+    logEl.hidden = !S.log.length;
+    $('log-empty').hidden = !!S.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+
+    // 설정
+    $('mode-ai').checked = S.mode === 'ai';
+    $('mode-2p').checked = S.mode === '2p';
+    $('mode-online').checked = online;
+    $('human-black').checked = S.human === BLACK;
+    $('human-white').checked = S.human === WHITE;
+    $('level-' + S.level).checked = true;
+    $('fs-human').hidden = S.mode !== 'ai';
+    $('fs-level').hidden = S.mode !== 'ai';
+    O.renderPanel(online);
+    $('btn-undo').hidden = online;
+    $('btn-undo').disabled = !S.log.length;
+    $('btn-new').disabled = online && O.status !== 'live';
+  }
+
+  function bindControls() {
+    document.querySelectorAll('input[name="mode"]').forEach(r =>
+      r.addEventListener('change', () => setMode(r.value)));
+    document.querySelectorAll('input[name="human"]').forEach(r =>
+      r.addEventListener('change', () => { S.human = Number(r.value); newGame(); }));
+    document.querySelectorAll('input[name="level"]').forEach(r =>
+      r.addEventListener('change', () => { S.level = r.value; save(); }));
+    $('btn-new').addEventListener('click', newGame);
+    $('btn-undo').addEventListener('click', undo);
+  }
+
+  function start() {
+    const saved = loadSaved();
+    if (!adopt(saved)) resetBoard();
+    buildBoard();
+    bindControls();
+    O.mountPanel($('fs-online'));
+    if (!O.boot(saved && saved.room)) {
+      if (S.mode === 'online') resetBoard();
+      render();
+      scheduleAI();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

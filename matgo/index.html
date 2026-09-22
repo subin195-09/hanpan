@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ko" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>맞고 한 판</title>
+<meta name="description" content="설치 없이 브라우저에서 바로 치는 2인 맞고. 고·스톱, 흔들기·폭탄, 쪽·따닥·뻑, 피박·광박·고박까지. AI 또는 초대 링크로 친구와.">
+<meta property="og:title" content="맞고 한 판">
+<meta property="og:description" content="설치 없이 브라우저에서 바로 치는 2인 맞고. 고·스톱, 흔들기·폭탄, 쪽·따닥·뻑, 피박·광박·고박까지.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="thumb.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #EFE9DF;
+    --surface: #F8F4EC;
+    --ink: #221C17;
+    --ink-soft: #6A5F55;
+    --line: #D6CBBC;
+    --accent: #B4261F;
+    --on-ink: #F8F4EC;
+    --felt: #3E5A3A;
+    --felt-edge: #2A3E28;
+    --red: #C8372D;
+    --blue: #2A5DAA;
+    --gold: #D9A83A;
+    --cw: 54px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #15120F; --surface: #1F1A16; --ink: #ECE5DA; --ink-soft: #A69B8E; --line: #382F28;
+      --accent: #E8574D; --on-ink: #15120F; --felt: #2F4A2D; --felt-edge: #1D2E1C; --red: #E25A4F; --blue: #4C82D9;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #15120F; --surface: #1F1A16; --ink: #ECE5DA; --ink-soft: #A69B8E; --line: #382F28;
+    --accent: #E8574D; --on-ink: #15120F; --felt: #2F4A2D; --felt-edge: #1D2E1C; --red: #E25A4F; --blue: #4C82D9;
+  }
+  @media (max-width: 640px) { :root { --cw: 40px; } }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 1rem/1.6 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+  .page { max-width: 1160px; margin-inline: auto; padding-inline: 16px; padding-block: 24px 48px; display: grid; gap: 20px; }
+  .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+  h1 { margin: 0; font: 800 2.2rem/1.15 "Nanum Myeongjo", "Batang", serif; letter-spacing: -0.01em; }
+  .masthead p { margin: 0; color: var(--ink-soft); }
+  .table { display: grid; grid-template-columns: minmax(0, 780px) minmax(250px, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 960px) { .table { grid-template-columns: minmax(0, 1fr); gap: 28px; } h1 { font-size: 1.75rem; } }
+  .play { display: grid; gap: 10px; }
+
+  /* 화투 카드 */
+  .card {
+    position: relative;
+    width: var(--cw);
+    height: calc(var(--cw) * 1.55);
+    flex: none;
+    border-radius: 5px;
+    background: #F7ECD6;
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    color: #1E1710;
+    font-family: "Gothic A1", "Apple SD Gothic Neo", sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .card .mo { position: absolute; left: 0; right: 0; top: 0; height: 22%; background: var(--mc); color: #FFF; font-size: calc(var(--cw) * 0.2); font-weight: 900; line-height: 1; display: flex; align-items: center; padding-left: 4px; }
+  .card .mark { position: absolute; left: 0; right: 0; top: 22%; bottom: 0; display: grid; place-items: center; }
+  .card .g { width: 74%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE9A3, #D9A83A 70%); border: 2px solid #8A5A1C; display: grid; place-items: center; font: 900 calc(var(--cw) * 0.36)/1 "Nanum Myeongjo", serif; color: #7A1A12; }
+  .card .y { width: 82%; padding: 3px 0; border-radius: 999px; background: #FFF; border: 1.5px solid var(--mc); text-align: center; font-size: calc(var(--cw) * 0.2); font-weight: 700; color: var(--mc); }
+  .card .t { width: 34%; height: 78%; border-radius: 3px; background: var(--tc); color: #FFF; writing-mode: vertical-rl; text-orientation: upright; display: grid; place-items: center; font-size: calc(var(--cw) * 0.19); font-weight: 900; letter-spacing: 0.1em; }
+  .card .p { font-size: calc(var(--cw) * 0.23); font-weight: 900; color: var(--mc); text-align: center; line-height: 1.15; }
+  .card .p small { display: block; font-size: calc(var(--cw) * 0.17); font-weight: 700; color: #5A4A3A; }
+  .card .p.ssang { border: 2px solid var(--mc); border-radius: 4px; padding: 2px 5px; }
+  .card.back { background: repeating-linear-gradient(45deg, #7A1F1A 0 6px, #63140F 6px 12px); border-color: #3A0A08; }
+  .card.mini { --cw: calc(var(--cw-base, 54px) * 0.62); }
+  button.card { cursor: pointer; padding: 0; font: inherit; }
+  button.card:disabled { cursor: default; }
+  .card.can { outline: 3px solid var(--gold); outline-offset: 1px; }
+  .card.pickable { outline: 3px solid #FFF; outline-offset: 1px; cursor: pointer; animation: beckon 1s ease-in-out infinite; }
+  @keyframes beckon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+  .card.new { box-shadow: 0 0 0 3px var(--gold); }
+  .card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  /* 상대·나 영역 */
+  .seat { display: grid; gap: 6px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+  .seat.active { border-color: var(--team); box-shadow: inset 0 0 0 1px var(--team); }
+  .seat[data-team="0"] { --team: var(--red); }
+  .seat[data-team="1"] { --team: var(--blue); }
+  .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .seat-name { font-weight: 700; color: var(--team); }
+  .seat-score { font: 800 1.25rem/1 "Nanum Myeongjo", serif; }
+  .seat-score small { font: 500 0.75rem/1 "Gothic A1", sans-serif; color: var(--ink-soft); margin-left: 4px; }
+  .seat-meta { font-size: 0.8125rem; color: var(--ink-soft); }
+  .caps { display: flex; flex-wrap: wrap; gap: 4px 12px; min-height: calc(var(--cw) * 0.62 * 1.55 + 4px); }
+  .capgroup { display: flex; align-items: center; gap: 2px; }
+  .capgroup .lab { font-size: 0.6875rem; color: var(--ink-soft); margin-right: 3px; white-space: nowrap; }
+  .capgroup .card { margin-left: calc(var(--cw) * -0.28); }
+  .capgroup .card:first-of-type { margin-left: 0; }
+  .hand { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.55 + 6px); }
+  .hand .back { margin-left: -14px; } .hand .back:first-child { margin-left: 0; }
+
+  /* 바닥 */
+  .floor {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--felt);
+    border: 2px solid var(--felt-edge);
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25);
+    min-height: calc(var(--cw) * 1.55 * 2 + 40px);
+  }
+  @media (max-width: 640px) { .floor { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; } }
+  .slot { display: flex; align-items: flex-start; min-height: calc(var(--cw) * 1.55); }
+  .slot .card { margin-left: calc(var(--cw) * -0.4); }
+  .slot .card:first-child { margin-left: 0; }
+  .deck { display: flex; align-items: center; gap: 8px; color: #FFF; font-size: 0.8125rem; }
+  .deck .card { margin-left: 0; }
+  .deck b { font-size: 1.1rem; }
+  .floor-empty { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255, 255, 255, 0.5); font-size: 0.875rem; pointer-events: none; }
+
+  .status { margin: 0; min-height: 1.6em; font-weight: 700; }
+  .status.final { font: 800 1.3rem/1.35 "Nanum Myeongjo", serif; }
+  .lastmove { margin: 0; min-height: 1.5em; font-size: 0.8125rem; color: var(--ink-soft); }
+  .prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--accent); }
+  .prompt b { font-size: 1rem; }
+  .btn { appearance: none; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; cursor: pointer; }
+  .btn.primary { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .btn.go { background: var(--accent); border-color: var(--accent); color: #FFF; font-weight: 900; font-size: 1rem; padding: 10px 22px; }
+  .btn.small { padding: 6px 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+  /* 결과 */
+  .result { display: grid; gap: 8px; padding: 14px 16px; border-radius: 8px; background: var(--surface); border: 2px solid var(--gold); }
+  .result h3 { margin: 0; font: 800 1.4rem/1.2 "Nanum Myeongjo", serif; }
+  .result ul { margin: 0; padding-left: 1.2em; font-size: 0.875rem; color: var(--ink-soft); columns: 2; }
+  .result .sum { font-weight: 700; }
+
+  /* 옆 패널 */
+  .panel { display: grid; gap: 22px; }
+  .panel section { display: grid; gap: 12px; }
+  .panel section + section { padding-top: 22px; border-top: 1px solid var(--line); }
+  h2 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+  legend { padding: 0; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; }
+  .seg-row { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label { flex: 1 1 auto; padding: 8px 12px; text-align: center; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--gold); outline-offset: -3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  #online-msg { color: var(--ink); font-weight: 500; }
+  #lobby, #room { display: grid; gap: 10px; }
+  .join { display: flex; gap: 8px; }
+  .join input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.15em; text-transform: uppercase; }
+  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "Gothic A1", system-ui, sans-serif; }
+  .join input:focus-visible { outline: 3px solid var(--gold); outline-offset: 1px; }
+  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .room-code strong { font: 700 1.75rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; }
+  .log { margin: 0; padding: 0; list-style: none; max-height: 260px; overflow-y: auto; display: grid; gap: 2px; font-size: 0.8125rem; }
+  .log li { display: flex; align-items: baseline; gap: 8px; }
+  .log li[data-team="0"] { --team: var(--red); }
+  .log li[data-team="1"] { --team: var(--blue); }
+  .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
+  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+  details ul { margin: 10px 0 0; padding-left: 1.2em; color: var(--ink-soft); display: grid; gap: 4px; max-width: 38em; }
+  @media (prefers-reduced-motion: reduce) { .card.pickable { animation: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <a class="home" href="../index.html">← 한 판 놀이방</a>
+    <h1>맞고 한 판</h1>
+    <p>3점을 먼저 내고 고를 부를지, 스톱할지. 돈 없이 점수만 겨룹니다.</p>
+  </header>
+
+  <main class="table">
+    <div class="play">
+      <div class="seat" id="seat-1" data-team="1">
+        <div class="seat-head"><span class="seat-name" id="name-1">청</span><span class="seat-score" id="score-1">0</span><span class="seat-meta" id="meta-1"></span></div>
+        <div class="caps" id="caps-1"></div>
+        <div class="hand" id="hand-1"></div>
+      </div>
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="floor" id="floor"></div>
+      <p class="lastmove" id="lastmove" aria-live="polite"></p>
+      <div class="prompt" id="prompt" hidden></div>
+      <div class="result" id="result" hidden></div>
+
+      <div class="seat" id="seat-0" data-team="0">
+        <div class="seat-head"><span class="seat-name" id="name-0">홍</span><span class="seat-score" id="score-0">0</span><span class="seat-meta" id="meta-0"></span></div>
+        <div class="caps" id="caps-0"></div>
+        <div class="hand" id="hand-0"></div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>놀이 설정</h2>
+        <fieldset>
+          <legend>상대</legend>
+          <div class="seg-row">
+            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-online" hidden></fieldset>
+        <fieldset id="fs-level">
+          <legend>AI 난이도</legend>
+          <div class="seg-row">
+            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
+            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
+            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="btn" id="btn-new">처음부터 새로</button>
+        </div>
+        <p class="fine">손패가 비밀이라 한 화면 2인은 없습니다. 판이 끝나면 이긴 쪽(선)이 다음 판을 돌립니다.</p>
+      </section>
+
+      <section>
+        <h2>지난 수</h2>
+        <p class="log-empty" id="log-empty">아직 낸 패가 없습니다.</p>
+        <ol class="log" id="log" hidden></ol>
+      </section>
+
+      <section>
+        <details>
+          <summary>규칙 보기</summary>
+          <ul>
+            <li>각자 10장, 바닥 8장, 더미 20장. 선부터 손패 한 장을 내고 더미 한 장을 뒤집어 같은 달끼리 먹습니다.</li>
+            <li>광 3장 3점(비광 포함 2점) · 4장 4점 · 5장 15점. 열끗·띠는 5장부터 장당 1점, 피는 10장부터 장당 1점(쌍피 2장). 고도리 5점, 홍단·청단·초단 3점. 9월 국진은 유리한 쪽으로 자동 계산.</li>
+            <li>3점이 되면 고 또는 스톱. 고 1회 +1점, 2회 +2점, 3고부터 2배씩. 고를 부른 뒤엔 점수가 더 올라야 다시 고·스톱할 수 있습니다.</li>
+            <li>쪽(낸 패에 뒤집은 패가 붙음) · 따닥 · 뻑 먹기 · 싹쓸이는 상대 피 한 장을 가져옵니다. 같은 달 3장을 들고 흔들면 2배, 바닥의 한 장에 3장을 한꺼번에 내는 폭탄은 2배에 상대 피 한 장.</li>
+            <li>진 쪽 피가 7장 미만이면 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박, 고를 부르고 당하면 고박 — 각각 2배.</li>
+            <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배. 총점은 판마다 누적됩니다.</li>
+          </ul>
+        </details>
+      </section>
+      <div class="ad-slot" data-ad="game-side" hidden></div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/online.js"></script>
+<script src="../shared/site.js"></script>
+<script src="engine.js"></script>
+<script>
+(() => {
+  const M = window.Matgo, C = id => M.CARDS[id];
+  const TEAM = ['홍', '청'];
+  const STORE_KEY = 'matgo-standalone-v1';
+  const $ = id => document.getElementById(id);
+  const MC = ['', '#2F6B3A', '#C24E4E', '#D96C8B', '#4B3F6B', '#7B4FA0', '#B8323E', '#A24A2A', '#3B4A5A', '#B8921F', '#D0662B', '#2B2B2B', '#5C7A8C'];
+  const PLANT = ['', '송', '매', '벚', '싸리', '난', '모란', '홍싸리', '공산', '국', '단풍', '오동', '비'];
+  const TC = { hong: '#B8232F', cheong: '#2A4FA5', cho: '#C7302B', bi: '#6B4E8A' };
+  const YEOL_SHORT = { 2: '새', 4: '새', 5: '다리', 6: '나비', 7: '멧돼지', 8: '기러기', 9: '국진', 10: '사슴', 12: '제비' };
+  const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
+
+  // ---------- 상태 ----------
+  const S = { mode: 'ai', level: 'normal' };
+  let G = null, seen = 0, aiTimer = 0;
+  function freshGame(seq, first, carry, total) {
+    const g = M.deal(newSeed(), first || 0, carry || 0, total || [0, 0]);
+    g.seq = seq || 0; g.ev = null;
+    return g;
+  }
+  const O = Hanpan.createOnline({
+    id: 'matgo',
+    seats: { host: 0, guest: 1, none: -1 },
+    text: { host: '방장 · 홍(첫 판 선)', guest: '참가자 · 청', note: '방장이 홍, 참가자가 청입니다. 패는 방장 쪽에서 섞어 보냅니다.' },
+    isOnline: () => S.mode === 'online',
+    setOnline: () => { S.mode = 'online'; },
+    onNewRoom: kind => { G = freshGame(kind === 'guest' ? 0 : (G ? G.seq + 1 : 0)); seen = kind === 'guest' ? -1 : G.seq; },
+    onLeave: () => {},
+    getState: () => G,
+    onState: (g, firstSync) => { const clean = cleanGame(g); if (clean) adoptRemote(clean, firstSync); },
+    render: () => render(),
+    save: () => save()
+  });
+  function save() {
+    try {
+      const d = { mode: S.mode, level: S.level, game: G };
+      if (S.mode === 'online' && O.roomInfo()) d.room = O.roomInfo();
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function loadSaved() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
+  const okId = v => Number.isInteger(v) && v >= 0 && v < 48;
+  const idList = a => (Array.isArray(a) && a.every(okId) ? a.slice() : null);
+  const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
+  function cleanGame(d) {
+    if (!d || typeof d !== 'object') return null;
+    const seed = int(d.seed, 1, 2147483647), first = int(d.first, 0, 1), turn = int(d.turn, 0, 1);
+    if (seed === null || first === null || turn === null) return null;
+    const hands = Array.isArray(d.hands) && d.hands.length === 2 ? d.hands.map(idList) : null;
+    const caps = Array.isArray(d.caps) && d.caps.length === 2 ? d.caps.map(idList) : null;
+    const floor = idList(d.floor), deck = idList(d.deck);
+    if (!hands || !caps || hands.some(h => !h) || caps.some(c => !c) || !floor || !deck) return null;
+    let pend = null;
+    if (d.pend && typeof d.pend === 'object') {
+      const P = d.pend;
+      pend = {
+        take: idList(P.take) || [], hold: Array.isArray(P.hold) ? idList(P.hold) : null, stay: okId(P.stay) ? P.stay : -1,
+        flipped: okId(P.flipped) ? P.flipped : -1, pi: int(P.pi, 0, 9) || 0, notes: Array.isArray(P.notes) ? P.notes.map(String).slice(0, 8) : [],
+        floorAtStart: int(P.floorAtStart, 0, 48) || 0, played: okId(P.played) ? P.played : -1, bomb: !!P.bomb
+      };
+      if (P.pick && okId(P.pick.card) && idList(P.pick.opts) && (P.pick.step === 'play' || P.pick.step === 'flip')) pend.pick = { card: P.pick.card, opts: idList(P.pick.opts), step: P.pick.step };
+    }
+    // 48장이 정확히 한 번씩 있어야 한다
+    const all = [...deck, ...floor, ...hands[0], ...hands[1], ...caps[0], ...caps[1]];
+    if (pend) { all.push(...pend.take); if (pend.hold) all.push(...pend.hold); if (pend.pick && (pend.stage !== 'play')) all.push(pend.pick.card); }
+    const stage = ['play', 'shake', 'pick', 'flip', 'go', 'over'].includes(d.stage) ? d.stage : null;
+    if (!stage) return null;
+    if (stage === 'shake' && pend && okId(pend.played)) { /* 흔들기 대기 중인 카드는 아직 손에 있다 */ }
+    const uniq = new Set(all);
+    if (all.length !== 48 || uniq.size !== 48) return null;
+    const g = {
+      seed, first, turn, carry: int(d.carry, 0, 10) || 0,
+      total: Array.isArray(d.total) && d.total.length === 2 ? d.total.map(v => int(v, 0, 1e7) || 0) : [0, 0],
+      hands, floor, deck, caps, go: [0, 1].map(i => int(d.go && d.go[i], 0, 20) || 0), goAt: [0, 1].map(i => int(d.goAt && d.goAt[i], 0, 200) || 0),
+      mult: [0, 1].map(i => int(d.mult && d.mult[i], 0, 10) || 0),
+      stage, pend, over: !!d.over, winner: d.winner === 0 || d.winner === 1 ? d.winner : -1,
+      result: d.result && typeof d.result === 'object' ? {
+        nagari: !!d.result.nagari, text: typeof d.result.text === 'string' ? d.result.text.slice(0, 120) : '',
+        pts: int(d.result.pts, 0, 1e7) || 0, base: int(d.result.base, 0, 500) || 0,
+        lines: Array.isArray(d.result.lines) ? d.result.lines.map(s => String(s).slice(0, 30)).slice(0, 12) : [],
+        mults: Array.isArray(d.result.mults) ? d.result.mults.filter(x => Array.isArray(x)).map(([n, k]) => [String(n).slice(0, 20), int(k, 1, 1024) || 1]).slice(0, 12) : []
+      } : null,
+      log: Array.isArray(d.log) ? d.log.slice(-60).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 80) })) : [],
+      last: d.last && typeof d.last === 'object' ? { t: d.last.t === 1 ? 1 : 0, played: okId(d.last.played) ? d.last.played : -1, flipped: okId(d.last.flipped) ? d.last.flipped : -1, take: idList(d.last.take) || [], notes: Array.isArray(d.last.notes) ? d.last.notes.map(String).slice(0, 8) : [] } : null,
+      seq: int(d.seq, 0, 1e9) || 0, ev: d.ev && typeof d.ev === 'object' ? { seq: int(d.ev.seq, 0, 1e9) || 0, type: String(d.ev.type || '').slice(0, 10) } : null
+    };
+    return g;
+  }
+
+  // ---------- 진행 ----------
+  function myTeam() { return S.mode === 'ai' ? 0 : O.my; }
+  function canAct() {
+    if (G.over) return false;
+    if (S.mode === 'ai') return G.turn === 0;
+    return O.status === 'live' && G.turn === O.my;
+  }
+  function roleOf(t) {
+    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
+    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
+    return '';
+  }
+  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+  function commit(type) {
+    G.seq++;
+    G.ev = { seq: G.seq, type };
+    seen = G.seq;
+    save();
+    O.send();
+    render();
+    scheduleAI();
+  }
+  function act(fn, type) {
+    if (!fn()) return;
+    commit(type);
+  }
+  function doPlay(card, shake) { if (canAct()) act(() => M.play(G, card, shake), 'play'); }
+  function doPick(card) { if (canAct()) act(() => M.pick(G, card), 'pick'); }
+  function doGo(go) { if (canAct()) act(() => M.decideGo(G, go), go ? 'go' : 'stop'); }
+  function nextRound() {
+    if (!G.over) return;
+    const first = G.winner >= 0 ? G.winner : G.first, carry = G.winner >= 0 ? 0 : G.carry + 1;
+    if (S.mode === 'online' && (O.status !== 'live' || O.my !== first)) return;
+    G = Object.assign(freshGame(G.seq + 1, first, carry, G.total), {});
+    commit('deal');
+  }
+  function newMatch() {
+    if (S.mode === 'online' && O.status !== 'live') return;
+    clearTimeout(aiTimer);
+    G = freshGame(G ? G.seq + 1 : 0, S.mode === 'online' ? 0 : 0, 0, [0, 0]);
+    commit('deal');
+  }
+  function adoptRemote(g, firstSync) {
+    G = g;
+    seen = g.seq;
+    render();
+    save();
+    scheduleAI();
+  }
+  function setMode(mode) {
+    if (S.mode === 'online') O.leave();
+    clearTimeout(aiTimer);
+    S.mode = mode;
+    G = freshGame(G ? G.seq + 1 : 0);
+    seen = G.seq;
+    render();
+    save();
+    scheduleAI();
+  }
+
+  // ---------- AI ----------
+  function scheduleAI() {
+    clearTimeout(aiTimer);
+    if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+    const wait = G.stage === 'play' ? 900 : G.stage === 'go' ? 1100 : 500;
+    aiTimer = setTimeout(() => {
+      if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      let ok = false;
+      if (G.stage === 'play') { const a = M.aiPlay(G, S.level); ok = M.play(G, a.card, a.shake); }
+      else if (G.stage === 'shake') ok = M.play(G, G.pend.played, S.level !== 'easy' || Math.random() < 0.5);
+      else if (G.stage === 'pick') ok = M.pick(G, M.aiPick(G));
+      else if (G.stage === 'go') ok = M.decideGo(G, M.aiGo(G, S.level));
+      if (ok) commit('ai');
+    }, wait);
+  }
+
+  // ---------- 카드 그리기 ----------
+  function cardEl(id, opts) {
+    const o = opts || {};
+    const el = document.createElement(o.button ? 'button' : 'div');
+    if (o.button) el.type = 'button';
+    el.className = 'card' + (o.mini ? ' mini' : '') + (o.cls ? ' ' + o.cls : '');
+    if (id < 0) { el.classList.add('back'); el.setAttribute('aria-label', '뒤집힌 패'); return el; }
+    const c = C(id);
+    el.style.setProperty('--mc', MC[c.m]);
+    el.setAttribute('aria-label', M.cardName(id));
+    el.dataset.id = id;
+    const mo = document.createElement('span'); mo.className = 'mo'; mo.textContent = c.m + '월';
+    const mark = document.createElement('span'); mark.className = 'mark';
+    let inner;
+    if (c.t === 'g') { inner = document.createElement('span'); inner.className = 'g'; inner.textContent = '光'; }
+    else if (c.t === 'y') { inner = document.createElement('span'); inner.className = 'y'; inner.textContent = YEOL_SHORT[c.m]; }
+    else if (c.t === 't') { inner = document.createElement('span'); inner.className = 't'; inner.style.setProperty('--tc', TC[c.sub]); inner.textContent = c.sub === 'bi' ? '' : ({ hong: '홍단', cheong: '청단', cho: '초단' })[c.sub]; }
+    else { inner = document.createElement('span'); inner.className = 'p' + (c.sub === 'ssang' ? ' ssang' : ''); inner.textContent = c.sub === 'ssang' ? '쌍피' : PLANT[c.m]; if (c.sub !== 'ssang') { const sm = document.createElement('small'); sm.textContent = '피'; inner.appendChild(sm); } }
+    mark.appendChild(inner);
+    el.append(mo, mark);
+    return el;
+  }
+  function capsInto(container, caps, newIds) {
+    container.textContent = '';
+    const groups = [['광', id => C(id).t === 'g'], ['열끗', id => C(id).t === 'y'], ['띠', id => C(id).t === 't'], ['피', id => C(id).t === 'p']];
+    for (const [lab, f] of groups) {
+      const ids = caps.filter(f);
+      if (!ids.length) continue;
+      const g = document.createElement('div');
+      g.className = 'capgroup';
+      const l = document.createElement('span'); l.className = 'lab';
+      const pv = lab === '피' ? ids.reduce((a, id) => a + C(id).pv, 0) : ids.length;
+      l.textContent = lab + ' ' + pv;
+      g.appendChild(l);
+      ids.forEach(id => g.appendChild(cardEl(id, { mini: true, cls: newIds.has(id) ? 'new' : '' })));
+      container.appendChild(g);
+    }
+  }
+
+  // ---------- 화면 ----------
+  function render() {
+    const online = S.mode === 'online', me = myTeam(), act = canAct();
+    const newIds = new Set(G.last ? G.last.take : []);
+    const pickOpts = G.stage === 'pick' && G.pend && G.pend.pick ? new Set(G.pend.pick.opts) : new Set();
+    for (let t = 0; t < 2; t++) {
+      const pts = M.best(G.caps[t]);
+      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
+      $('score-' + t).textContent = '';
+      $('score-' + t).append(String(pts.s));
+      const sm = document.createElement('small'); sm.textContent = '점 · 누적 ' + G.total[t]; $('score-' + t).appendChild(sm);
+      const meta = [];
+      if (G.go[t]) meta.push(G.go[t] + '고');
+      if (G.mult[t]) meta.push('흔들기·폭탄 ×' + Math.pow(2, G.mult[t]));
+      if (G.first === t && !G.over) meta.push('선');
+      $('meta-' + t).textContent = meta.join(' · ');
+      $('seat-' + t).classList.toggle('active', !G.over && G.turn === t);
+      capsInto($('caps-' + t), G.caps[t], newIds);
+      const hand = $('hand-' + t);
+      hand.textContent = '';
+      const mine = t === me || (S.mode === 'ai' && t === 0);
+      const shown = mine || G.over;
+      for (const id of G.hands[t]) {
+        if (!shown) { hand.appendChild(cardEl(-1)); continue; }
+        const can = act && t === G.turn && (G.stage === 'play');
+        const b = cardEl(id, { button: true, cls: can && G.floor.some(f => C(f).m === C(id).m) ? 'can' : '' });
+        b.disabled = !can;
+        if (can) b.addEventListener('click', () => doPlay(id));
+        hand.appendChild(b);
+      }
+      if (shown && t === G.turn && act && G.stage === 'play' && !G.hands[t].length && !G.over) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn primary'; b.textContent = '더미 뒤집기';
+        b.addEventListener('click', () => doPlay(-1));
+        hand.appendChild(b);
+      }
+    }
+    // 바닥: 달별로 모아 보여 준다
+    const floor = $('floor');
+    floor.textContent = '';
+    const deckEl = document.createElement('div'); deckEl.className = 'deck';
+    deckEl.appendChild(cardEl(-1));
+    const dl = document.createElement('span'); dl.innerHTML = '';
+    const b = document.createElement('b'); b.textContent = G.deck.length; dl.append('더미 ', b, '장');
+    deckEl.appendChild(dl);
+    floor.appendChild(deckEl);
+    const months = [...new Set(G.floor.map(id => C(id).m))].sort((a, b) => a - b);
+    for (const m of months) {
+      const slot = document.createElement('div'); slot.className = 'slot';
+      for (const id of G.floor.filter(f => C(f).m === m)) {
+        const pickable = pickOpts.has(id) && act;
+        const el = cardEl(id, { button: pickable, cls: pickable ? 'pickable' : '' });
+        if (pickable) el.addEventListener('click', () => doPick(id));
+        slot.appendChild(el);
+      }
+      floor.appendChild(slot);
+    }
+    if (!G.floor.length) { const e = document.createElement('div'); e.className = 'floor-empty'; e.textContent = '바닥이 비었습니다'; floor.appendChild(e); }
+
+    // 상태 문구
+    const connText = online ? O.statusText() : null;
+    let text;
+    if (connText) text = connText;
+    else if (G.over) {
+      if (G.winner < 0) text = G.result.text;
+      else text = (me >= 0 ? (G.winner === me ? '이겼습니다! ' : '졌습니다. ') : TEAM[G.winner] + ' 승리 — ') + G.result.pts + '점';
+    } else if (G.stage === 'play') text = act ? label(G.turn) + ' 차례 — 낼 패를 고르세요.' + (G.hands[G.turn].length ? '' : ' 손패가 없으니 더미만 뒤집습니다.') : label(G.turn) + ' 차례 — 패를 고르는 중…';
+    else if (G.stage === 'shake') text = label(G.turn) + ' 차례 — 흔들지 정하는 중…';
+    else if (G.stage === 'pick') text = act ? label(G.turn) + ' 차례 — 바닥에서 가져갈 패를 누르세요.' : label(G.turn) + ' 차례 — 가져갈 패를 고르는 중…';
+    else if (G.stage === 'go') text = act ? label(G.turn) + ' — ' + M.best(G.caps[G.turn]).s + '점! 고? 스톱?' : label(G.turn) + ' — 고·스톱을 정하는 중…';
+    else text = '';
+    $('status').textContent = text;
+    $('status').classList.toggle('final', G.over && !connText);
+
+    const L = G.last;
+    $('lastmove').textContent = L ? TEAM[L.t] + ': ' + [L.played >= 0 ? M.cardName(L.played) + ' 냄' : '손패 없음', L.flipped >= 0 ? M.cardName(L.flipped) + ' 뒤집음' : '', L.take.length ? L.take.length + '장 가져감' : '못 먹음', L.notes.join('·')].filter(Boolean).join(' · ') : '';
+
+    // 물음 창
+    const pr = $('prompt');
+    pr.textContent = '';
+    pr.hidden = true;
+    if (act && G.stage === 'shake') {
+      pr.hidden = false;
+      const bb = document.createElement('b'); bb.textContent = C(G.pend.played).m + '월 패가 손에 석 장 있습니다. 흔들까요? (이기면 2배, 상대에게 패가 보입니다)';
+      const y = document.createElement('button'); y.type = 'button'; y.className = 'btn go'; y.textContent = '흔들기'; y.addEventListener('click', () => doPlay(G.pend.played, true));
+      const n = document.createElement('button'); n.type = 'button'; n.className = 'btn'; n.textContent = '그냥 내기'; n.addEventListener('click', () => doPlay(G.pend.played, false));
+      pr.append(bb, y, n);
+    } else if (act && G.stage === 'go') {
+      pr.hidden = false;
+      const sc = M.best(G.caps[G.turn]);
+      const bb = document.createElement('b'); bb.textContent = sc.s + '점 (' + sc.d.join(', ') + ')';
+      const y = document.createElement('button'); y.type = 'button'; y.className = 'btn go'; y.textContent = (G.go[G.turn] + 1) + '고!'; y.addEventListener('click', () => doGo(true));
+      const n = document.createElement('button'); n.type = 'button'; n.className = 'btn primary'; n.textContent = '스톱'; n.addEventListener('click', () => doGo(false));
+      pr.append(bb, y, n);
+    }
+    // 결과
+    const rs = $('result');
+    rs.textContent = '';
+    rs.hidden = !G.over;
+    if (G.over) {
+      const h = document.createElement('h3');
+      const R = G.result;
+      if (G.winner < 0) h.textContent = '나가리';
+      else h.textContent = TEAM[G.winner] + (roleOf(G.winner) ? '(' + roleOf(G.winner) + ')' : '') + ' ' + R.pts + '점';
+      rs.appendChild(h);
+      if (G.winner >= 0) {
+        const ul = document.createElement('ul');
+        R.lines.forEach(s => { const li = document.createElement('li'); li.textContent = s; ul.appendChild(li); });
+        R.mults.forEach(([n, k]) => { const li = document.createElement('li'); li.textContent = n + ' ×' + k; ul.appendChild(li); });
+        rs.appendChild(ul);
+        const sum = document.createElement('p'); sum.className = 'sum';
+        sum.textContent = '기본 ' + R.base + '점' + (G.go[G.winner] ? ' + ' + G.go[G.winner] + '고' : '') + (R.mults.length ? ' × ' + R.mults.map(x => x[1]).join(' × ') : '') + ' = ' + R.pts + '점' + (R.gukjinAsPi ? ' (국진은 쌍피로)' : '');
+        rs.appendChild(sum);
+      } else { const p = document.createElement('p'); p.textContent = R.text; rs.appendChild(p); }
+      const first = G.winner >= 0 ? G.winner : G.first;
+      const canDeal = S.mode === 'ai' || (O.status === 'live' && O.my === first);
+      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'btn primary'; nb.textContent = '다음 판 (선: ' + TEAM[first] + ')';
+      nb.disabled = !canDeal;
+      nb.addEventListener('click', nextRound);
+      rs.appendChild(nb);
+      if (!canDeal && online) { const p = document.createElement('p'); p.className = 'fine'; p.textContent = '선이 다음 판을 돌리길 기다리는 중…'; rs.appendChild(p); }
+    }
+    if (S.mode === 'ai' && G.over && G.winner === 1) setTimeout(() => { if (G.over) nextRoundAuto(); }, 0);
+
+    // 지난 수
+    const logEl = $('log');
+    logEl.textContent = '';
+    for (const e of G.log) {
+      const li = document.createElement('li');
+      li.dataset.team = e.t;
+      const dot = document.createElement('span'); dot.className = 'dot';
+      const s = document.createElement('span'); s.textContent = TEAM[e.t] + ' · ' + e.s;
+      li.append(dot, s);
+      logEl.appendChild(li);
+    }
+    logEl.hidden = !G.log.length;
+    $('log-empty').hidden = !!G.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+
+    $('mode-ai').checked = S.mode === 'ai';
+    $('mode-online').checked = online;
+    $('level-' + S.level).checked = true;
+    $('fs-level').hidden = S.mode !== 'ai';
+    O.renderPanel(online);
+    $('btn-new').disabled = online && O.status !== 'live';
+  }
+  function nextRoundAuto() { /* AI 모드에선 사람이 '다음 판'을 누른다 */ }
+
+  function bindControls() {
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
+    document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
+    $('btn-new').addEventListener('click', newMatch);
+  }
+  function start() {
+    const saved = loadSaved();
+    if (saved && typeof saved === 'object') {
+      if (['ai', 'online'].includes(saved.mode)) S.mode = saved.mode;
+      if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
+      G = cleanGame(saved.game);
+    }
+    if (!G) G = freshGame(0);
+    seen = G.seq;
+    bindControls();
+    O.mountPanel($('fs-online'));
+    if (!O.boot(saved && saved.room)) {
+      if (S.mode === 'online') G = freshGame(G.seq + 1);
+      seen = G.seq;
+      render();
+      scheduleAI();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

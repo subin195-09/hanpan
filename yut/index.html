@@ -211,27 +211,55 @@
     white-space: nowrap;
   }
 
-  /* 윷 던지기 */
+  /* 윷 던지기 — 멍석 위에 윷가락이 흩뿌려진다 */
   .throw {
     display: grid;
     grid-template-columns: auto auto 1fr;
     gap: 16px 18px;
     align-items: center;
+    padding-top: 28px;                       /* 낙일 때 윷가락이 멍석 위쪽 밖으로 튀어나올 자리 */
   }
-  .sticks { display: flex; gap: 8px; height: 100px; align-items: center; }
-  .stick {
+  .mat-throw {
+    --lift: 46px;                            /* 던지는 힘만큼 높이 뜬다 */
     position: relative;
-    width: 24px;
-    height: 92px;
-    border-radius: 12px;
+    width: 236px;
+    height: 124px;
+    border-radius: 10px;
+    background:
+      repeating-linear-gradient(90deg, rgba(90, 60, 10, 0.10) 0 3px, transparent 3px 9px),
+      repeating-linear-gradient(0deg, rgba(90, 60, 10, 0.08) 0 3px, transparent 3px 9px),
+      var(--mat);
+    border: 1px solid var(--mat-edge);
+    box-shadow: inset 0 0 0 4px rgba(120, 80, 20, 0.12), 0 2px 0 var(--mat-edge);
+    perspective: 700px;
+  }
+  .stick {
+    --x: 0px; --y: 0px; --rot: 0deg; --op: 1;
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 22px;
+    height: 88px;
+    transform: rotate(var(--rot));
+    opacity: var(--op);
+  }
+  .mat-throw.ready .stick {
+    transition: left 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), top 0.7s cubic-bezier(0.2, 0.7, 0.3, 1),
+                transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.5s;
+  }
+  .stick-body {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 11px;
     background: var(--stick-round);
     box-shadow: inset -3px 0 0 rgba(0, 0, 0, 0.18), 0 2px 3px rgba(0, 0, 0, 0.3);
   }
-  .stick.flat {
+  .stick.flat .stick-body {
     background: var(--stick-flat);
     box-shadow: inset 0 0 0 2px rgba(120, 80, 20, 0.35), 0 2px 3px rgba(0, 0, 0, 0.3);
   }
-  .stick.flat::after {
+  .stick.flat .stick-body::after {
     content: "✕\A✕\A✕";
     white-space: pre;
     position: absolute;
@@ -242,16 +270,20 @@
     color: var(--stick-mark);
     font: 700 0.75rem/1.7 "Gothic A1", sans-serif;
   }
-  .stick.flat.marked::after { content: "빽"; font-size: 0.8125rem; }
-  .sticks { --lift: 46px; }                       /* 던지는 힘만큼 높이 뜬다 */
-  .sticks.toss .stick { animation: toss 0.7s cubic-bezier(0.3, 0.6, 0.4, 1); }
-  .sticks.toss .stick:nth-child(2) { animation-delay: 0.04s; }
-  .sticks.toss .stick:nth-child(3) { animation-delay: 0.08s; }
-  .sticks.toss .stick:nth-child(4) { animation-delay: 0.12s; }
+  .stick.marked.flat .stick-body::after { content: "빽"; font-size: 0.8125rem; }
+  .mat-throw.toss .stick-body { animation: toss 0.7s cubic-bezier(0.3, 0.6, 0.4, 1); }
+  .mat-throw.toss .stick:nth-child(2) .stick-body { animation-delay: 0.04s; }
+  .mat-throw.toss .stick:nth-child(3) .stick-body { animation-delay: 0.08s; }
+  .mat-throw.toss .stick:nth-child(4) .stick-body { animation-delay: 0.12s; }
+  .mat-throw.toss.strong .stick-body { animation-name: toss-strong; }
   @keyframes toss {
-    0% { transform: translateY(0) rotate(0); }
-    45% { transform: translateY(calc(-1 * var(--lift))) rotate(200deg); }
-    100% { transform: translateY(0) rotate(360deg); }
+    0% { transform: translateY(0) rotateX(0); }
+    45% { transform: translateY(calc(-1 * var(--lift))) rotateX(540deg); }
+    100% { transform: translateY(0) rotateX(1080deg); }
+  }
+  @keyframes toss-strong {
+    0% { transform: translateY(0) rotateX(0); opacity: 1; }
+    100% { transform: translateY(-190px) rotateX(900deg); opacity: 0; }
   }
   .throw-side { display: grid; gap: 8px; justify-items: start; }
   .shout {
@@ -281,13 +313,17 @@
   /* 힘 조절 */
   #btn-throw { touch-action: none; user-select: none; -webkit-user-select: none; }
   #btn-throw.holding { transform: scale(0.97); box-shadow: inset 0 0 0 3px var(--accent); }
-  .gauge-wrap { display: grid; justify-items: center; gap: 4px; font-size: 0.6875rem; color: var(--ink-soft); line-height: 1; }
+  .gauge-wrap { position: relative; height: 100px; width: 62px; font-size: 0.6875rem; color: var(--ink-soft); line-height: 1; }
+  .gauge-wrap .gauge { position: absolute; left: 0; top: 0; }
+  .gauge-wrap span { position: absolute; left: 20px; white-space: nowrap; }
+  .gauge-wrap .z-nak { top: 0; color: var(--red); font-weight: 700; }
+  .gauge-wrap .z-bonus { top: 20%; color: #F3A712; font-weight: 700; }
+  .gauge-wrap .z-base { bottom: 0; }
   .gauge {
-    position: relative;
     width: 12px;
     height: 100px;
     border-radius: 6px;
-    background: linear-gradient(0deg, var(--accent) 0 85%, var(--red) 85% 100%);
+    background: linear-gradient(0deg, var(--accent) 0 70%, #F3A712 70% 85%, var(--red) 85% 100%);
     opacity: 0.4;
     transition: opacity 0.2s;
   }
@@ -305,18 +341,6 @@
   }
   .throw-hint { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
 
-  /* 낙: 윷가락이 멍석 밖으로 */
-  .sticks .stick { transition: transform 0.3s, opacity 0.3s; }
-  .sticks.nak .stick { opacity: 0.4; }
-  .sticks.nak .stick:nth-child(1) { transform: translate(-8px, 24px) rotate(-38deg); }
-  .sticks.nak .stick:nth-child(2) { transform: translate(2px, 32px) rotate(17deg); }
-  .sticks.nak .stick:nth-child(3) { transform: translate(-3px, 27px) rotate(-12deg); }
-  .sticks.nak .stick:nth-child(4) { transform: translate(9px, 35px) rotate(44deg); }
-  .sticks.toss.strong .stick { animation-name: toss-strong; }
-  @keyframes toss-strong {
-    0% { transform: none; opacity: 1; }
-    100% { transform: translateY(-170px) rotate(720deg); opacity: 0; }
-  }
 
   /* 옆 패널 */
   .panel { display: grid; gap: 22px; }
@@ -405,7 +429,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .piece { transition: none; }
-    .sticks.toss .stick, .shout.pop, .token.movable, .piece.movable { animation: none; }
+    .mat-throw.toss .stick-body, .shout.pop, .token.movable, .piece.movable { animation: none; }
+    .mat-throw.ready .stick { transition: none; }
     .token.movable, .piece.movable { box-shadow: 0 0 0 4px var(--accent); }
   }
 </style>
@@ -439,18 +464,22 @@
       </div>
 
       <div class="throw">
-        <div class="sticks" id="sticks" aria-hidden="true">
-          <div class="stick marked"></div><div class="stick"></div><div class="stick"></div><div class="stick"></div>
+        <div class="mat-throw" id="sticks" aria-hidden="true">
+          <div class="stick marked"><div class="stick-body"></div></div>
+          <div class="stick"><div class="stick-body"></div></div>
+          <div class="stick"><div class="stick-body"></div></div>
+          <div class="stick"><div class="stick-body"></div></div>
         </div>
         <div class="gauge-wrap" aria-hidden="true">
-          <span>낙</span>
           <div class="gauge" id="gauge"><div class="gauge-mark" id="gauge-mark"></div></div>
-          <span>힘</span>
+          <span class="z-nak">낙</span>
+          <span class="z-bonus">확률업</span>
+          <span class="z-base">힘</span>
         </div>
         <div class="throw-side">
           <p class="shout" id="shout" aria-live="polite"></p>
           <button type="button" class="btn primary big" id="btn-throw" aria-describedby="throw-hint">윷 던지기</button>
-          <p class="throw-hint" id="throw-hint">버튼을 <b>누르고 있으면</b> 힘이 차오르고, 세게 던질수록 윷이 높이 뜹니다. 빨간 구간까지 차기 전에 놓으세요. 너무 세면 멍석 밖으로 날아가 <b>낙</b>(무효)입니다.</p>
+          <p class="throw-hint" id="throw-hint">버튼을 <b>누르고 있으면</b> 힘이 차오릅니다. 노란 <b>확률업</b> 구간에서 놓으면 세 번 던져 가장 좋은 결과를 가지고, 그 바로 위 빨간 구간은 <b>낙</b>(무효)입니다. 두 구간은 순식간에 지나가고, 끝까지 차면 다시 처음부터 찹니다.</p>
         </div>
       </div>
       <div class="chips" id="chips"></div>
@@ -494,7 +523,7 @@
           <ul>
             <li>윷가락 네 개를 던져 배(평평한 면)가 나온 수만큼 갑니다. 도 1칸 · 개 2칸 · 걸 3칸 · 윷 4칸 · 모 5칸(네 개 모두 등).</li>
             <li>윷이나 모가 나오면 한 번 더 던집니다. 상대 말을 잡아도 한 번 더 던집니다.</li>
-            <li>던지기 버튼을 누르고 있으면 힘이 차오릅니다. 너무 세게 던지면 <b>낙</b>: 윷이 멍석 밖으로 떨어져 그 던지기는 무효가 되고, 그대로 차례가 넘어갑니다. 너무 약하면 윷이 손에서 떨어져 다시 던집니다.</li>
+            <li>던지기 버튼을 누르고 있으면 힘이 차오릅니다. 노란 <b>확률업</b> 구간에서 놓으면 세 번 던져 가장 좋은 결과를 가집니다(윷·모가 나올 확률이 약 15%에서 40%로). 그 위 빨간 구간은 <b>낙</b>: 윷이 멍석 밖으로 떨어져 그 던지기는 무효가 되고 차례가 넘어갑니다. 두 구간은 빠르게 지나가며, 끝까지 차면 다시 처음부터 찹니다. 너무 약하면 윷이 손에서 떨어져 다시 던집니다.</li>
             <li>'빽' 표시 윷가락 하나만 배가 나오면 빽도입니다. 판 위의 말 하나를 한 칸 뒤로 물립니다. 판 위에 말이 없으면 그냥 넘어갑니다.</li>
             <li>모 · 뒷모 · 방(가운데)에 정확히 멈춘 말은 다음에 지름길로 갑니다.</li>
             <li>내 말이 있는 칸에 서면 업혀서 함께 움직이고, 상대 말이 있는 칸에 서면 잡아서 대기석으로 돌려보냅니다.</li>
@@ -517,9 +546,17 @@
   const TEAM = ['홍', '청'];
   const VAL_NAME = { '-1': '빽도', 0: '낙', 1: '도', 2: '개', 3: '걸', 4: '윷', 5: '모' };
   // 힘 조절: 버튼을 누르는 동안 힘이 0→1 로 차오르고, 놓은 순간의 값이 힘.
-  // NAK 이상이면 낙(멍석 밖, 무효), WEAK 미만이면 윷이 손에서 떨어져 다시 던진다
-  const WEAK = 0.2, NAK = 0.85, GAUGE_MS = 1100;
-  const isNak = p => p >= NAK;
+  // 보통 구간(0~BONUS)은 T1 동안 천천히, 확률업 구간(BONUS~NAK)은 T2, 낙 구간(NAK~1)은 T3 만에 지나가고 다시 0 부터 반복.
+  // NAK 이상이면 낙(멍석 밖, 무효), BONUS 이상이면 두 번 던져 좋은 쪽, WEAK 미만이면 윷이 손에서 떨어져 다시 던진다
+  const WEAK = 0.2, BONUS = 0.7, NAK = 0.85;
+  const T1 = 900, T2 = 190, T3 = 130, CYCLE = T1 + T2 + T3;
+  const isNak = p => p >= NAK, isBonus = p => p >= BONUS && p < NAK;
+  function powerAt(ms) {
+    const t = ms % CYCLE;
+    if (t < T1) return BONUS * t / T1;
+    if (t < T1 + T2) return BONUS + (NAK - BONUS) * (t - T1) / T2;
+    return NAK + (1 - NAK) * (t - T1 - T2) / T3;
+  }
   const VAL_PROB = { '-1': 0.0384, 1: 0.1152, 2: 0.3456, 3: 0.3456, 4: 0.1296, 5: 0.0256 };
   const STORE_KEY = 'yut-standalone-v1';
   const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -612,7 +649,7 @@
     return {
       pieces: [0, 1].map(() => [0, 1, 2, 3].map(() => ({ pos: WAIT, came: null }))),
       turn: 0, throwsLeft: 1, results: [], sticks: null, lastValue: null,
-      over: false, winner: -1, note: '', log: [], seq: seq || 0, ev: null
+      over: false, winner: -1, note: '', log: [], seq: seq || 0, ev: null, bonus: false
     };
   }
   // 온라인 2인: 방·연결·동기화는 shared/online.js 가 맡는다. 방장 = 홍, 참가자 = 청
@@ -669,6 +706,7 @@
     g.results = Array.isArray(d.results) ? d.results.filter(okVal).slice(0, 12) : [];
     g.sticks = Array.isArray(d.sticks) && d.sticks.length === 4 ? d.sticks.map(Boolean) : null;
     g.lastValue = okVal(d.lastValue) || d.lastValue === 0 ? d.lastValue : null;
+    g.bonus = !!d.bonus;
     g.over = !!d.over;
     g.winner = d.winner === 0 || d.winner === 1 ? d.winner : -1;
     g.note = typeof d.note === 'string' ? d.note.slice(0, 120) : '';
@@ -741,26 +779,36 @@
       // 낙: 윷이 멍석 밖으로. 이번 던지기는 없던 일
       G.sticks = null;
       G.lastValue = 0;
+      G.bonus = false;
       G.log.push({ t: team, s: '낙 · 너무 세게 던져 무효' });
       G.note = '낙! 윷이 멍석 밖으로 떨어져 이번 던지기는 무효입니다.';
     } else {
-      const sticks = [0, 1, 2, 3].map(() => Math.random() < 0.6);   // true = 배(평평한 면)
-      const flats = sticks.filter(Boolean).length;
-      let v = flats === 0 ? 5 : flats;
-      if (flats === 1 && sticks[0]) v = -1;                          // '빽' 윷가락만 배
-      G.sticks = sticks;
-      G.lastValue = v;
-      G.results.push(v);
-      if (v >= 4) { G.throwsLeft++; G.note = VAL_NAME[v] + '! 한 번 더 던집니다.'; }
+      const bonus = isBonus(power);
+      let best = null;
+      for (let n = 0; n < (bonus ? 3 : 1); n++) {                    // 확률업: 세 번 던져 가장 좋은 결과
+        const sticks = [0, 1, 2, 3].map(() => Math.random() < 0.6);   // true = 배(평평한 면)
+        const flats = sticks.filter(Boolean).length;
+        let v = flats === 0 ? 5 : flats;
+        if (flats === 1 && sticks[0]) v = -1;                          // '빽' 윷가락만 배
+        if (!best || v > best.v) best = { sticks, v };
+      }
+      G.sticks = best.sticks;
+      G.lastValue = best.v;
+      G.bonus = bonus;
+      G.results.push(best.v);
+      if (best.v >= 4) { G.throwsLeft++; G.note = VAL_NAME[best.v] + '! 한 번 더 던집니다.'; }
+      else if (bonus) G.note = '확률업! 세 번 던져 가장 좋은 결과를 가졌습니다.';
     }
     settle();
     commit({ type: 'throw', team, pw: Math.round(power * 100) / 100 });
   }
-  // AI 의 손힘: 적당한 세기를 노리지만 난이도만큼 흔들린다 (낙 확률 쉬움 ≈ 10%, 보통 ≈ 5%, 어려움 < 1%)
+  // AI 의 손힘: 어려울수록 확률업 구간을 자주 노리고, 낙은 드물다
   function aiPower() {
-    const sd = S.level === 'easy' ? 0.2 : S.level === 'normal' ? 0.15 : 0.1;
-    const gauss = (Math.random() + Math.random() + Math.random() - 1.5) * 2;
-    return Math.min(1, Math.max(WEAK, 0.6 + gauss * sd));
+    const [pNak, pBonus] = S.level === 'easy' ? [0.1, 0.1] : S.level === 'normal' ? [0.05, 0.3] : [0.03, 0.6];
+    const r = Math.random();
+    if (r < pNak) return NAK + Math.random() * (1 - NAK);
+    if (r < pNak + pBonus) return BONUS + Math.random() * (NAK - BONUS);
+    return WEAK + 0.05 + Math.random() * (BONUS - WEAK - 0.08);
   }
   function doMove(resultIdx, from) {
     if (phase() !== 'move') return;
@@ -864,10 +912,12 @@
       setGauge(ev.pw, true);
       sticksEl.style.setProperty('--lift', Math.round(12 + ev.pw * 110) + 'px');
       $('shout').textContent = '';
-      sticksEl.classList.remove('toss', 'strong', 'nak');
+      sticksEl.classList.remove('toss', 'strong');
       void sticksEl.offsetWidth;
       sticksEl.classList.add('toss');
       if (nak) sticksEl.classList.add('strong');
+      placeSticks();                                  // 날아가는 동안 떨어질 자리로 미끄러진다
+      setTimeout(() => setFaces(), reduceMotion() ? 0 : 380);   // 공중에서 면이 정해진다
       setTimeout(() => {
         sticksEl.classList.remove('toss', 'strong');
         renderSticks(true);
@@ -907,7 +957,7 @@
     $('gauge-mark').style.bottom = (p * 100) + '%';
     $('gauge').classList.toggle('live', !!live);
   }
-  const chargePower = () => Math.min(1, (performance.now() - charge.t0) / GAUGE_MS);
+  const chargePower = () => powerAt(performance.now() - charge.t0);
   function startCharge() {
     if (charge || !canAct() || phase() !== 'throw') return;
     charge = { t0: performance.now() };
@@ -1003,10 +1053,42 @@
   }
   function hideDest() { if (destEl) destEl.hidden = true; }
 
+  // 윷가락이 떨어질 자리. 시드 난수라 같은 판을 보는 두 화면에 똑같이 흩어진다
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function placeSticks() {
+    const els = [...$('sticks').children];
+    const idle = G.lastValue === null, nak = G.lastValue === 0;
+    const r = rng(G.seq * 7919 + 13);
+    const slots = [0, 1, 2, 3];
+    for (let i = 3; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [slots[i], slots[j]] = [slots[j], slots[i]]; }
+    els.forEach((el, i) => {
+      let x, y, rot, op = 1;
+      if (idle) { x = 46 + i * 40; y = 18; rot = 0; }
+      else if (nak) { x = 8 + slots[i] * 56 + (r() - 0.5) * 18; y = -48 + (r() - 0.5) * 18; rot = (r() - 0.5) * 130; op = 0.5; }
+      else { x = 14 + slots[i] * 52 + (r() - 0.5) * 22; y = 6 + r() * 24; rot = (r() - 0.5) * 72; }
+      el.style.setProperty('--x', x.toFixed(1) + 'px');
+      el.style.setProperty('--y', y.toFixed(1) + 'px');
+      el.style.setProperty('--rot', rot.toFixed(1) + 'deg');
+      el.style.setProperty('--op', op);
+    });
+  }
+  function setFaces() {
+    const sticks = G.sticks, nak = G.lastValue === 0;
+    [...$('sticks').children].forEach((el, i) => el.classList.toggle('flat', !nak && !!(sticks && sticks[i])));
+  }
   function renderSticks(pop) {
     const sticks = G.sticks, nak = G.lastValue === 0;
-    $('sticks').classList.toggle('nak', nak);
-    [...$('sticks').children].forEach((el, i) => el.classList.toggle('flat', !nak && !!(sticks && sticks[i])));
+    placeSticks();
+    setFaces();
     const shout = $('shout');
     shout.textContent = '';
     if (nak) {
@@ -1018,7 +1100,7 @@
     } else if (G.lastValue !== null && sticks) {
       shout.append(VAL_NAME[G.lastValue]);
       const sub = document.createElement('small');
-      sub.textContent = G.lastValue === -1 ? '한 칸 뒤로' : G.lastValue + '칸' + (G.lastValue >= 4 ? ' · 한 번 더!' : '');
+      sub.textContent = (G.lastValue === -1 ? '한 칸 뒤로' : G.lastValue + '칸' + (G.lastValue >= 4 ? ' · 한 번 더!' : '')) + (G.bonus ? ' · 확률업' : '');
       shout.appendChild(sub);
       if (pop) { shout.classList.remove('pop'); void shout.offsetWidth; shout.classList.add('pop'); }
     }
@@ -1211,6 +1293,7 @@
       render();
       scheduleAI();
     }
+    requestAnimationFrame(() => requestAnimationFrame(() => $('sticks').classList.add('ready')));
   }
   start();
 })();

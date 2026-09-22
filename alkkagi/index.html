@@ -201,7 +201,7 @@
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <canvas class="arena" id="arena" aria-label="알까기 판. 내 말을 누른 채 뒤로 당겼다 놓으면 튕깁니다."></canvas>
-      <p class="hint">내 말을 누른 채 <b>뒤로 당겼다 놓으면</b> 반대 방향으로 튕깁니다. 많이 당길수록 세게 나갑니다.</p>
+      <p class="hint">내 말을 누른 채 <b>뒤로 당겼다 놓으면</b> 반대 방향으로 튕깁니다. 많이 당길수록 세게 나갑니다. 판 밖까지 당겨도 됩니다.</p>
     </div>
 
     <aside class="panel">
@@ -696,15 +696,16 @@
     }
     if (!best) return;
     e.preventDefault();
-    drag = { id: best.id, px: x, py: y, pw: 0, ux: 0, uy: 0 };
+    drag = { id: best.id, pid: e.pointerId, px: x, py: y, pw: 0, ux: 0, uy: 0 };
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     canvas.classList.add('dragging');
     draw();
   });
-  canvas.addEventListener('pointermove', e => { if (drag) { updateDrag(e); draw(); } });
+  // 당기는 동안 마우스가 판 밖(화면 어디든)으로 나가도 계속 따라가고, 거기서 놓아도 튕긴다
+  window.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.pid) { updateDrag(e); draw(); } });
   function endDrag(e, cancel) {
-    if (!drag) return;
-    if (!cancel) updateDrag(e);
+    if (!drag || (e && e.pointerId !== undefined && e.pointerId !== drag.pid)) return;
+    if (!cancel && e) updateDrag(e);
     const d = drag;
     drag = null;
     canvas.classList.remove('dragging');
@@ -715,8 +716,9 @@
       draw();
     }
   }
-  canvas.addEventListener('pointerup', e => endDrag(e, false));
-  canvas.addEventListener('pointercancel', e => endDrag(e, true));
+  window.addEventListener('pointerup', e => endDrag(e, false));
+  window.addEventListener('pointercancel', e => endDrag(e, true));
+  window.addEventListener('blur', () => endDrag(null, true));
 
   // ---------- 화면 ----------
   function render() {

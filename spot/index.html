@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="ko" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>틀린그림찾기 대결</title>
+<meta name="description" content="같은 그림 두 장에서 다른 곳 7군데를 번갈아 찾는 대결. 매 판 새 그림이 만들어집니다. AI, 한 화면 2인, 초대 링크 온라인 2인.">
+<meta property="og:title" content="틀린그림찾기 대결">
+<meta property="og:description" content="같은 그림 두 장에서 다른 곳 7군데를 번갈아 찾는 대결. 매 판 새 그림이 만들어집니다.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="thumb.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gothic+A1:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #F3EEE4;
+    --surface: #FBF8F2;
+    --ink: #24201B;
+    --ink-soft: #6B635A;
+    --line: #D9D0C2;
+    --accent: #E4572E;
+    --on-ink: #FBF8F2;
+    --red: #D7263D;
+    --blue: #2E6FD9;
+    --good: #2E8B57;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #17140F;
+      --surface: #211D17;
+      --ink: #EFE8DC;
+      --ink-soft: #A99F91;
+      --line: #3A332A;
+      --accent: #FF7A50;
+      --on-ink: #17140F;
+      --red: #F0506A;
+      --blue: #6A9BF5;
+      --good: #5FC58A;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #17140F;
+    --surface: #211D17;
+    --ink: #EFE8DC;
+    --ink-soft: #A99F91;
+    --line: #3A332A;
+    --accent: #FF7A50;
+    --on-ink: #17140F;
+    --red: #F0506A;
+    --blue: #6A9BF5;
+    --good: #5FC58A;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1rem/1.6 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .page {
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+    display: grid;
+    gap: 20px;
+  }
+  .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+  h1 { margin: 0; font: 400 2.4rem/1.1 "Jua", "Gothic A1", "Apple SD Gothic Neo", sans-serif; }
+  .masthead p { margin: 0; color: var(--ink-soft); }
+
+  .table {
+    display: grid;
+    grid-template-columns: minmax(0, 760px) minmax(250px, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .table { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    h1 { font-size: 1.9rem; }
+  }
+  .play { display: grid; gap: 12px; }
+
+  .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .side { display: grid; gap: 2px; padding-bottom: 6px; border-bottom: 3px solid transparent; }
+  .side.right { justify-items: end; text-align: right; }
+  .side[data-team="0"] { --team: var(--red); }
+  .side[data-team="1"] { --team: var(--blue); }
+  .side.active { border-bottom-color: var(--team); }
+  .side-name { font-weight: 700; color: var(--team); }
+  .side-score { font: 400 1.9rem/1 "Jua", "Gothic A1", sans-serif; }
+  .side-score small { font: 400 0.8125rem/1 "Gothic A1", sans-serif; color: var(--ink-soft); margin-left: 4px; }
+
+  .status { margin: 0; min-height: 1.6em; font-weight: 700; }
+  .status.final { font: 400 1.5rem/1.3 "Jua", "Gothic A1", sans-serif; }
+  .timer { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .timer-fill { height: 100%; width: 100%; background: var(--accent); border-radius: 4px; transition: width 0.1s linear; }
+  .timer-fill.low { background: var(--red); }
+
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 640px) { .pair { grid-template-columns: 1fr; } }
+  .pic { position: relative; }
+  .pic svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #BFE3F5;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .pic.can svg { cursor: crosshair; }
+  .pic .tag {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(36, 32, 27, 0.7);
+    color: #FFF;
+    font-size: 0.75rem;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  .mark { fill: none; stroke-width: 4; transform-box: fill-box; transform-origin: center; }
+  .mark.pop { animation: pop 0.35s ease-out; }
+  @keyframes pop { from { transform: scale(1.8); opacity: 0; } to { transform: none; opacity: 1; } }
+  .miss { stroke: #D7263D; stroke-width: 5; stroke-linecap: round; animation: fade 0.9s ease-out forwards; }
+  @keyframes fade { 0%, 60% { opacity: 1; } 100% { opacity: 0; } }
+  .note { margin: 0; min-height: 1.5em; font-size: 0.875rem; color: var(--ink-soft); }
+  .hint { margin: 0; font-size: 0.8125rem; color: var(--ink-soft); }
+
+  /* 옆 패널 */
+  .panel { display: grid; gap: 22px; }
+  .panel section { display: grid; gap: 12px; }
+  .panel section + section { padding-top: 22px; border-top: 1px solid var(--line); }
+  h2 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+  legend { padding: 0; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; }
+  .seg-row { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label { flex: 1 1 auto; padding: 8px 12px; text-align: center; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn {
+    appearance: none;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .btn.small { padding: 6px 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  #online-msg { color: var(--ink); font-weight: 500; }
+  #lobby, #room { display: grid; gap: 10px; }
+  .join { display: flex; gap: 8px; }
+  .join input {
+    flex: 1; min-width: 0; padding: 8px 10px;
+    border: 1px solid var(--line); border-radius: 4px;
+    background: var(--surface); color: var(--ink);
+    font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "Gothic A1", system-ui, sans-serif; }
+  .join input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .room-code strong { font: 700 1.75rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; }
+
+  .log { margin: 0; padding: 0; list-style: none; max-height: 220px; overflow-y: auto; display: grid; gap: 2px; font-size: 0.875rem; }
+  .log li { display: flex; align-items: baseline; gap: 8px; }
+  .log li[data-team="0"] { --team: var(--red); }
+  .log li[data-team="1"] { --team: var(--blue); }
+  .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
+  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+  .found-count { margin: 0; font-size: 0.875rem; }
+
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  details ul { margin: 10px 0 0; padding-left: 1.2em; color: var(--ink-soft); display: grid; gap: 4px; max-width: 38em; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mark.pop, .miss { animation: none; }
+    .timer-fill { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <a class="home" href="../index.html">← 한 판 놀이방</a>
+    <h1>틀린그림찾기 대결</h1>
+    <p>다른 곳 7군데를 번갈아 찾아 더 많이 찾는 쪽이 이깁니다.</p>
+  </header>
+
+  <main class="table">
+    <div class="play">
+      <div class="sides">
+        <div class="side" id="side-0" data-team="0"><span class="side-name" id="name-0">홍</span><span class="side-score" id="score-0">0</span></div>
+        <div class="side right" id="side-1" data-team="1"><span class="side-name" id="name-1">청</span><span class="side-score" id="score-1">0</span></div>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="timer" id="timer" aria-hidden="true"><div class="timer-fill" id="timer-fill"></div></div>
+      <div class="pair">
+        <div class="pic" id="pic-0"><svg viewBox="0 0 480 320" role="img" aria-label="원본 그림"></svg><span class="tag">원본</span></div>
+        <div class="pic" id="pic-1"><svg viewBox="0 0 480 320" role="img" aria-label="틀린 그림. 다른 곳을 누르세요"></svg><span class="tag">틀린 그림</span></div>
+      </div>
+      <p class="note" id="note" aria-live="polite"></p>
+      <p class="hint">두 그림 중 아무 쪽이나 눌러도 됩니다. 다른 곳을 정확히 누르면 1점. 헛짚거나 20초가 지나면 차례가 넘어갑니다.</p>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>놀이 설정</h2>
+        <fieldset>
+          <legend>상대</legend>
+          <div class="seg-row">
+            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
+            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면 2인</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-online" hidden></fieldset>
+        <fieldset id="fs-level">
+          <legend>AI 난이도</legend>
+          <div class="seg-row">
+            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
+            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
+            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="btn" id="btn-new">새 그림</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>찾은 곳</h2>
+        <p class="found-count" id="found-count"></p>
+        <p class="log-empty" id="log-empty">아직 찾은 곳이 없습니다.</p>
+        <ol class="log" id="log" hidden></ol>
+      </section>
+
+      <section>
+        <details>
+          <summary>규칙 보기</summary>
+          <ul>
+            <li>두 그림은 7군데가 다릅니다. 색·크기·자리·방향이 다르거나, 모양이 조금 다르거나, 아예 없어진 것이 있습니다.</li>
+            <li>홍이 먼저, 차례마다 20초 안에 다른 곳 하나를 누릅니다. 맞히면 1점을 얻고 차례가 넘어갑니다.</li>
+            <li>헛짚거나 시간이 다 되면 점수 없이 차례가 넘어갑니다. 상대 차례에도 눈으로는 계속 찾아 두세요.</li>
+            <li>7군데를 모두 찾으면 끝. 더 많이 찾은 쪽이 이깁니다. 새 그림은 매번 새로 만들어집니다.</li>
+          </ul>
+        </details>
+      </section>
+      <div class="ad-slot" data-ad="game-side" hidden></div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/online.js"></script>
+<script src="../shared/site.js"></script>
+<script>
+(() => {
+  const TEAM = ['홍', '청'];
+  const NDIFF = 7, TURN_MS = 20000;
+  const VW = 480, VH = 320;
+  const STORE_KEY = 'spot-standalone-v1';
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const $ = id => document.getElementById(id);
+
+  // ---------- 시드 난수 ----------
+  // 같은 시드면 어느 기기에서나 같은 그림이 나온다 (온라인 2인은 시드만 주고받는다)
+  function rng(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
+
+  // ---------- 그림 만들기 ----------
+  const PALETTE = ['#E4572E', '#F3A712', '#5BB318', '#2E86AB', '#8E44AD', '#E75480', '#17A2B8', '#A0522D'];
+  const SKY = ['cloud', 'sun', 'bird', 'balloon', 'kite', 'cloud', 'bird'];
+  const GROUND = ['tree', 'pine', 'house', 'flower', 'mushroom', 'bush', 'rock', 'tree', 'flower'];
+  const NO_COLOR = new Set(['cloud', 'sun', 'rock']);
+  const FLIPPABLE = new Set(['bird', 'house', 'kite', 'balloon', 'flower']);
+  const NAME = { tree: '나무', pine: '소나무', house: '집', flower: '꽃', mushroom: '버섯', bush: '덤불', rock: '바위', cloud: '구름', sun: '해', bird: '새', balloon: '풍선', kite: '연' };
+  const KIND_TEXT = { color: '색이 다름', size: '크기가 다름', gone: '없어짐', move: '자리가 다름', detail: '모양이 다름', flip: '방향이 다름' };
+
+  function makeScene(seed) {
+    const r = rng(seed);
+    const pick = arr => arr[Math.floor(r() * arr.length)];
+    const shuffle = arr => { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; };
+    const cells = [];
+    for (let c = 0; c < 6; c++) cells.push({ x: 40 + c * 80, y: 58, sky: true });
+    for (let row = 0; row < 2; row++) for (let c = 0; c < 6; c++) cells.push({ x: 40 + c * 80, y: 186 + row * 82, sky: false });
+    shuffle(cells);
+    const n = 14 + Math.floor(r() * 3);
+    const items = [];
+    let sun = false;
+    for (let i = 0; i < n; i++) {
+      const c = cells[i];
+      let type = pick(c.sky ? SKY : GROUND);
+      if (type === 'sun') { if (sun) type = 'cloud'; else sun = true; }
+      items.push({
+        type, x: c.x + Math.round((r() - 0.5) * 26), y: c.y + Math.round((r() - 0.5) * 22),
+        s: Math.round((0.72 + r() * 0.4) * 100) / 100, color: pick(PALETTE), flip: r() < 0.5, detail: r() < 0.5
+      });
+    }
+    const order = shuffle(items.map((_, i) => i));
+    const diffs = [];
+    for (let k = 0; k < NDIFF; k++) {
+      const i = order[k], it = items[i];
+      const kinds = ['size', 'gone', 'move', 'detail'];
+      if (!NO_COLOR.has(it.type)) kinds.push('color', 'color');
+      if (FLIPPABLE.has(it.type)) kinds.push('flip');
+      const kind = pick(kinds);
+      const d = { i, kind };
+      if (kind === 'color') { let c; do c = pick(PALETTE); while (c === it.color); d.color = c; }
+      if (kind === 'size') d.s = Math.round(it.s * (r() < 0.5 ? 0.6 : 1.45) * 100) / 100;
+      if (kind === 'move') {
+        const dir = it.x > VW / 2 ? -1 : 1;
+        d.dx = dir * (24 + Math.round(r() * 8));
+        d.dy = Math.round((r() - 0.5) * 14);
+      }
+      diffs.push(d);
+    }
+    return { seed, items, diffs };
+  }
+  function altered(it, d) {
+    if (!d) return it;
+    const o = { ...it };
+    if (d.kind === 'color') o.color = d.color;
+    if (d.kind === 'size') o.s = d.s;
+    if (d.kind === 'flip') o.flip = !it.flip;
+    if (d.kind === 'detail') o.detail = !it.detail;
+    if (d.kind === 'move') { o.x = it.x + d.dx; o.y = it.y + d.dy; }
+    return o;
+  }
+
+  // ---------- 그리기 ----------
+  function svgEl(tag, attrs, parent) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function drawItem(g, it) {
+    const el = (tag, attrs) => svgEl(tag, attrs, g);
+    const c = it.color, dk = '#3A2A1A';
+    switch (it.type) {
+      case 'tree':
+        el('rect', { x: -5, y: 8, width: 10, height: 26, rx: 2, fill: '#7A4E24' });
+        el('circle', { cx: 0, cy: -6, r: 21, fill: c });
+        el('circle', { cx: -14, cy: 5, r: 13, fill: c });
+        el('circle', { cx: 14, cy: 5, r: 13, fill: c });
+        if (it.detail) for (const [x, y] of [[-8, -10], [9, -3], [0, 9]]) el('circle', { cx: x, cy: y, r: 3.4, fill: '#FFF7E6' });
+        break;
+      case 'pine':
+        el('rect', { x: -4, y: 14, width: 8, height: 18, fill: '#7A4E24' });
+        el('polygon', { points: '-24,16 24,16 0,-8', fill: c });
+        el('polygon', { points: '-18,0 18,0 0,-22', fill: c });
+        if (it.detail) el('polygon', { points: '-12,-14 12,-14 0,-34', fill: c });
+        break;
+      case 'house':
+        el('rect', { x: -24, y: -4, width: 48, height: 32, fill: c });
+        el('polygon', { points: '-28,-4 28,-4 0,-28', fill: dk });
+        el('rect', { x: 8, y: 8, width: 11, height: 20, fill: dk });
+        el('rect', { x: -18, y: 4, width: 11, height: 10, fill: '#FFF3C4' });
+        if (it.detail) el('rect', { x: -4, y: 4, width: 9, height: 10, fill: '#FFF3C4' });
+        break;
+      case 'flower': {
+        el('rect', { x: -2, y: 4, width: 4, height: 28, fill: '#3E8E3E' });
+        el('ellipse', { cx: 9, cy: 20, rx: 8, ry: 4, fill: '#3E8E3E', transform: 'rotate(-30 9 20)' });
+        const n = it.detail ? 6 : 4;
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2, px = Math.cos(a) * 11, py = Math.sin(a) * 11 - 2;
+          el('circle', { cx: px.toFixed(2), cy: py.toFixed(2), r: 7.5, fill: c });
+        }
+        el('circle', { cx: 0, cy: -2, r: 6, fill: '#FFD447' });
+        break;
+      }
+      case 'mushroom':
+        el('rect', { x: -7, y: 2, width: 14, height: 24, rx: 4, fill: '#F3E9D2' });
+        el('path', { d: 'M-26 6 Q0 -34 26 6 Z', fill: c });
+        for (const [x, y] of it.detail ? [[-12, -4], [0, -14], [12, -4], [-5, -10], [7, -10]] : [[-12, -4], [0, -14], [12, -4]]) el('circle', { cx: x, cy: y, r: 3.2, fill: '#FFF7E6' });
+        break;
+      case 'bush':
+        el('ellipse', { cx: -12, cy: 10, rx: 15, ry: 12, fill: c });
+        el('ellipse', { cx: 12, cy: 10, rx: 15, ry: 12, fill: c });
+        el('ellipse', { cx: 0, cy: 0, rx: 18, ry: 15, fill: c });
+        if (it.detail) for (const [x, y] of [[-10, 6], [6, -2], [12, 12]]) el('circle', { cx: x, cy: y, r: 3, fill: '#D7263D' });
+        break;
+      case 'rock':
+        el('polygon', { points: '-24,18 -18,-6 -2,-16 18,-10 26,8 16,20', fill: '#8D8A84' });
+        el('polygon', { points: '-18,-6 -2,-16 18,-10 6,-2', fill: '#B3AFA8' });
+        if (it.detail) el('polyline', { points: '-6,2 2,10 -2,18', fill: 'none', stroke: '#5B5854', 'stroke-width': 2.5 });
+        break;
+      case 'cloud':
+        el('ellipse', { cx: 0, cy: 4, rx: 30, ry: 12, fill: '#FFFFFF' });
+        el('circle', { cx: -10, cy: -4, r: 13, fill: '#FFFFFF' });
+        el('circle', { cx: 8, cy: -8, r: 15, fill: '#FFFFFF' });
+        if (it.detail) el('circle', { cx: 24, cy: -1, r: 10, fill: '#FFFFFF' });
+        break;
+      case 'sun': {
+        const n = it.detail ? 12 : 8;
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          el('line', { x1: (Math.cos(a) * 22).toFixed(2), y1: (Math.sin(a) * 22).toFixed(2), x2: (Math.cos(a) * 32).toFixed(2), y2: (Math.sin(a) * 32).toFixed(2), stroke: '#F3A712', 'stroke-width': 4, 'stroke-linecap': 'round' });
+        }
+        el('circle', { cx: 0, cy: 0, r: 18, fill: '#FFD447' });
+        break;
+      }
+      case 'bird':
+        el('path', { d: 'M-22 0 Q-11 -14 0 0 Q11 -14 22 0', fill: 'none', stroke: c, 'stroke-width': 4, 'stroke-linecap': 'round' });
+        el('circle', { cx: 4, cy: -2, r: 3, fill: c });
+        if (it.detail) el('path', { d: 'M-2 16 Q6 6 14 16 Q22 6 30 16', fill: 'none', stroke: c, 'stroke-width': 3, 'stroke-linecap': 'round' });
+        break;
+      case 'balloon':
+        el('path', { d: 'M0 18 Q6 30 -4 40', fill: 'none', stroke: '#555', 'stroke-width': 1.5 });
+        el('ellipse', { cx: 0, cy: -4, rx: 16, ry: 20, fill: c });
+        el('polygon', { points: '-4,16 4,16 0,20', fill: c });
+        if (it.detail) el('ellipse', { cx: -6, cy: -12, rx: 4, ry: 7, fill: '#FFFFFF', opacity: 0.6 });
+        break;
+      case 'kite': {
+        el('polygon', { points: '0,-26 16,0 0,22 -16,0', fill: c });
+        el('polyline', { points: '0,-26 0,22 M-16,0 16,0', fill: 'none', stroke: '#FFFFFF', 'stroke-width': 1.5, opacity: 0.8 });
+        el('path', { d: 'M0 22 Q10 34 4 46 Q0 54 8 62', fill: 'none', stroke: '#555', 'stroke-width': 1.5 });
+        const bows = it.detail ? [[6, 32], [4, 46], [8, 58]] : [[6, 32], [8, 58]];
+        for (const [x, y] of bows) el('polygon', { points: `${x - 5},${y - 3} ${x + 5},${y + 3} ${x + 5},${y - 3} ${x - 5},${y + 3}`, fill: c });
+        break;
+      }
+    }
+  }
+  function drawScene(svg, scene, right) {
+    svg.textContent = '';
+    const defs = svgEl('defs', {}, svg);
+    const gid = 'sky-' + (right ? 1 : 0);
+    const grad = svgEl('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, defs);
+    svgEl('stop', { offset: 0, 'stop-color': '#8ED1F5' }, grad);
+    svgEl('stop', { offset: 1, 'stop-color': '#DDF1FB' }, grad);
+    svgEl('rect', { width: VW, height: VH, fill: 'url(#' + gid + ')' }, svg);
+    svgEl('ellipse', { cx: 120, cy: 190, rx: 260, ry: 70, fill: '#A6D96A' }, svg);
+    svgEl('ellipse', { cx: 400, cy: 200, rx: 260, ry: 70, fill: '#8CC152' }, svg);
+    svgEl('rect', { y: 210, width: VW, height: VH - 210, fill: '#7DB446' }, svg);
+    const diffOf = {};
+    if (right) scene.diffs.forEach(d => { diffOf[d.i] = d; });
+    const drawn = scene.items.map((it, i) => ({ i, it: altered(it, diffOf[i]), gone: !!(diffOf[i] && diffOf[i].kind === 'gone') }))
+      .filter(o => !o.gone).sort((a, b) => a.it.y - b.it.y);
+    for (const o of drawn) {
+      const g = svgEl('g', { transform: `translate(${o.it.x} ${o.it.y}) scale(${o.it.flip ? -o.it.s : o.it.s} ${o.it.s})`, 'data-i': o.i }, svg);
+      drawItem(g, o.it);
+    }
+    svgEl('g', { class: 'marks' }, svg);
+    svgEl('g', { class: 'fx' }, svg);
+  }
+  // 틀린 곳의 중심(들)과 반지름 — 왼쪽 그림엔 원래 자리, 오른쪽엔 바뀐 자리
+  function spotsOf(scene, k, right) {
+    const d = scene.diffs[k], it = scene.items[d.i], a = altered(it, d);
+    const s = Math.max(it.s, d.kind === 'size' ? d.s : it.s);
+    const r = 24 * s + 14;
+    const spots = [{ x: it.x, y: it.y, r }];
+    if (d.kind === 'move' && right) spots.unshift({ x: a.x, y: a.y, r });
+    return spots;
+  }
+
+  // ---------- 상태 ----------
+  const S = { mode: 'ai', level: 'normal' };
+  let G = null, scene = null;
+  function freshGame(seq, seed) {
+    return { seed: seed || newSeed(), found: Array(NDIFF).fill(-1), turn: 0, turnNo: 0, over: false, winner: -1, log: [], seq: seq || 0, ev: null };
+  }
+  const scores = g => [0, 1].map(t => g.found.filter(b => b === t).length);
+  const remaining = g => g.found.filter(b => b < 0).length;
+
+  // 온라인 2인: 방·연결·동기화는 shared/online.js 가 맡는다. 방장 = 홍, 참가자 = 청
+  const O = Hanpan.createOnline({
+    id: 'spot',
+    seats: { host: 0, guest: 1, none: -1 },
+    text: { host: '방장 · 홍(선공)', guest: '참가자 · 청(후공)', note: '방장이 홍(선공), 참가자가 청입니다. 그림은 방장 쪽에서 만들어 보냅니다.' },
+    isOnline: () => S.mode === 'online',
+    setOnline: () => { S.mode = 'online'; },
+    onNewRoom: kind => {
+      if (kind === 'guest') { G = freshGame(0); seen = -1; }
+      else { G = freshGame(G ? G.seq + 1 : 0); seen = G.seq; }
+    },
+    onLeave: () => {},
+    getState: () => G,
+    onState: (g, firstSync) => { const clean = cleanGame(g); if (clean) adoptRemote(clean, firstSync); },
+    render: () => render(),
+    save: () => save()
+  });
+  let seen = 0, aiTimer = 0, timerTurn = -1, turnStart = 0;
+
+  function save() {
+    try {
+      const d = { mode: S.mode, level: S.level, game: G };
+      if (S.mode === 'online' && O.roomInfo()) d.room = O.roomInfo();
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; }
+  }
+  function cleanGame(d) {
+    if (!d || !Number.isInteger(d.seed) || d.seed < 1 || !Array.isArray(d.found) || d.found.length !== NDIFF) return null;
+    const g = freshGame(Number.isInteger(d.seq) ? d.seq : 0, d.seed);
+    g.found = d.found.map(b => (b === 0 || b === 1 ? b : -1));
+    g.turn = d.turn === 1 ? 1 : 0;
+    g.turnNo = Number.isInteger(d.turnNo) ? d.turnNo : 0;
+    g.over = !!d.over;
+    g.winner = d.winner === 0 || d.winner === 1 ? d.winner : -1;
+    g.log = Array.isArray(d.log) ? d.log.slice(-40).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 60) })) : [];
+    const ev = d.ev;
+    if (ev && ['find', 'miss', 'pass', 'new'].includes(ev.type)) {
+      g.ev = {
+        type: ev.type, seq: Number.isInteger(ev.seq) ? ev.seq : -1, team: ev.team === 1 ? 1 : 0,
+        d: Number.isInteger(ev.d) && ev.d >= 0 && ev.d < NDIFF ? ev.d : -1,
+        x: typeof ev.x === 'number' ? Math.max(0, Math.min(VW, ev.x)) : 0,
+        y: typeof ev.y === 'number' ? Math.max(0, Math.min(VH, ev.y)) : 0
+      };
+    }
+    return g;
+  }
+  function canAct() {
+    if (G.over) return false;
+    if (S.mode === '2p') return true;
+    if (S.mode === 'ai') return G.turn === 0;
+    return O.status === 'live' && G.turn === O.my;
+  }
+  function roleOf(t) {
+    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
+    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
+    return '';
+  }
+  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+
+  // ---------- 진행 ----------
+  function commit(ev) {
+    G.seq++;
+    ev.seq = G.seq;
+    G.ev = ev;
+    seen = G.seq;
+    save();
+    O.send();
+    present(ev);
+    render();
+    scheduleAI();
+  }
+  function nextTurn() { G.turn = 1 - G.turn; G.turnNo++; }
+  function doFind(k) {
+    const team = G.turn, d = scene.diffs[k];
+    G.found[k] = team;
+    G.log.push({ t: team, s: NAME[scene.items[d.i].type] + ' · ' + KIND_TEXT[d.kind] });
+    if (remaining(G) === 0) {
+      const [a, b] = scores(G);
+      G.over = true; G.winner = a === b ? -1 : a > b ? 0 : 1;
+    } else nextTurn();
+    commit({ type: 'find', team, d: k });
+  }
+  function doMiss(x, y) {
+    const team = G.turn;
+    G.log.push({ t: team, s: '헛짚음 · 차례 넘어감' });
+    nextTurn();
+    commit({ type: 'miss', team, x: Math.round(x), y: Math.round(y) });
+  }
+  function doPass(text) {
+    const team = G.turn;
+    G.log.push({ t: team, s: text });
+    nextTurn();
+    commit({ type: 'pass', team });
+  }
+  function tryAt(x, y, right) {
+    if (!canAct()) return;
+    let best = -1, bd = Infinity;
+    for (let k = 0; k < NDIFF; k++) {
+      if (G.found[k] >= 0) continue;
+      for (const sp of spotsOf(scene, k, right)) {
+        const d = Math.hypot(sp.x - x, sp.y - y);
+        if (d <= sp.r && d < bd) { best = k; bd = d; }
+      }
+    }
+    if (best >= 0) doFind(best); else doMiss(x, y);
+  }
+  function newGame() {
+    if (S.mode === 'online' && O.status !== 'live') return;
+    clearTimeout(aiTimer);
+    G = freshGame(G ? G.seq : 0);
+    commit({ type: 'new', team: 0 });
+  }
+  function adoptRemote(g, firstSync) {
+    const fresh = g.ev && g.ev.seq === g.seq && g.seq > seen && !firstSync;
+    G = g;
+    seen = g.seq;
+    if (fresh) present(g.ev);
+    render();
+    save();
+    scheduleAI();
+  }
+  function setMode(mode) {
+    if (S.mode === 'online') O.leave();
+    clearTimeout(aiTimer);
+    S.mode = mode;
+    G = freshGame(G ? G.seq + 1 : 0);
+    seen = G.seq;
+    render();
+    save();
+    scheduleAI();
+  }
+
+  // ---------- AI ----------
+  // 난이도에 따라 찾는 데 걸리는 시간과 성공률이 다르다
+  function scheduleAI() {
+    clearTimeout(aiTimer);
+    if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+    const [lo, hi, p] = S.level === 'easy' ? [5000, 9500, 0.65] : S.level === 'normal' ? [3000, 6500, 0.85] : [1500, 3500, 0.97];
+    aiTimer = setTimeout(() => {
+      if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      const left = G.found.map((b, k) => (b < 0 ? k : -1)).filter(k => k >= 0);
+      if (Math.random() < p && left.length) doFind(left[Math.floor(Math.random() * left.length)]);
+      else doMiss(40 + Math.random() * (VW - 80), 40 + Math.random() * (VH - 80));
+    }, lo + Math.random() * (hi - lo));
+  }
+
+  // ---------- 연출 ----------
+  const svgs = [$('pic-0').querySelector('svg'), $('pic-1').querySelector('svg')];
+  function present(ev) {
+    if (ev.type === 'miss') {
+      const fx = svgs[1].querySelector('.fx');
+      if (!fx) return;
+      const g = svgEl('g', { class: 'miss' }, fx);
+      svgEl('line', { x1: ev.x - 12, y1: ev.y - 12, x2: ev.x + 12, y2: ev.y + 12 }, g);
+      svgEl('line', { x1: ev.x + 12, y1: ev.y - 12, x2: ev.x - 12, y2: ev.y + 12 }, g);
+      setTimeout(() => g.remove(), 1000);
+    }
+    if (ev.type === 'find') popMark = ev.d;
+  }
+  let popMark = -1;
+
+  // ---------- 시간 ----------
+  function tickTimer() {
+    if (G.over) { $('timer').hidden = true; return; }
+    $('timer').hidden = false;
+    const left = Math.max(0, TURN_MS - (Date.now() - turnStart));
+    const fill = $('timer-fill');
+    fill.style.width = (left / TURN_MS * 100) + '%';
+    fill.classList.toggle('low', left < 5000);
+    if (left === 0 && canAct() && (S.mode !== 'online' || G.turn === O.my)) doPass('시간 초과 · 차례 넘어감');
+  }
+  setInterval(tickTimer, 100);
+
+  // ---------- 화면 ----------
+  function ensureScene() {
+    if (scene && scene.seed === G.seed) return;
+    scene = makeScene(G.seed);
+    drawScene(svgs[0], scene, false);
+    drawScene(svgs[1], scene, true);
+  }
+  function drawMarks() {
+    svgs.forEach((svg, side) => {
+      const layer = svg.querySelector('.marks');
+      layer.textContent = '';
+      for (let k = 0; k < NDIFF; k++) {
+        const by = G.found[k];
+        if (by < 0) continue;
+        const sp = spotsOf(scene, k, side === 1)[0];
+        const c = svgEl('circle', { class: 'mark' + (popMark === k ? ' pop' : ''), cx: sp.x, cy: sp.y, r: sp.r - 6, stroke: by === 0 ? '#D7263D' : '#2E6FD9' }, layer);
+        if (G.over === false && popMark === k) c.addEventListener('animationend', () => c.classList.remove('pop'));
+      }
+    });
+    popMark = -1;
+  }
+  function render() {
+    const online = S.mode === 'online';
+    ensureScene();
+    if (G.turnNo !== timerTurn || G.over) { timerTurn = G.turnNo; turnStart = Date.now(); }
+    const act = canAct(), sc = scores(G);
+    for (let t = 0; t < 2; t++) {
+      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
+      $('score-' + t).textContent = '';
+      $('score-' + t).append(String(sc[t]));
+      const sm = document.createElement('small');
+      sm.textContent = '점';
+      $('score-' + t).appendChild(sm);
+      $('side-' + t).classList.toggle('active', !G.over && G.turn === t);
+    }
+    const connText = online ? O.statusText() : null;
+    let text;
+    if (connText) text = connText;
+    else if (G.over) {
+      const me = S.mode === 'ai' ? 0 : online ? O.my : -1;
+      const how = sc[0] + ' : ' + sc[1];
+      if (G.winner < 0) text = '무승부 ' + how;
+      else text = me >= 0 ? (G.winner === me ? '이겼습니다! ' : '졌습니다. ') + how : TEAM[G.winner] + ' 승리 — ' + how;
+    } else if (act) text = label(G.turn) + ' 차례 — 다른 곳을 누르세요. (' + remaining(G) + '곳 남음)';
+    else text = label(G.turn) + ' 차례 — ' + (S.mode === 'ai' ? '찾는 중…' : '기다리는 중…') + ' (' + remaining(G) + '곳 남음)';
+    $('status').textContent = text;
+    $('status').classList.toggle('final', G.over && !connText);
+    $('pic-0').classList.toggle('can', act);
+    $('pic-1').classList.toggle('can', act);
+    tickTimer();
+    drawMarks();
+
+    const last = G.log[G.log.length - 1];
+    $('note').textContent = G.over ? '새 그림을 누르면 다른 그림으로 다시 겨룹니다.' : last && last.s.includes('넘어감') ? TEAM[last.t] + ' · ' + last.s : '';
+    $('found-count').textContent = '찾은 곳 ' + (NDIFF - remaining(G)) + '/' + NDIFF;
+    const logEl = $('log');
+    logEl.textContent = '';
+    for (const e of G.log) {
+      const li = document.createElement('li');
+      li.dataset.team = e.t;
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      const s = document.createElement('span');
+      s.textContent = TEAM[e.t] + ' · ' + e.s;
+      li.append(dot, s);
+      logEl.appendChild(li);
+    }
+    logEl.hidden = !G.log.length;
+    $('log-empty').hidden = !!G.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+
+    $('mode-ai').checked = S.mode === 'ai';
+    $('mode-2p').checked = S.mode === '2p';
+    $('mode-online').checked = online;
+    $('level-' + S.level).checked = true;
+    $('fs-level').hidden = S.mode !== 'ai';
+    O.renderPanel(online);
+    $('btn-new').disabled = online && O.status !== 'live';
+  }
+
+  function bindControls() {
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
+    document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
+    $('btn-new').addEventListener('click', newGame);
+    svgs.forEach((svg, side) => {
+      svg.addEventListener('pointerdown', e => {
+        if (!canAct()) return;
+        e.preventDefault();
+        const rect = svg.getBoundingClientRect();
+        tryAt((e.clientX - rect.left) / rect.width * VW, (e.clientY - rect.top) / rect.height * VH, side === 1);
+      });
+    });
+  }
+
+  function start() {
+    const saved = loadSaved();
+    if (saved && typeof saved === 'object') {
+      if (['ai', '2p', 'online'].includes(saved.mode)) S.mode = saved.mode;
+      if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
+      G = cleanGame(saved.game);
+    }
+    if (!G) G = freshGame(0);
+    seen = G.seq;
+    bindControls();
+    O.mountPanel($('fs-online'));
+    if (!O.boot(saved && saved.room)) {
+      if (S.mode === 'online') G = freshGame(G.seq + 1);
+      seen = G.seq;
+      render();
+      scheduleAI();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>장기 알까기 한 판</title>
+<meta name="description" content="장기말로 하는 알까기. 왕은 무겁고 졸은 가볍습니다. 말을 튕겨 상대 말을 판 밖으로 떨어뜨리세요. AI, 한 화면 2인, 초대 링크 온라인 2인.">
+<meta property="og:title" content="장기 알까기 한 판">
+<meta property="og:description" content="장기말로 하는 알까기. 왕은 무겁고 졸은 가볍습니다. 말을 튕겨 상대 말을 판 밖으로 떨어뜨리세요.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="thumb.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Nanum+Myeongjo:wght@700;800&display=swap">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #E9E6E0;
+    --surface: #F6F4F0;
+    --ink: #1F1B16;
+    --ink-soft: #625A4F;
+    --line: #CDC6BA;
+    --accent: #8A5A1C;
+    --on-ink: #F6F4F0;
+    --cho: #1B6B45;
+    --han: #B3261E;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #14120F;
+      --surface: #1E1B17;
+      --ink: #EAE5DC;
+      --ink-soft: #A49A8B;
+      --line: #342F28;
+      --accent: #D9A355;
+      --on-ink: #14120F;
+      --cho: #4FB584;
+      --han: #E5645B;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #14120F;
+    --surface: #1E1B17;
+    --ink: #EAE5DC;
+    --ink-soft: #A49A8B;
+    --line: #342F28;
+    --accent: #D9A355;
+    --on-ink: #14120F;
+    --cho: #4FB584;
+    --han: #E5645B;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 400 1rem/1.6 "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  }
+  .page {
+    max-width: 1000px;
+    margin-inline: auto;
+    padding-inline: 16px;
+    padding-block: 24px 48px;
+    display: grid;
+    gap: 20px;
+  }
+  .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+  h1 {
+    margin: 0;
+    font: 800 2.2rem/1.15 "Nanum Myeongjo", "Batang", serif;
+    letter-spacing: -0.01em;
+  }
+  .masthead p { margin: 0; color: var(--ink-soft); }
+
+  .table {
+    display: grid;
+    grid-template-columns: minmax(0, 500px) minmax(260px, 1fr);
+    gap: 40px;
+    align-items: start;
+  }
+  @media (max-width: 820px) {
+    .table { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    h1 { font-size: 1.75rem; }
+  }
+  .play { display: grid; gap: 10px; }
+
+  .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .side { display: grid; gap: 2px; padding-bottom: 5px; border-bottom: 3px solid transparent; }
+  .side.right { justify-items: end; text-align: right; }
+  .side[data-team="0"] { --team: var(--cho); }
+  .side[data-team="1"] { --team: var(--han); }
+  .side.active { border-bottom-color: var(--team); }
+  .side-name { font-weight: 700; color: var(--team); }
+  .side-left { font-size: 0.8125rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+
+  .status { margin: 0; min-height: 1.6em; font-weight: 700; }
+  .status.final { font: 800 1.35rem/1.35 "Nanum Myeongjo", "Batang", serif; }
+
+  .arena {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 688 / 928;
+    border-radius: 8px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
+  }
+  .arena.can { cursor: grab; }
+  .arena.dragging { cursor: grabbing; }
+  .arena:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .hint { margin: 0; font-size: 0.8125rem; color: var(--ink-soft); }
+
+  /* 옆 패널 */
+  .panel { display: grid; gap: 22px; }
+  .panel section { display: grid; gap: 12px; }
+  .panel section + section { padding-top: 22px; border-top: 1px solid var(--line); }
+  h2 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+  legend { padding: 0; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; }
+  .seg-row {
+    display: flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label { flex: 1 1 auto; padding: 8px 12px; text-align: center; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn {
+    appearance: none;
+    padding: 10px 18px;
+    border: 1px solid var(--ink);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--ink);
+    font: 500 0.875rem/1.2 "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .btn.small { padding: 6px 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  .join { display: flex; gap: 8px; }
+  .join input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink);
+    font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "IBM Plex Sans KR", system-ui, sans-serif; }
+  .join input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .room-code strong { font: 700 1.75rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; }
+
+  .weights { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 0.875rem; }
+  .weights li { display: grid; grid-template-columns: 5.2em 1fr; gap: 10px; align-items: baseline; }
+  .weights b { font: 800 1rem/1.2 "Nanum Myeongjo", "Batang", serif; }
+  .weights span { color: var(--ink-soft); }
+
+  .log { margin: 0; padding: 0; list-style: none; max-height: 190px; overflow-y: auto; display: grid; gap: 2px; font-size: 0.875rem; }
+  .log li { display: flex; align-items: baseline; gap: 8px; }
+  .log li[data-team="0"] { --team: var(--cho); }
+  .log li[data-team="1"] { --team: var(--han); }
+  .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
+  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  details ul { margin: 10px 0 0; padding-left: 1.2em; color: var(--ink-soft); display: grid; gap: 4px; max-width: 38em; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <a class="home" href="../index.html">← 한 판 놀이방</a>
+    <h1>장기 알까기 한 판</h1>
+    <p>말을 튕겨서 상대 왕을 판 밖으로 먼저 떨어뜨리면 이깁니다.</p>
+  </header>
+
+  <main class="table">
+    <div class="play">
+      <div class="sides">
+        <div class="side" id="side-0" data-team="0"><span class="side-name" id="name-0">초</span><span class="side-left" id="left-0"></span></div>
+        <div class="side right" id="side-1" data-team="1"><span class="side-name" id="name-1">한</span><span class="side-left" id="left-1"></span></div>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <canvas class="arena" id="arena" aria-label="알까기 판. 내 말을 누른 채 뒤로 당겼다 놓으면 튕깁니다."></canvas>
+      <p class="hint">내 말을 누른 채 <b>뒤로 당겼다 놓으면</b> 반대 방향으로 튕깁니다. 많이 당길수록 세게 나갑니다.</p>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>놀이 설정</h2>
+        <fieldset>
+          <legend>상대</legend>
+          <div class="seg-row">
+            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
+            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면 2인</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-online" hidden></fieldset>
+        <fieldset id="fs-level">
+          <legend>AI 난이도</legend>
+          <div class="seg-row">
+            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
+            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
+            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
+          </div>
+        </fieldset>
+        <div class="actions">
+          <button type="button" class="btn" id="btn-new">새 판</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>말의 크기와 무게</h2>
+        <ul class="weights">
+          <li><b>楚 · 漢</b><span>왕. 가장 크고 무겁습니다(졸의 3배). 잘 안 밀리지만 멀리 못 갑니다.</span></li>
+          <li><b>車 · 包</b><span>크고 묵직합니다(2.2배). 밀어내기에 좋습니다.</span></li>
+          <li><b>馬 · 象</b><span>중간(1.6배). 공격과 수비 모두 무난합니다.</span></li>
+          <li><b>士</b><span>작고 가볍습니다(1.2배). 왕 곁을 지킵니다.</span></li>
+          <li><b>卒 · 兵</b><span>가장 작고 가볍습니다. 빠르게 날아가지만 부딪히면 자기가 튕겨 나갑니다.</span></li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>지난 수</h2>
+        <p class="log-empty" id="log-empty">아직 튕긴 말이 없습니다.</p>
+        <ol class="log" id="log" hidden></ol>
+      </section>
+
+      <section>
+        <details>
+          <summary>규칙 보기</summary>
+          <ul>
+            <li>초(아래)가 먼저, 번갈아 가며 자기 말 하나를 한 번씩 튕깁니다.</li>
+            <li>말의 중심이 판 밖으로 나가면 떨어진 것입니다. 내가 튕긴 말도 나가면 잃습니다.</li>
+            <li>상대 왕(楚/漢)을 먼저 떨어뜨리면 이깁니다. 두 왕이 한 번에 떨어지면 튕긴 쪽이 집니다.</li>
+          </ul>
+        </details>
+      </section>
+      <div class="ad-slot" data-ad="game-side" hidden></div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/online.js"></script>
+<script src="../shared/site.js"></script>
+<script>
+(() => {
+  // 판 좌표계: 가로 600 × 세로 840. 캔버스에는 둘레에 M 만큼 바닥(떨어지는 곳)이 더 있다
+  const W = 600, H = 840, M = 44;
+  const DT = 1 / 240, DECEL = 600, REST = 0.88, MAX_STEPS = 4800;
+  const MAX_PULL = 170, MIN_POWER = 0.08;
+  // r: 반지름, m: 무게(졸 = 1), v: 가장 세게 튕겼을 때 속도, val: AI가 매기는 가치
+  // 무거운 말은 잘 안 밀리지만 느리고, 가벼운 말은 빠르지만 부딪히면 자기가 튕겨 나간다
+  const KIND = {
+    K: { r: 36, m: 3.0, v: 640, val: 100 },   // 왕 (楚·漢)
+    R: { r: 30, m: 2.2, v: 820, val: 4 },     // 차·포
+    M: { r: 26, m: 1.6, v: 960, val: 3 },     // 마·상
+    G: { r: 22, m: 1.2, v: 1080, val: 2 },    // 사
+    P: { r: 20, m: 1.0, v: 1160, val: 1.5 }   // 졸·병
+  };
+  const TEAM = ['초', '한'];
+  const PER = 9, TOTAL = PER * 2;                   // 한 편에 왕 1 · 사 2 · 차 1 · 포 1 · 마 1 · 상 1 · 졸 2
+  const STORE_KEY = 'alkkagi-standalone-v2';
+  const $ = id => document.getElementById(id);
+
+  function layout() {
+    const base = [                                 // 왕이 0번이어야 한다 (승패 판정)
+      ['K', 300, 650, '楚', '漢'],
+      ['G', 225, 610, '士', '士'], ['G', 375, 610, '士', '士'],
+      ['R', 120, 570, '車', '車'], ['R', 480, 570, '包', '包'],
+      ['M', 200, 530, '馬', '馬'], ['M', 400, 530, '象', '象'],
+      ['P', 240, 470, '卒', '兵'], ['P', 360, 470, '卒', '兵']
+    ];
+    const out = [];
+    for (let t = 0; t < 2; t++) base.forEach(([k, x, y, c0, c1], i) =>
+      out.push({ id: t * PER + i, team: t, k, ch: t ? c1 : c0, x, y: t ? H - y : y, alive: true }));
+    return out;
+  }
+  const TEMPLATE = layout();
+
+  // ---------- 물리 ----------
+  // 온라인에서 두 브라우저가 같은 결과를 내도록 + - * / sqrt 만 쓴다 (sin·cos·pow 금지)
+  function makeSim(pieces, shot) {
+    const b = pieces.map(p => ({
+      id: p.id, team: p.team, k: p.k, ch: p.ch, r: KIND[p.k].r, m: KIND[p.k].m,
+      x: p.x, y: p.y, vx: 0, vy: 0, alive: p.alive
+    }));
+    const s = b.find(o => o.id === shot.id);
+    if (s && s.alive) { s.vx = shot.vx; s.vy = shot.vy; }
+    return { b, fallen: [], steps: 0, done: false };
+  }
+  function stepSim(sim) {
+    const b = sim.b;
+    let moving = false;
+    for (const o of b) {
+      if (!o.alive) continue;
+      const sp2 = o.vx * o.vx + o.vy * o.vy;
+      if (sp2 === 0) continue;
+      const sp = Math.sqrt(sp2), ns = sp - DECEL * DT;
+      if (ns <= 0) { o.vx = 0; o.vy = 0; continue; }
+      const f = ns / sp;
+      o.vx *= f; o.vy *= f;
+      o.x += o.vx * DT; o.y += o.vy * DT;
+      moving = true;
+    }
+    for (let i = 0; i < b.length; i++) {
+      const a = b[i];
+      if (!a.alive) continue;
+      for (let j = i + 1; j < b.length; j++) {
+        const c = b[j];
+        if (!c.alive) continue;
+        const dx = c.x - a.x, dy = c.y - a.y, rr = a.r + c.r, d2 = dx * dx + dy * dy;
+        if (d2 >= rr * rr) continue;
+        const d = Math.sqrt(d2);
+        const nx = d === 0 ? 1 : dx / d, ny = d === 0 ? 0 : dy / d;
+        const vn = (a.vx - c.vx) * nx + (a.vy - c.vy) * ny;
+        if (vn > 0) {
+          const jn = (1 + REST) * vn / (1 / a.m + 1 / c.m);
+          a.vx -= jn / a.m * nx; a.vy -= jn / a.m * ny;
+          c.vx += jn / c.m * nx; c.vy += jn / c.m * ny;
+          moving = true;
+        }
+        // 겹친 만큼 떼어 놓는다. 가벼운 쪽이 더 많이 밀린다
+        const ov = rr - d, ta = c.m / (a.m + c.m), tc = a.m / (a.m + c.m);
+        a.x -= nx * ov * ta; a.y -= ny * ov * ta;
+        c.x += nx * ov * tc; c.y += ny * ov * tc;
+      }
+    }
+    for (const o of b) {
+      if (o.alive && (o.x < 0 || o.x > W || o.y < 0 || o.y > H)) {
+        o.alive = false;
+        sim.fallen.push(o.id);
+        if (sim.onFall) sim.onFall(o);
+      }
+    }
+    sim.steps++;
+    if (!moving || sim.steps >= MAX_STEPS) sim.done = true;
+  }
+
+  // ---------- 상태 ----------
+  const S = { mode: 'ai', level: 'normal' };
+  let G = null;
+  function freshGame(seq) {
+    return { pieces: layout().map(p => ({ id: p.id, x: p.x, y: p.y, alive: true })), turn: 0, over: false, winner: -1, seq: seq || 0, shot: null, log: [] };
+  }
+  const full = g => g.pieces.map((p, i) => ({ ...TEMPLATE[i], x: p.x, y: p.y, alive: p.alive }));
+
+  let sim = null, simulating = false, pending = null, seenShot = 0, aiTimer = 0;
+  let drag = null, preview = null;
+  const ghosts = [];
+
+  // 온라인 2인: 방·연결·동기화는 shared/online.js 가 맡는다. 방장 = 초, 참가자 = 한
+  const O = Hanpan.createOnline({
+    id: 'alkkagi',
+    seats: { host: 0, guest: 1, none: -1 },
+    text: { host: '방장 · 초(선공, 아래)', guest: '참가자 · 한(후공, 위)', note: '방장이 초(선공), 참가자가 한입니다.' },
+    isOnline: () => S.mode === 'online',
+    setOnline: () => { S.mode = 'online'; },
+    onNewRoom: kind => { stopSim(); G = freshGame(kind === 'guest' || !G ? 0 : G.seq + 1); seenShot = 0; },
+    onLeave: () => { pending = null; },
+    getState: () => G,
+    onState: (g, firstSync) => { const clean = cleanGame(g); if (clean) adoptRemote(clean, firstSync); },
+    render: () => render(),
+    save: () => save()
+  });
+
+  function save() {
+    try {
+      const d = { mode: S.mode, level: S.level, game: G };
+      if (S.mode === 'online' && O.roomInfo()) d.room = O.roomInfo();
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function loadSaved() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; }
+  }
+  const num = v => typeof v === 'number' && isFinite(v);
+  function cleanGame(d) {
+    if (!d || !Array.isArray(d.pieces) || d.pieces.length !== TOTAL) return null;
+    const g = freshGame(Number.isInteger(d.seq) ? d.seq : 0);
+    for (let i = 0; i < TOTAL; i++) {
+      const p = d.pieces[i];
+      if (!p || !num(p.x) || !num(p.y)) return null;
+      g.pieces[i] = { id: i, x: p.x, y: p.y, alive: !!p.alive };
+    }
+    g.turn = d.turn === 1 ? 1 : 0;
+    g.over = !!d.over;
+    g.winner = d.winner === 0 || d.winner === 1 ? d.winner : -1;
+    g.log = Array.isArray(d.log) ? d.log.slice(-60).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 60) })) : [];
+    const sh = d.shot;
+    if (sh && Number.isInteger(sh.id) && sh.id >= 0 && sh.id < TOTAL && num(sh.vx) && num(sh.vy) && Number.isInteger(sh.seq)) {
+      const limit = KIND[TEMPLATE[sh.id].k].v * 1.001;
+      if (sh.vx * sh.vx + sh.vy * sh.vy <= limit * limit && TEMPLATE[sh.id].team === g.turn) g.shot = { seq: sh.seq, id: sh.id, vx: sh.vx, vy: sh.vy };
+    }
+    return g;
+  }
+
+  function canAct() {
+    if (simulating || G.over || G.shot || preview) return false;
+    if (S.mode === '2p') return true;
+    if (S.mode === 'ai') return G.turn === 0;
+    return O.status === 'live' && G.turn === O.my;
+  }
+  function roleOf(t) {
+    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
+    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
+    return '';
+  }
+  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+
+  // ---------- 진행 ----------
+  function shoot(id, vx, vy) {
+    G.seq++;
+    G.shot = { seq: G.seq, id, vx, vy };
+    seenShot = G.seq;
+    save();
+    O.send();
+    startSim(true);
+  }
+  function stopSim() { sim = null; simulating = false; pending = null; ghosts.length = 0; }
+  function startSim(mine) {
+    const shot = G.shot;
+    simulating = true;
+    sim = makeSim(full(G), shot);
+    sim.onFall = o => ghosts.push({ ...o, t: 0 });
+    render();
+    runSim(sim, () => {
+      finishShot(sim, shot);
+      sim = null; simulating = false;
+      if (pending) { const g = pending; pending = null; adoptRemote(g, false); return; }
+      save();
+      if (mine) O.send();
+      render();
+      scheduleAI();
+    });
+  }
+  function finishShot(s, shot) {
+    const shooter = TEMPLATE[shot.id].team;
+    s.b.forEach((o, i) => { G.pieces[i] = { id: i, x: o.x, y: o.y, alive: o.alive }; });
+    const lostOpp = s.fallen.filter(id => TEMPLATE[id].team !== shooter).map(id => TEMPLATE[id].ch);
+    const lostOwn = s.fallen.filter(id => TEMPLATE[id].team === shooter).map(id => TEMPLATE[id].ch);
+    let text = TEMPLATE[shot.id].ch + '로 튕김';
+    if (lostOpp.length) text += ' · ' + lostOpp.join(' ') + ' 떨어뜨림';
+    if (lostOwn.length) text += ' · 내 말 ' + lostOwn.join(' ') + ' 떨어짐';
+    if (!s.fallen.length) text += ' · 떨어진 말 없음';
+    G.log.push({ t: shooter, s: text });
+    const kingDown = t => !G.pieces[t * PER].alive;
+    const opp = 1 - shooter;
+    if (kingDown(shooter)) { G.over = true; G.winner = opp; }       // 두 왕이 같이 떨어져도 튕긴 쪽이 진다
+    else if (kingDown(opp)) { G.over = true; G.winner = shooter; }
+    else G.turn = opp;
+    G.shot = null;
+    G.seq++;
+  }
+  function adoptRemote(g, firstSync) {
+    if (simulating) { pending = g; return; }
+    const fresh = g.shot && g.shot.seq > seenShot && !firstSync && g.turn !== O.my;
+    G = g;
+    if (g.shot) seenShot = Math.max(seenShot, g.shot.seq);
+    ghosts.length = 0;
+    if (fresh) { startSim(false); return; }
+    render();
+    save();
+  }
+  function newGame() {
+    if (S.mode === 'online' && O.status !== 'live') return;
+    clearTimeout(aiTimer);
+    stopSim();
+    preview = null;
+    G = freshGame(G ? G.seq + 1 : 0);
+    save();
+    O.send();
+    render();
+    scheduleAI();
+  }
+  function setMode(mode) {
+    if (S.mode === 'online') O.leave();
+    clearTimeout(aiTimer);
+    stopSim();
+    preview = null;
+    S.mode = mode;
+    G = freshGame(G ? G.seq + 1 : 0);
+    render();
+    save();
+    scheduleAI();
+  }
+
+  // ---------- AI ----------
+  // 후보 샷을 실제 물리로 끝까지 돌려 보고 결과가 가장 좋은 것을 고른다
+  const ROT = [-7, -3.5, 0, 3.5, 7].map(deg => [Math.cos(deg * Math.PI / 180), Math.sin(deg * Math.PI / 180)]);
+  function edgeRisk(o) {
+    // 가장자리에 가까울수록 위험. 왕은 멀리서부터 위험하게 본다
+    const d = Math.min(o.x, W - o.x, o.y, H - o.y), thr = o.k === 'K' ? 300 : 130;
+    return d >= thr ? 0 : (thr - d) / thr * (o.k === 'K' ? 40 : KIND[o.k].val);
+  }
+  function chooseShot(team) {
+    const all = full(G), mine = all.filter(p => p.alive && p.team === team), theirs = all.filter(p => p.alive && p.team !== team);
+    const rots = S.level === 'hard' ? ROT : [ROT[1], ROT[2], ROT[3]];
+    const powers = S.level === 'hard' ? [0.5, 0.75, 1] : [0.6, 1];
+    const cands = [];
+    for (const p of mine) for (const q of theirs) {
+      const dx = q.x - p.x, dy = q.y - p.y, d = Math.sqrt(dx * dx + dy * dy) || 1;
+      for (const [c, s] of rots) for (const pw of powers) {
+        const ux = (dx * c - dy * s) / d, uy = (dx * s + dy * c) / d, v = KIND[p.k].v * pw;
+        const sm = makeSim(all, { id: p.id, vx: ux * v, vy: uy * v });
+        while (!sm.done) stepSim(sm);
+        let score = 0;
+        for (const id of sm.fallen) {
+          const t = TEMPLATE[id];
+          score += t.team === team ? -(t.k === 'K' ? 400 : KIND[t.k].val * 1.4) : (t.k === 'K' ? 300 : KIND[t.k].val);
+        }
+        for (const o of sm.b) if (o.alive) score += (o.team === team ? -0.5 : 0.9) * edgeRisk(o);   // 수비보다 공격을 조금 더 친다
+        cands.push({ id: p.id, ux, uy, pw, score: score + Math.random() * 0.3 });
+      }
+    }
+    if (!cands.length) return null;
+    cands.sort((a, b) => b.score - a.score);
+    const pick = S.level === 'easy' ? cands[Math.floor(Math.random() * Math.min(cands.length, Math.ceil(cands.length / 2)))] : cands[0];
+    // 난이도별 손떨림
+    const jitter = (S.level === 'easy' ? 8 : S.level === 'normal' ? 3 : 0.8) * (Math.random() * 2 - 1) * Math.PI / 180;
+    const c = Math.cos(jitter), s = Math.sin(jitter);
+    return { id: pick.id, ux: pick.ux * c - pick.uy * s, uy: pick.ux * s + pick.uy * c, pw: pick.pw };
+  }
+  function scheduleAI() {
+    clearTimeout(aiTimer);
+    if (simulating || G.over || S.mode !== 'ai' || G.turn !== 1) return;
+    aiTimer = setTimeout(() => {
+      if (simulating || G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      const a = chooseShot(1);
+      if (!a) return;
+      preview = a;                                   // 조준선을 잠깐 보여 주고 튕긴다
+      render();
+      aiTimer = setTimeout(() => {
+        preview = null;
+        const v = KIND[TEMPLATE[a.id].k].v * a.pw;
+        shoot(a.id, a.ux * v, a.uy * v);
+      }, 550);
+    }, 600);
+  }
+
+  // ---------- 그리기 ----------
+  const canvas = $('arena'), ctx = canvas.getContext('2d');
+  const OCT = [];
+  for (let i = 0; i < 8; i++) { const a = (22.5 + 45 * i) * Math.PI / 180; OCT.push([Math.cos(a), Math.sin(a)]); }
+  let scale = 1;
+  function fit() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round((rect.width || 500) * dpr));
+    const h = Math.max(1, Math.round(w * (H + 2 * M) / (W + 2 * M)));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    scale = w / (W + 2 * M);
+  }
+  function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  function drawPiece(o, alpha, shrink, glow) {
+    const r = (o.r || KIND[o.k].r) * shrink;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(o.x, o.y);
+    ctx.beginPath();
+    OCT.forEach(([cx, cy], i) => (i ? ctx.lineTo(cx * r, cy * r) : ctx.moveTo(cx * r, cy * r)));
+    ctx.closePath();
+    ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 3;
+    const gr = ctx.createLinearGradient(-r, -r, r, r);
+    gr.addColorStop(0, '#F1D9A4'); gr.addColorStop(1, '#C99A55');
+    ctx.fillStyle = gr;
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.lineWidth = glow ? 4 : 2;
+    ctx.strokeStyle = glow ? glow : '#6B4A1E';
+    ctx.stroke();
+    ctx.fillStyle = o.team === 0 ? '#1B6B45' : '#B3261E';
+    ctx.font = '800 ' + Math.round(r * 1.12) + 'px "Nanum Myeongjo", "Batang", serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(o.ch, 0, r * 0.06);
+    ctx.restore();
+  }
+  function drawArrow(x, y, ux, uy, pw, color) {
+    const len = 36 + pw * 150, ex = x + ux * len, ey = y + uy * len;
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+    const px = -uy, py = ux, hs = 13;
+    ctx.beginPath();
+    ctx.moveTo(ex + ux * hs, ey + uy * hs);
+    ctx.lineTo(ex + px * hs * 0.7, ey + py * hs * 0.7);
+    ctx.lineTo(ex - px * hs * 0.7, ey - py * hs * 0.7);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  function draw() {
+    fit();
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.fillStyle = '#2A241D';
+    ctx.fillRect(0, 0, W + 2 * M, H + 2 * M);
+    ctx.translate(M, M);
+    // 판
+    ctx.fillStyle = '#D9B06A';
+    ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(74,51,22,0.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i < 9; i++) { ctx.moveTo(60 + i * 60, 60); ctx.lineTo(60 + i * 60, 780); }
+    for (let j = 0; j < 10; j++) { ctx.moveTo(60, 60 + j * 80); ctx.lineTo(540, 60 + j * 80); }
+    for (const y0 of [60, 620]) { ctx.moveTo(240, y0); ctx.lineTo(360, y0 + 160); ctx.moveTo(360, y0); ctx.lineTo(240, y0 + 160); }
+    ctx.stroke();
+    ctx.strokeStyle = '#8A6528'; ctx.lineWidth = 4;
+    ctx.strokeRect(0, 0, W, H);
+
+    const bodies = sim ? sim.b : full(G);
+    const act = canAct();
+    const accent = css('--accent') || '#D9A355';
+    for (const g of ghosts) drawPiece(g, Math.max(0, 1 - g.t / 0.35), Math.max(0.3, 1 - g.t / 0.5), null);
+    for (const o of bodies) {
+      if (!o.alive) continue;
+      const mineNow = act && o.team === G.turn && !(drag && drag.id !== o.id);
+      drawPiece(o, 1, 1, mineNow ? accent : null);
+    }
+    if (drag && drag.pw >= MIN_POWER) {
+      const p = bodies.find(o => o.id === drag.id);
+      ctx.save();
+      ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(drag.px, drag.py); ctx.stroke();
+      ctx.restore();
+      drawArrow(p.x, p.y, drag.ux, drag.uy, drag.pw, drag.pw > 0.8 ? '#C8372D' : '#FFFFFF');
+    }
+    if (preview) {
+      const p = bodies.find(o => o.id === preview.id);
+      if (p) drawArrow(p.x, p.y, preview.ux, preview.uy, preview.pw, '#FFFFFF');
+    }
+  }
+  function runSim(s, onDone) {
+    if (typeof requestAnimationFrame !== 'function') {
+      while (!s.done) stepSim(s);
+      onDone();
+      return;
+    }
+    let last = null, acc = 0;
+    const frame = now => {
+      if (sim !== s) return;                         // 새 판 등으로 중단됨
+      if (last === null) last = now;
+      const el = Math.min(0.05, (now - last) / 1000);
+      last = now; acc += el;
+      let n = 0;
+      while (acc >= DT && !s.done && n < 16) { stepSim(s); acc -= DT; n++; }
+      for (const g of ghosts) { g.t += el; g.x += g.vx * el; g.y += g.vy * el; }
+      draw();
+      if (s.done) { onDone(); return; }
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- 입력 ----------
+  function boardPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    const k = (W + 2 * M) / rect.width;
+    return [(e.clientX - rect.left) * k - M, (e.clientY - rect.top) * k - M];
+  }
+  function updateDrag(e) {
+    const p = full(G)[drag.id], [x, y] = boardPoint(e);
+    const dx = p.x - x, dy = p.y - y, d = Math.sqrt(dx * dx + dy * dy);
+    drag.px = x; drag.py = y;
+    drag.pw = Math.min(1, d / MAX_PULL);
+    drag.ux = d ? dx / d : 0; drag.uy = d ? dy / d : 0;
+  }
+  canvas.addEventListener('pointerdown', e => {
+    if (!canAct()) return;
+    const [x, y] = boardPoint(e);
+    let best = null, bd = Infinity;
+    for (const p of full(G)) {
+      if (!p.alive || p.team !== G.turn) continue;
+      const d = Math.sqrt((p.x - x) * (p.x - x) + (p.y - y) * (p.y - y));
+      if (d <= KIND[p.k].r + 14 && d < bd) { best = p; bd = d; }
+    }
+    if (!best) return;
+    e.preventDefault();
+    drag = { id: best.id, px: x, py: y, pw: 0, ux: 0, uy: 0 };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    canvas.classList.add('dragging');
+    draw();
+  });
+  canvas.addEventListener('pointermove', e => { if (drag) { updateDrag(e); draw(); } });
+  function endDrag(e, cancel) {
+    if (!drag) return;
+    if (!cancel) updateDrag(e);
+    const d = drag;
+    drag = null;
+    canvas.classList.remove('dragging');
+    if (!cancel && d.pw >= MIN_POWER && canAct()) {
+      const v = KIND[TEMPLATE[d.id].k].v * d.pw;
+      shoot(d.id, d.ux * v, d.uy * v);
+    } else {
+      draw();
+    }
+  }
+  canvas.addEventListener('pointerup', e => endDrag(e, false));
+  canvas.addEventListener('pointercancel', e => endDrag(e, true));
+
+  // ---------- 화면 ----------
+  function render() {
+    const online = S.mode === 'online';
+    const act = canAct();
+    for (let t = 0; t < 2; t++) {
+      const left = G.pieces.slice(t * PER, (t + 1) * PER).filter(p => p.alive).length;
+      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
+      $('left-' + t).textContent = '남은 말 ' + left + '/' + PER;
+      $('side-' + t).classList.toggle('active', !G.over && G.turn === t);
+    }
+    const connText = online ? O.statusText() : null;
+    let text;
+    if (connText) text = connText;
+    else if (G.over) {
+      const me = S.mode === 'ai' ? 0 : online ? O.my : -1;
+      const how = TEAM[1 - G.winner] + ' 왕이 떨어졌습니다';
+      text = me >= 0 ? (G.winner === me ? '이겼습니다! ' : '졌습니다. ') + how : TEAM[G.winner] + ' 승리 — ' + how;
+    } else if (simulating || G.shot) text = '말이 굴러가는 중…';
+    else if (act) text = label(G.turn) + ' 차례 — 말을 당겼다 놓으세요.';
+    else text = label(G.turn) + ' 차례 — ' + (S.mode === 'ai' ? '조준하는 중…' : '기다리는 중…');
+    $('status').textContent = text;
+    $('status').classList.toggle('final', G.over && !connText);
+    canvas.classList.toggle('can', act);
+
+    const logEl = $('log');
+    logEl.textContent = '';
+    for (const e of G.log) {
+      const li = document.createElement('li');
+      li.dataset.team = e.t;
+      const dot = document.createElement('span');
+      dot.className = 'dot';
+      const s = document.createElement('span');
+      s.textContent = TEAM[e.t] + ' · ' + e.s;
+      li.append(dot, s);
+      logEl.appendChild(li);
+    }
+    logEl.hidden = !G.log.length;
+    $('log-empty').hidden = !!G.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+
+    $('mode-ai').checked = S.mode === 'ai';
+    $('mode-2p').checked = S.mode === '2p';
+    $('mode-online').checked = online;
+    $('level-' + S.level).checked = true;
+    $('fs-level').hidden = S.mode !== 'ai';
+    O.renderPanel(online);
+    $('btn-new').disabled = online && O.status !== 'live';
+    draw();
+  }
+
+  function bindControls() {
+    document.querySelectorAll('input[name="mode"]').forEach(r =>
+      r.addEventListener('change', () => setMode(r.value)));
+    document.querySelectorAll('input[name="level"]').forEach(r =>
+      r.addEventListener('change', () => { S.level = r.value; save(); }));
+    $('btn-new').addEventListener('click', newGame);
+    if (typeof ResizeObserver === 'function') new ResizeObserver(() => draw()).observe(canvas);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => draw());
+  }
+
+  function start() {
+    const saved = loadSaved();
+    if (saved && typeof saved === 'object') {
+      if (['ai', '2p', 'online'].includes(saved.mode)) S.mode = saved.mode;
+      if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
+      G = cleanGame(saved.game);
+    }
+    if (!G) G = freshGame(0);
+    G.shot = null;                                    // 새로고침으로 끊긴 샷은 없던 일로
+    bindControls();
+    O.mountPanel($('fs-online'));
+    if (!O.boot(saved && saved.room)) {
+      if (S.mode === 'online') G = freshGame(G.seq + 1);
+      render();
+      scheduleAI();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

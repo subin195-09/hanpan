@@ -68,15 +68,14 @@
     user-select: none;
     -webkit-user-select: none;
   }
-  .card .mo { position: absolute; left: 0; right: 0; top: 0; height: 22%; background: var(--mc); color: #FFF; font-size: calc(var(--cw) * 0.2); font-weight: 900; line-height: 1; display: flex; align-items: center; padding-left: 4px; }
-  .card .mark { position: absolute; left: 0; right: 0; top: 22%; bottom: 0; display: grid; place-items: center; }
-  .card .g { width: 74%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #FFE9A3, #D9A83A 70%); border: 2px solid #8A5A1C; display: grid; place-items: center; font: 900 calc(var(--cw) * 0.36)/1 "Nanum Myeongjo", serif; color: #7A1A12; }
-  .card .y { width: 82%; padding: 3px 0; border-radius: 999px; background: #FFF; border: 1.5px solid var(--mc); text-align: center; font-size: calc(var(--cw) * 0.2); font-weight: 700; color: var(--mc); }
-  .card .t { width: 34%; height: 78%; border-radius: 3px; background: var(--tc); color: #FFF; writing-mode: vertical-rl; text-orientation: upright; display: grid; place-items: center; font-size: calc(var(--cw) * 0.19); font-weight: 900; letter-spacing: 0.1em; }
-  .card .p { font-size: calc(var(--cw) * 0.23); font-weight: 900; color: var(--mc); text-align: center; line-height: 1.15; }
-  .card .p small { display: block; font-size: calc(var(--cw) * 0.17); font-weight: 700; color: #5A4A3A; }
-  .card .p.ssang { border: 2px solid var(--mc); border-radius: 4px; padding: 2px 5px; }
+  .card svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
   .card.back { background: repeating-linear-gradient(45deg, #7A1F1A 0 6px, #63140F 6px 12px); border-color: #3A0A08; }
+  .card.back::after { content: ""; position: absolute; inset: 6px; border-radius: 3px; border: 1.5px solid rgba(255, 220, 160, 0.55); }
+  /* 치는 연출: 날아가는 카드 */
+  #fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+  #fx .card { position: absolute; margin: 0; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45); will-change: left, top, transform; }
+  .play.busy .card.can, .play.busy .card.pickable { outline: none; animation: none; }
+  .pend { display: flex; align-items: center; gap: 6px; color: #FFF; font-size: 0.75rem; }
   .card.mini { --cw: calc(var(--cw-base, 54px) * 0.62); }
   button.card { cursor: pointer; padding: 0; font: inherit; }
   button.card:disabled { cursor: default; }
@@ -121,7 +120,7 @@
   .slot { display: flex; align-items: flex-start; min-height: calc(var(--cw) * 1.55); }
   .slot .card { margin-left: calc(var(--cw) * -0.4); }
   .slot .card:first-child { margin-left: 0; }
-  .deck { display: flex; align-items: center; gap: 8px; color: #FFF; font-size: 0.8125rem; }
+  .deck { grid-column: span 2; display: flex; align-items: center; gap: 8px; color: #FFF; font-size: 0.8125rem; white-space: nowrap; }
   .deck .card { margin-left: 0; }
   .deck b { font-size: 1.1rem; }
   .floor-empty { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255, 255, 255, 0.5); font-size: 0.875rem; pointer-events: none; }
@@ -263,16 +262,13 @@
 <script src="../shared/online.js"></script>
 <script src="../shared/site.js"></script>
 <script src="engine.js"></script>
+<script src="cards.js"></script>
 <script>
 (() => {
   const M = window.Matgo, C = id => M.CARDS[id];
   const TEAM = ['홍', '청'];
   const STORE_KEY = 'matgo-standalone-v1';
   const $ = id => document.getElementById(id);
-  const MC = ['', '#2F6B3A', '#C24E4E', '#D96C8B', '#4B3F6B', '#7B4FA0', '#B8323E', '#A24A2A', '#3B4A5A', '#B8921F', '#D0662B', '#2B2B2B', '#5C7A8C'];
-  const PLANT = ['', '송', '매', '벚', '싸리', '난', '모란', '홍싸리', '공산', '국', '단풍', '오동', '비'];
-  const TC = { hong: '#B8232F', cheong: '#2A4FA5', cho: '#C7302B', bi: '#6B4E8A' };
-  const YEOL_SHORT = { 2: '새', 4: '새', 5: '다리', 6: '나비', 7: '멧돼지', 8: '기러기', 9: '국진', 10: '사슴', 12: '제비' };
   const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
 
   // ---------- 상태 ----------
@@ -355,7 +351,7 @@
   // ---------- 진행 ----------
   function myTeam() { return S.mode === 'ai' ? 0 : O.my; }
   function canAct() {
-    if (G.over) return false;
+    if (G.over || busy) return false;
     if (S.mode === 'ai') return G.turn === 0;
     return O.status === 'live' && G.turn === O.my;
   }
@@ -371,7 +367,9 @@
     seen = G.seq;
     save();
     O.send();
+    const prev = snapshot();
     render();
+    present(prev);
     scheduleAI();
   }
   function act(fn, type) {
@@ -395,9 +393,11 @@
     commit('deal');
   }
   function adoptRemote(g, firstSync) {
+    const prev = snapshot();
     G = g;
     seen = g.seq;
     render();
+    if (!firstSync) present(prev); else lastSig = sigOf(G);
     save();
     scheduleAI();
   }
@@ -415,10 +415,10 @@
   // ---------- AI ----------
   function scheduleAI() {
     clearTimeout(aiTimer);
-    if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
-    const wait = G.stage === 'play' ? 900 : G.stage === 'go' ? 1100 : 500;
+    if (G.over || busy || S.mode !== 'ai' || G.turn !== 1) return;
+    const wait = G.stage === 'play' ? 700 : G.stage === 'go' ? 1100 : 500;
     aiTimer = setTimeout(() => {
-      if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      if (G.over || busy || S.mode !== 'ai' || G.turn !== 1) return;
       let ok = false;
       if (G.stage === 'play') { const a = M.aiPlay(G, S.level); ok = M.play(G, a.card, a.shake); }
       else if (G.stage === 'shake') ok = M.play(G, G.pend.played, S.level !== 'easy' || Math.random() < 0.5);
@@ -435,19 +435,9 @@
     if (o.button) el.type = 'button';
     el.className = 'card' + (o.mini ? ' mini' : '') + (o.cls ? ' ' + o.cls : '');
     if (id < 0) { el.classList.add('back'); el.setAttribute('aria-label', '뒤집힌 패'); return el; }
-    const c = C(id);
-    el.style.setProperty('--mc', MC[c.m]);
     el.setAttribute('aria-label', M.cardName(id));
     el.dataset.id = id;
-    const mo = document.createElement('span'); mo.className = 'mo'; mo.textContent = c.m + '월';
-    const mark = document.createElement('span'); mark.className = 'mark';
-    let inner;
-    if (c.t === 'g') { inner = document.createElement('span'); inner.className = 'g'; inner.textContent = '光'; }
-    else if (c.t === 'y') { inner = document.createElement('span'); inner.className = 'y'; inner.textContent = YEOL_SHORT[c.m]; }
-    else if (c.t === 't') { inner = document.createElement('span'); inner.className = 't'; inner.style.setProperty('--tc', TC[c.sub]); inner.textContent = c.sub === 'bi' ? '' : ({ hong: '홍단', cheong: '청단', cho: '초단' })[c.sub]; }
-    else { inner = document.createElement('span'); inner.className = 'p' + (c.sub === 'ssang' ? ' ssang' : ''); inner.textContent = c.sub === 'ssang' ? '쌍피' : PLANT[c.m]; if (c.sub !== 'ssang') { const sm = document.createElement('small'); sm.textContent = '피'; inner.appendChild(sm); } }
-    mark.appendChild(inner);
-    el.append(mo, mark);
+    el.innerHTML = window.MatgoCards.cardSvg(id);          // 우리가 만든 SVG 문자열
     return el;
   }
   function capsInto(container, caps, newIds) {
@@ -507,10 +497,15 @@
     const floor = $('floor');
     floor.textContent = '';
     const deckEl = document.createElement('div'); deckEl.className = 'deck';
-    deckEl.appendChild(cardEl(-1));
+    const deckCard = cardEl(-1); deckCard.id = 'deck-card'; deckEl.appendChild(deckCard);
     const dl = document.createElement('span'); dl.innerHTML = '';
     const b = document.createElement('b'); b.textContent = G.deck.length; dl.append('더미 ', b, '장');
     deckEl.appendChild(dl);
+    if (G.stage === 'pick' && G.pend && G.pend.pick) {
+      const pd = document.createElement('div'); pd.className = 'pend';
+      pd.append(G.pend.pick.step === 'play' ? '낸 패' : '뒤집은 패', cardEl(G.pend.pick.card, { mini: true }));
+      deckEl.appendChild(pd);
+    }
     floor.appendChild(deckEl);
     const months = [...new Set(G.floor.map(id => C(id).m))].sort((a, b) => a - b);
     for (const m of months) {
@@ -605,6 +600,7 @@
     $('log-empty').hidden = !!G.log.length;
     logEl.scrollTop = logEl.scrollHeight;
 
+    document.querySelector('.play').classList.toggle('busy', busy);
     $('mode-ai').checked = S.mode === 'ai';
     $('mode-online').checked = online;
     $('level-' + S.level).checked = true;
@@ -613,6 +609,95 @@
     $('btn-new').disabled = online && O.status !== 'live';
   }
   function nextRoundAuto() { /* AI 모드에선 사람이 '다음 판'을 누른다 */ }
+
+  // ---------- 치는 연출 ----------
+  // 화면을 새로 그리기 전 카드 위치를 기억해 두고, 그린 뒤 '낸 패 → 바닥', '더미 → 바닥', '먹은 패 → 내 쪽'으로 날린다
+  const fx = document.createElement('div'); fx.id = 'fx'; document.body.appendChild(fx);
+  let busy = false, lastSig = '';
+  const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sigOf = g => g.log.length + ':' + (g.last ? g.last.t + '/' + g.last.played + '/' + g.last.flipped + '/' + g.last.take.join(',') : '');
+  function snapshot() {
+    const map = new Map();
+    const where = el => (el.closest('.caps') ? 'caps' + el.closest('.seat').dataset.team : el.closest('#floor') ? 'floor' : el.closest('.hand') ? 'hand' : 'etc');
+    document.querySelectorAll('.card[data-id]').forEach(el => map.set(+el.dataset.id, { r: el.getBoundingClientRect(), w: where(el) }));
+    const deck = $('deck-card');
+    map.set('deck', (deck || $('floor')).getBoundingClientRect());
+    for (let t = 0; t < 2; t++) { const h = $('hand-' + t).querySelector('.card') || $('hand-' + t); map.set('hand' + t, h.getBoundingClientRect()); }
+    map.set('floor', $('floor').getBoundingClientRect());
+    return map;
+  }
+  const rectOf = id => { const el = document.querySelector('.card[data-id="' + id + '"]'); return el ? el.getBoundingClientRect() : null; };
+  function placeGhost(g, r) { g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px'; }
+  function fly(id, from, to, ms, pop) {
+    return new Promise(res => {
+      const g = cardEl(id);
+      placeGhost(g, from);
+      fx.appendChild(g);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        g.style.transition = 'left ' + ms + 'ms cubic-bezier(0.3, 0.8, 0.3, 1), top ' + ms + 'ms cubic-bezier(0.3, 0.8, 0.3, 1), width ' + ms + 'ms, height ' + ms + 'ms, transform ' + ms + 'ms';
+        placeGhost(g, to);
+        if (pop) { g.style.transform = 'scale(1.18) rotate(-6deg)'; setTimeout(() => { g.style.transition = 'transform 120ms'; g.style.transform = ''; }, ms * 0.7); }
+      }));
+      setTimeout(() => res(g), ms + 40);
+    });
+  }
+  const at = g => g.getBoundingClientRect();
+  async function present(prev) {
+    const sig = sigOf(G);
+    if (sig === lastSig) return;
+    lastSig = sig;
+    const L = G.last;
+    if (!L || reduceMotion()) return;
+    const t = L.t, deckR = prev.get('deck'), floorR = prev.get('floor');
+    const cw = deckR.width, ch = deckR.height;
+    const spot = i => ({ left: Math.min(floorR.right - cw - 12, floorR.left + floorR.width * 0.5 + i * (cw + 10)), top: floorR.top + 14, width: cw, height: ch });
+    const ids = new Set([L.played, L.flipped, ...L.take].filter(id => id >= 0));
+    // 상대 피를 가져온 것도 날린다
+    const stolen = [...document.querySelectorAll('#caps-' + t + ' .card[data-id]')].map(el => +el.dataset.id).filter(id => prev.has(id) && prev.get(id).w === 'caps' + (1 - t));
+    stolen.forEach(id => ids.add(id));
+    const hidden = [...document.querySelectorAll('.card[data-id]')].filter(el => ids.has(+el.dataset.id));
+    hidden.forEach(el => { el.style.visibility = 'hidden'; });
+    busy = true;
+    document.querySelector('.play').classList.add('busy');
+    const ghosts = [];
+    const used = new Set();
+    const floorMate = id => L.take.find(x => x !== id && !used.has(x) && C(x).m === C(id).m && prev.has(x) && prev.get(x).w === 'floor');
+    const endPos = new Map();
+    try {
+      if (L.played >= 0) {
+        const p = prev.get(L.played);
+        const from = p && p.w !== 'caps' + t ? p.r : prev.get('hand' + t);
+        const mate = L.take.includes(L.played) ? floorMate(L.played) : null;
+        if (mate !== undefined && mate !== null) used.add(mate);
+        const to = mate != null ? prev.get(mate).r : (rectOf(L.played) || spot(0));
+        const g = await fly(L.played, from, to, 380, true);
+        ghosts.push(g); endPos.set(L.played, at(g));
+      }
+      if (L.flipped >= 0) {
+        let to;
+        const mate = L.take.includes(L.flipped) ? floorMate(L.flipped) : null;
+        if (mate != null) { used.add(mate); to = prev.get(mate).r; }
+        else if (L.take.includes(L.flipped) && endPos.has(L.played)) to = endPos.get(L.played);
+        else to = rectOf(L.flipped) || spot(1);
+        const g = await fly(L.flipped, deckR, to, 380, true);
+        ghosts.push(g); endPos.set(L.flipped, at(g));
+      }
+      const moves = [];
+      for (const id of [...L.take, ...stolen]) {
+        const dest = rectOf(id);
+        if (!dest) continue;
+        const from = endPos.get(id) || (prev.has(id) ? prev.get(id).r : spot(0));
+        moves.push(fly(id, from, dest, 420, false));
+      }
+      ghosts.push(...await Promise.all(moves));
+    } finally {
+      ghosts.forEach(g => g.remove());
+      fx.textContent = '';
+      busy = false;
+      render();
+      scheduleAI();
+    }
+  }
 
   function bindControls() {
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));

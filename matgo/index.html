@@ -60,7 +60,7 @@
     flex: none;
     border-radius: 5px;
     background: #F7ECD6;
-    border: 1px solid rgba(0, 0, 0, 0.35);
+    border: 0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
     overflow: hidden;
     color: #1E1710;
@@ -68,13 +68,15 @@
     user-select: none;
     -webkit-user-select: none;
   }
-  .card svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .card img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: fill; pointer-events: none; }
   .card.back { background: repeating-linear-gradient(45deg, #7A1F1A 0 6px, #63140F 6px 12px); border-color: #3A0A08; }
   .card.back::after { content: ""; position: absolute; inset: 6px; border-radius: 3px; border: 1.5px solid rgba(255, 220, 160, 0.55); }
   /* 치는 연출: 날아가는 카드 */
   #fx { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
   #fx .card { position: absolute; margin: 0; box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45); will-change: left, top, transform; }
   .play.busy .card.can, .play.busy .card.pickable { outline: none; animation: none; }
+  #fx .flipcover { position: absolute; inset: 0; border-radius: 5px; background: repeating-linear-gradient(45deg, #7A1F1A 0 6px, #63140F 6px 12px); transform-origin: center; transition: transform 150ms ease-in; }
+  #fx .flipcover.open { transform: scaleX(0); }
   .pend { display: flex; align-items: center; gap: 6px; color: #FFF; font-size: 0.75rem; }
   .card.mini { --cw: calc(var(--cw-base, 54px) * 0.62); }
   button.card { cursor: pointer; padding: 0; font: inherit; }
@@ -98,32 +100,34 @@
   .caps { display: flex; flex-wrap: wrap; gap: 4px 12px; min-height: calc(var(--cw) * 0.62 * 1.55 + 4px); }
   .capgroup { display: flex; align-items: center; gap: 2px; }
   .capgroup .lab { font-size: 0.6875rem; color: var(--ink-soft); margin-right: 3px; white-space: nowrap; }
-  .capgroup .card { margin-left: calc(var(--cw) * -0.28); }
+  .capgroup .card { margin-left: calc(var(--cw) * -0.28); transition: transform 0.12s ease-out; overflow: visible; }
   .capgroup .card:first-of-type { margin-left: 0; }
+  .capgroup .card:hover, .capgroup .card:focus-visible { transform: scale(2.1); z-index: 20; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); }
+  .caps { position: relative; z-index: 1; }
+  .caps:hover { z-index: 30; }
   .hand { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.55 + 6px); }
   .hand .back { margin-left: -14px; } .hand .back:first-child { margin-left: 0; }
 
   /* 바닥 */
+  /* 바닥: 정사각형 담요. 4×4 칸 중 가운데 2×2는 더미, 둘레 12칸에 달별로 깐다 */
   .floor {
     position: relative;
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
-    padding: 12px;
-    border-radius: 10px;
-    background: var(--felt);
-    border: 2px solid var(--felt-edge);
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.25);
-    min-height: calc(var(--cw) * 1.55 * 2 + 40px);
+    width: min(100%, 560px);
+    aspect-ratio: 1;
+    margin-inline: auto;
+    border-radius: 14px;
+    background: radial-gradient(circle at center, #4A6B45 0%, var(--felt) 55%, #2F452D 100%);
+    border: 3px solid var(--felt-edge);
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35), 0 4px 0 var(--felt-edge);
   }
-  @media (max-width: 640px) { .floor { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px; } }
-  .slot { display: flex; align-items: flex-start; min-height: calc(var(--cw) * 1.55); }
-  .slot .card { margin-left: calc(var(--cw) * -0.4); }
+  .slot { position: absolute; width: 25%; height: 25%; display: flex; align-items: center; justify-content: center; }
+  .slot .card { margin-left: calc(var(--cw) * -0.42); }
   .slot .card:first-child { margin-left: 0; }
-  .deck { grid-column: span 2; display: flex; align-items: center; gap: 8px; color: #FFF; font-size: 0.8125rem; white-space: nowrap; }
-  .deck .card { margin-left: 0; }
-  .deck b { font-size: 1.1rem; }
-  .floor-empty { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255, 255, 255, 0.5); font-size: 0.875rem; pointer-events: none; }
+  .deck { position: absolute; left: 25%; top: 25%; width: 50%; height: 50%; display: flex; align-items: center; justify-content: center; gap: 10px; color: #FFF; font-size: 0.75rem; white-space: nowrap; }
+  .deck .card { margin-left: 0; box-shadow: 0 3px 0 #4A0F0C, 0 5px 0 #3A0A08, 0 8px 10px rgba(0, 0, 0, 0.5); }
+  .deck b { font-size: 1rem; }
+  .deck .pend { flex-direction: column; gap: 2px; }
+  .floor-empty { position: absolute; left: 50%; bottom: 8px; transform: translateX(-50%); color: rgba(255, 255, 255, 0.5); font-size: 0.8125rem; pointer-events: none; white-space: nowrap; }
 
   .status { margin: 0; min-height: 1.6em; font-weight: 700; }
   .status.final { font: 800 1.3rem/1.35 "Nanum Myeongjo", serif; }
@@ -252,6 +256,9 @@
           </ul>
         </details>
       </section>
+      <section>
+        <p class="fine">화투 그림: 위키미디어 공용 <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hwatu" rel="license noopener" target="_blank">SVG Hwatu</a> (Spenĉjo, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" rel="license noopener" target="_blank">CC BY-SA 4.0</a>).</p>
+      </section>
       <div class="ad-slot" data-ad="game-side" hidden></div>
     </aside>
   </main>
@@ -262,7 +269,6 @@
 <script src="../shared/online.js"></script>
 <script src="../shared/site.js"></script>
 <script src="engine.js"></script>
-<script src="cards.js"></script>
 <script>
 (() => {
   const M = window.Matgo, C = id => M.CARDS[id];
@@ -270,6 +276,10 @@
   const STORE_KEY = 'matgo-standalone-v1';
   const $ = id => document.getElementById(id);
   const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
+  // 바닥 칸: [열, 행] — 위 5칸, 오른쪽 가운데, 아래 5칸, 왼쪽 가운데. 가운데는 더미
+  const SLOT_POS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1]];
+  const SLOT_ORDER = [1, 7, 4, 10, 2, 8, 0, 6, 3, 9, 5, 11];   // 보기 좋게 퍼지도록 채우는 순서
+  let slotOf = {}, slotSeed = 0;
 
   // ---------- 상태 ----------
   const S = { mode: 'ai', level: 'normal' };
@@ -416,7 +426,7 @@
   function scheduleAI() {
     clearTimeout(aiTimer);
     if (G.over || busy || S.mode !== 'ai' || G.turn !== 1) return;
-    const wait = G.stage === 'play' ? 700 : G.stage === 'go' ? 1100 : 500;
+    const wait = G.stage === 'play' ? 500 : G.stage === 'go' ? 1000 : 400;
     aiTimer = setTimeout(() => {
       if (G.over || busy || S.mode !== 'ai' || G.turn !== 1) return;
       let ok = false;
@@ -437,7 +447,11 @@
     if (id < 0) { el.classList.add('back'); el.setAttribute('aria-label', '뒤집힌 패'); return el; }
     el.setAttribute('aria-label', M.cardName(id));
     el.dataset.id = id;
-    el.innerHTML = window.MatgoCards.cardSvg(id);          // 우리가 만든 SVG 문자열
+    const img = document.createElement('img');
+    img.src = 'cards/' + String(id).padStart(2, '0') + '.svg';   // 위키미디어 공용 SVG Hwatu 세트 (CC BY-SA 4.0)
+    img.alt = '';
+    img.draggable = false;
+    el.appendChild(img);
     return el;
   }
   function capsInto(container, caps, newIds) {
@@ -493,9 +507,10 @@
         hand.appendChild(b);
       }
     }
-    // 바닥: 달별로 모아 보여 준다
+    // 바닥: 달별로 모아 둘레 칸에 깐다 (한 번 놓인 달은 판이 끝날 때까지 같은 자리)
     const floor = $('floor');
     floor.textContent = '';
+    if (slotSeed !== G.seed) { slotSeed = G.seed; slotOf = {}; }
     const deckEl = document.createElement('div'); deckEl.className = 'deck';
     const deckCard = cardEl(-1); deckCard.id = 'deck-card'; deckEl.appendChild(deckCard);
     const dl = document.createElement('span'); dl.innerHTML = '';
@@ -508,8 +523,13 @@
     }
     floor.appendChild(deckEl);
     const months = [...new Set(G.floor.map(id => C(id).m))].sort((a, b) => a - b);
+    const taken = new Set(months.map(m => slotOf[m]).filter(v => v !== undefined));
     for (const m of months) {
+      if (slotOf[m] === undefined) { const free = SLOT_ORDER.find(i => !taken.has(i)); slotOf[m] = free === undefined ? 0 : free; taken.add(slotOf[m]); }
+      const [col, row] = SLOT_POS[slotOf[m]];
       const slot = document.createElement('div'); slot.className = 'slot';
+      slot.style.left = (col * 25) + '%';
+      slot.style.top = (row * 25) + '%';
       for (const id of G.floor.filter(f => C(f).m === m)) {
         const pickable = pickOpts.has(id) && act;
         const el = cardEl(id, { button: pickable, cls: pickable ? 'pickable' : '' });
@@ -628,17 +648,19 @@
   }
   const rectOf = id => { const el = document.querySelector('.card[data-id="' + id + '"]'); return el ? el.getBoundingClientRect() : null; };
   function placeGhost(g, r) { g.style.left = r.left + 'px'; g.style.top = r.top + 'px'; g.style.width = r.width + 'px'; g.style.height = r.height + 'px'; }
-  function fly(id, from, to, ms, pop) {
+  function fly(id, from, to, ms, pop, flip) {
     return new Promise(res => {
       const g = cardEl(id);
       placeGhost(g, from);
+      if (flip) { const cv = document.createElement('div'); cv.className = 'flipcover'; g.appendChild(cv); requestAnimationFrame(() => requestAnimationFrame(() => cv.classList.add('open'))); }
       fx.appendChild(g);
-      requestAnimationFrame(() => requestAnimationFrame(() => {
+      const delay = flip ? 150 : 0;
+      setTimeout(() => requestAnimationFrame(() => {
         g.style.transition = 'left ' + ms + 'ms cubic-bezier(0.3, 0.8, 0.3, 1), top ' + ms + 'ms cubic-bezier(0.3, 0.8, 0.3, 1), width ' + ms + 'ms, height ' + ms + 'ms, transform ' + ms + 'ms';
         placeGhost(g, to);
-        if (pop) { g.style.transform = 'scale(1.18) rotate(-6deg)'; setTimeout(() => { g.style.transition = 'transform 120ms'; g.style.transform = ''; }, ms * 0.7); }
-      }));
-      setTimeout(() => res(g), ms + 40);
+        if (pop) { g.style.transform = 'scale(1.18) rotate(-6deg)'; setTimeout(() => { g.style.transition = 'transform 100ms'; g.style.transform = ''; }, ms * 0.7); }
+      }), delay);
+      setTimeout(() => res(g), ms + delay + 30);
     });
   }
   const at = g => g.getBoundingClientRect();
@@ -670,7 +692,7 @@
         const mate = L.take.includes(L.played) ? floorMate(L.played) : null;
         if (mate !== undefined && mate !== null) used.add(mate);
         const to = mate != null ? prev.get(mate).r : (rectOf(L.played) || spot(0));
-        const g = await fly(L.played, from, to, 380, true);
+        const g = await fly(L.played, from, to, 300, true);
         ghosts.push(g); endPos.set(L.played, at(g));
       }
       if (L.flipped >= 0) {
@@ -679,7 +701,7 @@
         if (mate != null) { used.add(mate); to = prev.get(mate).r; }
         else if (L.take.includes(L.flipped) && endPos.has(L.played)) to = endPos.get(L.played);
         else to = rectOf(L.flipped) || spot(1);
-        const g = await fly(L.flipped, deckR, to, 380, true);
+        const g = await fly(L.flipped, deckR, to, 260, true, true);
         ghosts.push(g); endPos.set(L.flipped, at(g));
       }
       const moves = [];
@@ -687,7 +709,7 @@
         const dest = rectOf(id);
         if (!dest) continue;
         const from = endPos.get(id) || (prev.has(id) ? prev.get(id).r : spot(0));
-        moves.push(fly(id, from, dest, 420, false));
+        moves.push(fly(id, from, dest, 320, false));
       }
       ghosts.push(...await Promise.all(moves));
     } finally {

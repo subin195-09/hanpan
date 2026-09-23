@@ -13,5 +13,10 @@ window.HANPAN_CONFIG = {
     'hub-bottom': '',     // 놀이방 첫 화면, 게임 목록 아래
     'game-side': ''       // 각 게임 화면, 설정 패널 아래
   },
-  analyticsId: ''         // Google Analytics 측정 ID (G-XXXXXXX). 비우면 통계 없음
+  analyticsId: '',        // Google Analytics 측정 ID (G-XXXXXXX). 비우면 통계 없음
+  // 전체 랭킹 (지뢰찾기). 비어 있으면 기기 안 랭킹만 보인다. 켜는 법은 README "랭킹 보드 켜는 법".
+  leaderboard: {
+    firebaseProjectId: '',
+    firebaseApiKey: ''
+  }
 };

@@ -16,7 +16,7 @@ reversi/ omok/ yut/ alkkagi/ matgo/ mines/   (spot/ 은 목록에서 뺀 틀린�
   thumb.svg       놀이방 목록에 보이는 판 그림 (정사각형)
 ```
 
-게임 목록: 리버시 · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 지뢰찾기(혼자 클래식 + 2인 지뢰 뺏기 대결).
+게임 목록: 리버시 · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 지뢰찾기(혼자, 랭킹 보드).
 
 ## 게임 추가하는 법
 
@@ -45,6 +45,37 @@ reversi/ omok/ yut/ alkkagi/ matgo/ mines/   (spot/ 은 목록에서 뺀 틀린�
 4. 방문 통계는 `analyticsId`에 GA 측정 ID를 넣는다.
 
 값이 비어 있는 동안에는 광고·통계 스크립트를 전혀 불러오지 않는다. 광고 자리를 더 만들려면 원하는 위치에 `<div class="ad-slot" data-ad="이름" hidden></div>`를 두고 `adSlots`에 같은 이름을 추가한다.
+
+## 랭킹 보드 켜는 법 (지뢰찾기 전체 랭킹)
+
+값이 비어 있으면 기기 안 랭킹만 보인다. 전체 랭킹은 무료 Firebase Firestore를 저장소로 쓴다 (서버 코드 없음, 브라우저가 REST로 직접 읽고 쓴다).
+
+1. https://console.firebase.google.com 에서 프로젝트를 만들고, 빌드 → Firestore Database → 데이터베이스 만들기(프로덕션 모드, 리전은 asia-northeast3 서울).
+2. 프로젝트 설정 → 일반 → 웹 앱 추가 → 나오는 `projectId` 와 `apiKey` 를 `shared/config.js` 의 `leaderboard` 에 넣는다.
+3. Firestore → 규칙에 아래를 붙여 넣고 게시한다. 누구나 읽고 새 기록만 추가할 수 있고, 고치거나 지우지는 못한다.
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{col}/{doc} {
+      allow read: if col in ['mines_easy', 'mines_mid', 'mines_hard'];
+      allow create: if col in ['mines_easy', 'mines_mid', 'mines_hard']
+        && request.resource.data.keys().hasOnly(['name', 'ms', 'at'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 12
+        && request.resource.data.ms is int
+        && request.resource.data.ms >= 1000 && request.resource.data.ms <= 3600000
+        && request.resource.data.at is timestamp;
+      allow update, delete: if false;
+    }
+  }
+}
+```
+
+4. 프로젝트 설정 → 앱 체크나 API 키 제한에서 HTTP 리퍼러를 사이트 주소로 제한하면 다른 사이트에서 키를 못 쓴다.
+
+기록은 크기별로 `mines_easy` / `mines_mid` / `mines_hard` 컬렉션에 `{ name, ms, at }` 으로 쌓이고, 화면은 `ms` 오름차순 상위 10개를 보여 준다. 시간은 브라우저가 재므로 조작은 막을 수 없다 — 친구들끼리 겨루는 용도로 본다.
 
 ## 도메인을 붙일 때
 

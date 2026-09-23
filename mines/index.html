@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지뢰찾기 한 판</title>
-<meta name="description" content="설치 없이 바로 하는 지뢰찾기. 혼자서는 초급·중급·고급 기록 도전, 둘이서는 지뢰를 번갈아 찾아 26개를 먼저 차지하는 지뢰 뺏기 대결. AI, 한 화면 2인, 초대 링크 온라인 2인.">
+<meta name="description" content="설치 없이 바로 하는 클래식 지뢰찾기. 초급·중급·고급, 첫 클릭 안전, 깃발과 한꺼번에 열기, 크기별 랭킹 보드.">
 <meta property="og:title" content="지뢰찾기 한 판">
-<meta property="og:description" content="혼자서는 기록 도전, 둘이서는 지뢰를 번갈아 찾아 26개를 먼저 차지하는 지뢰 뺏기 대결.">
+<meta property="og:description" content="설치 없이 바로 하는 클래식 지뢰찾기. 초급·중급·고급, 크기별 랭킹 보드.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="thumb.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&family=IBM+Plex+Mono:wght@600;700&display=swap">
@@ -18,7 +18,7 @@
     --ground: #E9EBEE; --surface: #F6F7F9; --ink: #1B2028; --ink-soft: #5F6873; --line: #C9CFD8;
     --accent: #D9481C; --on-ink: #F6F7F9;
     --cell: #C7CDD6; --cell-hi: #EEF1F5; --cell-lo: #8F98A5; --open: #DEE2E8; --open-line: #B9C1CC;
-    --red: #D33B2F; --blue: #2B63C9;
+    --red: #D33B2F; --gold: #C9932A;
     --cs: 30px;
   }
   @media (prefers-color-scheme: dark) {
@@ -26,14 +26,14 @@
       --ground: #14171B; --surface: #1D2126; --ink: #E7EAEE; --ink-soft: #9AA3AE; --line: #333A43;
       --accent: #FF7A4D; --on-ink: #14171B;
       --cell: #4A5260; --cell-hi: #6B7482; --cell-lo: #2C3139; --open: #262B32; --open-line: #3B424C;
-      --red: #F0584B; --blue: #5A8BE8;
+      --red: #F0584B; --gold: #E0B050;
     }
   }
   :root[data-theme="dark"] {
     --ground: #14171B; --surface: #1D2126; --ink: #E7EAEE; --ink-soft: #9AA3AE; --line: #333A43;
     --accent: #FF7A4D; --on-ink: #14171B;
     --cell: #4A5260; --cell-hi: #6B7482; --cell-lo: #2C3139; --open: #262B32; --open-line: #3B424C;
-    --red: #F0584B; --blue: #5A8BE8;
+    --red: #F0584B; --gold: #E0B050;
   }
   @media (max-width: 640px) { :root { --cs: 22px; } }
 
@@ -43,19 +43,10 @@
   .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
   h1 { margin: 0; font: 900 2.2rem/1.15 "Gothic A1", "Apple SD Gothic Neo", sans-serif; letter-spacing: -0.02em; }
   .masthead p { margin: 0; color: var(--ink-soft); }
-  .table { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 320px); gap: 32px; align-items: start; }
+  .table { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 32px; align-items: start; }
   @media (max-width: 900px) { .table { grid-template-columns: minmax(0, 1fr); gap: 28px; } h1 { font-size: 1.75rem; } }
   .play { display: grid; gap: 12px; min-width: 0; }
 
-  .sides { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .side { display: grid; gap: 2px; padding-bottom: 5px; border-bottom: 3px solid transparent; }
-  .side.right { justify-items: end; text-align: right; }
-  .side[data-team="0"] { --team: var(--red); }
-  .side[data-team="1"] { --team: var(--blue); }
-  .side.active { border-bottom-color: var(--team); }
-  .side-name { font-weight: 700; color: var(--team); }
-  .side-score { font: 700 1.6rem/1 "IBM Plex Mono", ui-monospace, monospace; }
-  .side-score small { font: 500 0.75rem/1 "Gothic A1", sans-serif; color: var(--ink-soft); margin-left: 4px; }
   .solo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
   .counter { font: 700 1.4rem/1 "IBM Plex Mono", ui-monospace, monospace; padding: 6px 10px; border-radius: 4px; background: var(--ink); color: #FF6B4A; letter-spacing: 0.05em; }
   .counter small { font: 500 0.6875rem/1 "Gothic A1", sans-serif; color: #C9CFD8; margin-right: 6px; letter-spacing: 0; }
@@ -65,63 +56,41 @@
 
   .board-wrap { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
   .board {
-    display: grid;
-    grid-template-columns: repeat(var(--w), var(--cs));
-    gap: 2px;
-    width: max-content;
-    padding: 6px;
-    border-radius: 6px;
-    background: var(--cell-lo);
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
+    display: grid; grid-template-columns: repeat(var(--w), var(--cs)); gap: 2px; width: max-content; padding: 6px;
+    border-radius: 6px; background: var(--cell-lo); touch-action: manipulation; user-select: none; -webkit-user-select: none;
   }
   .cell {
-    appearance: none;
-    width: var(--cs); height: var(--cs);
-    padding: 0; border: 0; border-radius: 3px;
-    background: var(--cell);
-    box-shadow: inset 2px 2px 0 var(--cell-hi), inset -2px -2px 0 var(--cell-lo);
-    font: 700 calc(var(--cs) * 0.6)/1 "IBM Plex Mono", ui-monospace, monospace;
-    color: var(--ink);
-    cursor: pointer;
-    display: grid; place-items: center;
-    position: relative;
+    appearance: none; width: var(--cs); height: var(--cs); padding: 0; border: 0; border-radius: 3px;
+    background: var(--cell); box-shadow: inset 2px 2px 0 var(--cell-hi), inset -2px -2px 0 var(--cell-lo);
+    font: 700 calc(var(--cs) * 0.6)/1 "IBM Plex Mono", ui-monospace, monospace; color: var(--ink);
+    cursor: pointer; display: grid; place-items: center; position: relative;
   }
   .cell:disabled { cursor: default; }
   .cell.open { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); cursor: default; }
   .cell.n1 { color: #2B63C9; } .cell.n2 { color: #2E8B3D; } .cell.n3 { color: #D33B2F; } .cell.n4 { color: #1F3A8A; }
   .cell.n5 { color: #8B2E2E; } .cell.n6 { color: #1F8A8A; } .cell.n7 { color: #222; } .cell.n8 { color: #666; }
   :root[data-theme="dark"] .cell.n7, :root:not([data-theme="light"]) .cell.n7 { color: #DDD; }
-  .cell.flag::before, .cell.mine-0::before, .cell.mine-1::before {
+  .cell.flag::before {
     content: ""; width: 0; height: 0; margin-left: 20%;
-    border-top: calc(var(--cs) * 0.22) solid transparent;
-    border-bottom: calc(var(--cs) * 0.22) solid transparent;
-    border-left: calc(var(--cs) * 0.34) solid var(--flag, var(--red));
+    border-top: calc(var(--cs) * 0.22) solid transparent; border-bottom: calc(var(--cs) * 0.22) solid transparent;
+    border-left: calc(var(--cs) * 0.34) solid var(--red);
   }
-  .cell.flag::after, .cell.mine-0::after, .cell.mine-1::after {
-    content: ""; position: absolute; left: 34%; top: 20%; width: 2px; height: 60%; background: var(--ink);
-  }
+  .cell.flag::after { content: ""; position: absolute; left: 34%; top: 20%; width: 2px; height: 60%; background: var(--ink); }
   /* 폭탄 모양: 검은 몸통에 가시, 반짝임 */
-  .cell.mine, .cell.boom, .cell.mine-0, .cell.mine-1, .cell.wrong {
+  .cell.mine, .cell.boom, .cell.wrong {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg stroke='%23111' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='7' fill='%23111'/%3E%3Ccircle cx='9.4' cy='9.4' r='1.9' fill='%23fff'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: center; background-size: 74% 74%;
   }
-  .cell.mine-0::before, .cell.mine-1::before, .cell.mine-0::after, .cell.mine-1::after { content: none; }
-  .cell.mine-0 { background-color: #F3B9B3; box-shadow: inset 0 0 0 2px var(--red); }
-  .cell.mine-1 { background-color: #B9CCF3; box-shadow: inset 0 0 0 2px var(--blue); }
   .cell.mine { background-color: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
   .cell.boom { background-color: var(--red); box-shadow: none; }
   .cell.wrong { background-color: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
-  .cell.wrong::before { content: ""; position: absolute; inset: 0; margin: 0; border: 0; width: auto; height: auto;
+  .cell.wrong::before { content: ""; position: absolute; inset: 0;
     background: linear-gradient(45deg, transparent 44%, var(--red) 44% 56%, transparent 56%), linear-gradient(-45deg, transparent 44%, var(--red) 44% 56%, transparent 56%); }
-  .cell.wrong::after { content: none; }
   .cell.last { outline: 3px solid var(--accent); outline-offset: -3px; }
-  .cell.pressed { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }   /* 숫자를 누르는 동안 둘레가 눌린 것처럼 */
+  .cell.pressed { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
   .cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; z-index: 1; }
   .board.can .cell:not(.open):not(:disabled):hover { background: var(--cell-hi); }
 
-  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .btn { appearance: none; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; cursor: pointer; }
   .btn.primary { background: var(--ink); color: var(--on-ink); font-weight: 700; }
   .btn.small { padding: 6px 12px; }
@@ -143,23 +112,23 @@
   .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
   .actions { display: flex; flex-wrap: wrap; gap: 10px; }
   .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
-  #online-msg { color: var(--ink); font-weight: 500; }
-  #lobby, #room { display: grid; gap: 10px; }
-  .join { display: flex; gap: 8px; }
-  .join input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.15em; text-transform: uppercase; }
-  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "Gothic A1", system-ui, sans-serif; }
-  .join input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
-  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
-  .room-code strong { font: 700 1.75rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; }
-  .best { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.875rem; }
-  .best li { display: flex; justify-content: space-between; gap: 10px; }
-  .best b { font-family: "IBM Plex Mono", ui-monospace, monospace; }
-  .log { margin: 0; padding: 0; list-style: none; max-height: 200px; overflow-y: auto; display: grid; gap: 2px; font-size: 0.8125rem; }
-  .log li { display: flex; align-items: baseline; gap: 8px; }
-  .log li[data-team="0"] { --team: var(--red); }
-  .log li[data-team="1"] { --team: var(--blue); }
-  .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
-  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+  .name-row { display: flex; gap: 8px; align-items: center; }
+  .name-row input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 500 0.9375rem/1.2 "Gothic A1", system-ui, sans-serif; }
+  .name-row input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+  /* 랭킹 */
+  .rank-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .rank-scope { font-size: 0.75rem; color: var(--ink-soft); }
+  .rank { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 0.875rem; }
+  .rank li { display: grid; grid-template-columns: 2em 1fr auto auto; gap: 8px; align-items: baseline; padding: 4px 6px; border-radius: 4px; }
+  .rank li.me { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+  .rank li.fresh { background: color-mix(in srgb, var(--gold) 22%, transparent); }
+  .rank .no { font: 700 0.8125rem/1 "IBM Plex Mono", ui-monospace, monospace; color: var(--ink-soft); }
+  .rank li:nth-child(1) .no { color: var(--gold); }
+  .rank .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .tm { font: 700 0.9375rem/1 "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .rank .dt { font-size: 0.6875rem; color: var(--ink-soft); }
+  .rank-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
   details { font-size: 0.875rem; }
   summary { cursor: pointer; font-weight: 500; }
   summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
@@ -171,19 +140,16 @@
   <header class="masthead">
     <a class="home" href="../index.html">← 한 판 놀이방</a>
     <h1>지뢰찾기 한 판</h1>
-    <p>혼자서는 기록에 도전, 둘이서는 지뢰를 번갈아 찾아 26개를 먼저 차지합니다.</p>
+    <p>지뢰가 아닌 칸을 모두 열고, 랭킹에 이름을 올리세요.</p>
   </header>
 
   <main class="table">
     <div class="play">
-      <div class="sides" id="sides">
-        <div class="side" id="side-0" data-team="0"><span class="side-name" id="name-0">홍</span><span class="side-score" id="score-0">0</span></div>
-        <div class="side right" id="side-1" data-team="1"><span class="side-name" id="name-1">청</span><span class="side-score" id="score-1">0</span></div>
-      </div>
-      <div class="solo-bar" id="solo-bar" hidden>
+      <div class="solo-bar">
         <span class="counter" id="mines-left"><small>남은 지뢰</small>000</span>
         <span class="counter" id="clock"><small>시간</small>000</span>
         <button type="button" class="btn small" id="btn-flagmode" aria-pressed="false">🚩 깃발 모드</button>
+        <button type="button" class="btn small primary" id="btn-new">새 판</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <div class="board-wrap"><div class="board" id="board" role="grid" aria-label="지뢰밭"></div></div>
@@ -194,16 +160,6 @@
       <section>
         <h2>놀이 설정</h2>
         <fieldset>
-          <legend>어떻게</legend>
-          <div class="seg-row">
-            <input type="radio" name="mode" id="mode-solo" value="solo"><label for="mode-solo">혼자</label>
-            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
-            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면 2인</label>
-            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
-          </div>
-        </fieldset>
-        <fieldset id="fs-online" hidden></fieldset>
-        <fieldset id="fs-size">
           <legend>판 크기</legend>
           <div class="seg-row">
             <input type="radio" name="size" id="size-easy" value="easy"><label for="size-easy">초급 9×9</label>
@@ -211,37 +167,27 @@
             <input type="radio" name="size" id="size-hard" value="hard"><label for="size-hard">고급 30×16</label>
           </div>
         </fieldset>
-        <fieldset id="fs-level">
-          <legend>AI 난이도</legend>
-          <div class="seg-row">
-            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
-            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
-            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
-          </div>
+        <fieldset>
+          <legend>랭킹에 남길 이름</legend>
+          <div class="name-row"><input type="text" id="name" maxlength="12" placeholder="이름 (12자까지)" autocomplete="nickname"></div>
         </fieldset>
-        <div class="actions">
-          <button type="button" class="btn" id="btn-new">새 판</button>
-        </div>
       </section>
 
-      <section id="sec-best">
-        <h2>내 최고 기록</h2>
-        <ul class="best" id="best"></ul>
-      </section>
-
-      <section id="sec-log">
-        <h2>지난 수</h2>
-        <p class="log-empty" id="log-empty">아직 연 칸이 없습니다.</p>
-        <ol class="log" id="log" hidden></ol>
+      <section>
+        <div class="rank-head"><h2 id="rank-title">랭킹 · 중급</h2><span class="rank-scope" id="rank-scope"></span></div>
+        <p class="rank-empty" id="rank-empty">아직 기록이 없습니다. 첫 번째로 이름을 올려 보세요.</p>
+        <ol class="rank" id="rank" hidden></ol>
+        <p class="fine" id="rank-note"></p>
       </section>
 
       <section>
         <details>
           <summary>규칙 보기</summary>
           <ul>
-            <li><b>혼자</b>: 숫자는 둘레 여덟 칸에 있는 지뢰 수입니다. 지뢰가 아닌 칸을 모두 열면 성공. 첫 클릭은 항상 안전합니다. 우클릭이나 길게 누르기(또는 깃발 모드)로 깃발을 꽂고, 깃발을 다 꽂은 숫자를 누르면 나머지 둘레가 한꺼번에 열립니다.</li>
+            <li>숫자는 둘레 여덟 칸에 있는 지뢰 수입니다. 지뢰가 아닌 칸을 모두 열면 성공. 첫 클릭은 항상 안전합니다.</li>
+            <li>우클릭이나 길게 누르기(또는 깃발 모드)로 깃발을 꽂습니다. 깃발을 다 꽂은 숫자를 누르면 나머지 둘레가 한꺼번에 열립니다.</li>
             <li>숫자를 누르고 있으면(양쪽 버튼이나 휠 버튼도 됩니다) 둘레 여덟 칸이 눌려 보여 세기 쉽습니다. 떼도 깃발 수가 맞지 않으면 열리지 않습니다.</li>
-            <li><b>대결(지뢰 뺏기)</b>: 16×16에 지뢰 51개. 번갈아 한 칸씩 엽니다. 지뢰를 찾으면 1점을 얻고 한 번 더, 숫자가 나오면 차례가 넘어갑니다. 26개를 먼저 찾으면 승리. 숫자를 열어 준 만큼 상대에게 힌트가 되니 어디를 여는지도 전략입니다.</li>
+            <li>성공하면 걸린 시간이 랭킹에 올라갑니다. 크기별로 따로 셉니다.</li>
           </ul>
         </details>
       </section>
@@ -250,16 +196,14 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="../shared/config.js"></script>
-<script src="../shared/online.js"></script>
 <script src="../shared/site.js"></script>
 <script>
 (() => {
-  const TEAM = ['홍', '청'];
   const SIZES = { easy: [9, 9, 10], mid: [16, 16, 40], hard: [30, 16, 99] };
-  const DUEL = [16, 16, 51], WIN = 26;
-  const STORE_KEY = 'mines-standalone-v1', BEST_KEY = 'mines-best-v1';
+  const SIZE_NAME = { easy: '초급', mid: '중급', hard: '고급' };
+  const STORE_KEY = 'mines-solo-v2', RANK_KEY = 'mines-rank-v1', NAME_KEY = 'hanpan-name';
+  const TOP = 10;
   const $ = id => document.getElementById(id);
 
   function rng(seed) {
@@ -273,10 +217,9 @@
     };
   }
   const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
-  // 지뢰 배치: 시드로 정해진다. avoid 는 첫 클릭 둘레(혼자 모드)
   function placeMines(w, h, n, seed, avoid) {
     const r = rng(seed), cells = [];
-    for (let i = 0; i < w * h; i++) if (!avoid || !avoid.has(i)) cells.push(i);
+    for (let i = 0; i < w * h; i++) if (!avoid.has(i)) cells.push(i);
     for (let i = cells.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [cells[i], cells[j]] = [cells[j], cells[i]]; }
     const mines = new Uint8Array(w * h);
     for (let k = 0; k < n && k < cells.length; k++) mines[cells[k]] = 1;
@@ -294,250 +237,172 @@
   const countAround = (mines, i, w, h) => neighbors(i, w, h).reduce((a, j) => a + mines[j], 0);
 
   // ---------- 상태 ----------
-  // open[i]: -1 닫힘 · 0~8 숫자 · 9 홍이 찾은 지뢰 · 10 청이 찾은 지뢰 (혼자 모드에선 9 = 깃발, 11 = 터진 지뢰)
-  const S = { mode: 'solo', size: 'mid', level: 'normal', flagMode: false };
-  let G = null, seen = 0, aiTimer = 0, clockTimer = 0;
-  function freshDuel(seq) {
-    const [w, h, n] = DUEL;
-    return { kind: 'duel', w, h, n, seed: newSeed(), open: Array(w * h).fill(-1), turn: 0, over: false, winner: -1, last: -1, log: [], seq: seq || 0, ev: null };
-  }
-  function freshSolo() {
+  // open[i]: -1 닫힘 · 0~8 숫자 · 9 깃발 · 10 드러난 지뢰 · 11 밟은 지뢰
+  const S = { size: 'mid', flagMode: false };
+  let G = null;
+  function freshGame() {
     const [w, h, n] = SIZES[S.size];
-    return { kind: 'solo', w, h, n, seed: 0, open: Array(w * h).fill(-1), started: 0, elapsed: 0, over: false, won: false, last: -1 };
+    return { size: S.size, w, h, n, seed: 0, avoid: [], open: Array(w * h).fill(-1), started: 0, elapsed: 0, over: false, won: false, last: -1, rank: -1 };
   }
-  const minesOf = g => (g.kind === 'duel' ? placeMines(g.w, g.h, g.n, g.seed) : g.seed ? placeMines(g.w, g.h, g.n, g.seed, new Set(g.avoid || [])) : null);
   let mineCache = { key: '', mines: null };
   function mines() {
-    const key = G.kind + ':' + G.seed + ':' + (G.avoid || []).join(',');
-    if (mineCache.key !== key) mineCache = { key, mines: minesOf(G) };
+    const key = G.seed + ':' + G.avoid.join(',');
+    if (mineCache.key !== key) mineCache = { key, mines: G.seed ? placeMines(G.w, G.h, G.n, G.seed, new Set(G.avoid)) : null };
     return mineCache.mines;
   }
-  const scores = g => [9, 10].map(v => g.open.filter(o => o === v).length);
-
-  const O = Hanpan.createOnline({
-    id: 'mines',
-    seats: { host: 0, guest: 1, none: -1 },
-    text: { host: '방장 · 홍(선공)', guest: '참가자 · 청(후공)', note: '방장이 홍(선공), 참가자가 청입니다. 지뢰밭은 방장 쪽에서 만들어 보냅니다.' },
-    isOnline: () => S.mode === 'online',
-    setOnline: () => { S.mode = 'online'; },
-    onNewRoom: kind => { G = freshDuel(kind === 'guest' || !G || G.kind !== 'duel' ? 0 : G.seq + 1); seen = kind === 'guest' ? -1 : G.seq; },
-    onLeave: () => {},
-    getState: () => G,
-    onState: (g, firstSync) => { const clean = cleanDuel(g); if (clean) adoptRemote(clean, firstSync); },
-    render: () => render(),
-    save: () => save()
-  });
-  function save() {
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ size: S.size, game: G })); } catch (e) {} }
+  function loadSaved() {
     try {
-      const d = { mode: S.mode, size: S.size, level: S.level, game: G };
-      if (S.mode === 'online' && O.roomInfo()) d.room = O.roomInfo();
-      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+      const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+      if (!d || !SIZES[d.size]) return;
+      S.size = d.size;
+      const g = d.game, [w, h] = SIZES[S.size];
+      if (!g || g.w !== w || g.h !== h || !Array.isArray(g.open) || g.open.length !== w * h) return;
+      G = freshGame();
+      G.seed = Number.isInteger(g.seed) ? g.seed : 0;
+      G.avoid = Array.isArray(g.avoid) ? g.avoid.filter(Number.isInteger) : [];
+      G.open = g.open.map(v => (Number.isInteger(v) && v >= -1 && v <= 11 ? v : -1));
+      G.elapsed = typeof g.elapsed === 'number' ? g.elapsed : 0;
+      G.over = !!g.over; G.won = !!g.won; G.rank = Number.isInteger(g.rank) ? g.rank : -1;
+      G.started = G.seed && !G.over ? Date.now() - G.elapsed : 0;
     } catch (e) {}
   }
-  function loadSaved() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
-  function cleanDuel(d) {
-    if (!d || d.kind !== 'duel' || !Number.isInteger(d.seed) || d.seed < 1) return null;
-    const [w, h, n] = DUEL;
-    if (!Array.isArray(d.open) || d.open.length !== w * h) return null;
-    const g = freshDuel(Number.isInteger(d.seq) ? d.seq : 0);
-    g.seed = d.seed;
-    g.open = d.open.map(v => (Number.isInteger(v) && v >= -1 && v <= 10 ? v : -1));
-    g.turn = d.turn === 1 ? 1 : 0;
-    g.over = !!d.over;
-    g.winner = d.winner === 0 || d.winner === 1 ? d.winner : -1;
-    g.last = Number.isInteger(d.last) && d.last >= -1 && d.last < w * h ? d.last : -1;
-    g.log = Array.isArray(d.log) ? d.log.slice(-60).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 60) })) : [];
-    g.ev = d.ev && typeof d.ev === 'object' ? { seq: Number.isInteger(d.ev.seq) ? d.ev.seq : 0 } : null;
-    return g;
-  }
-  function cleanSolo(d) {
-    if (!d || d.kind !== 'solo' || !SIZES[S.size]) return null;
-    const [w, h, n] = SIZES[S.size];
-    if (d.w !== w || d.h !== h || !Array.isArray(d.open) || d.open.length !== w * h) return null;
-    const g = freshSolo();
-    g.seed = Number.isInteger(d.seed) ? d.seed : 0;
-    g.avoid = Array.isArray(d.avoid) ? d.avoid.filter(Number.isInteger) : [];
-    g.open = d.open.map(v => (Number.isInteger(v) && v >= -1 && v <= 11 ? v : -1));
-    g.elapsed = typeof d.elapsed === 'number' ? d.elapsed : 0;
-    g.started = g.seed && !d.over ? Date.now() - g.elapsed : 0;
-    g.over = !!d.over; g.won = !!d.won;
-    return g;
-  }
-
-  const isDuel = () => G.kind === 'duel';
-  function canAct() {
-    if (G.over) return false;
-    if (S.mode === 'solo' || S.mode === '2p') return true;
-    if (S.mode === 'ai') return G.turn === 0;
-    return O.status === 'live' && G.turn === O.my;
-  }
-  function roleOf(t) {
-    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
-    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
-    return '';
-  }
-  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+  const myName = () => (localStorage.getItem(NAME_KEY) || '').trim().slice(0, 12) || '익명';
 
   // ---------- 열기 ----------
-  function flood(g, m, start) {
-    const stack = [start], opened = [];
+  function flood(m, start) {
+    const stack = [start];
     while (stack.length) {
       const i = stack.pop();
-      if (g.open[i] !== -1 || m[i]) continue;
-      const c = countAround(m, i, g.w, g.h);
-      g.open[i] = c; opened.push(i);
-      if (c === 0) for (const j of neighbors(i, g.w, g.h)) if (g.open[j] === -1) stack.push(j);
+      if (G.open[i] !== -1 || m[i]) continue;
+      const c = countAround(m, i, G.w, G.h);
+      G.open[i] = c;
+      if (c === 0) for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1) stack.push(j);
     }
-    return opened;
   }
-  // 대결: 한 칸 열기
-  function duelOpen(i) {
-    if (!isDuel() || G.over || G.open[i] !== -1) return false;
-    const m = mines(), t = G.turn;
-    G.last = i;
-    if (m[i]) {
-      G.open[i] = 9 + t;
-      const sc = scores(G);
-      G.log.push({ t, s: '지뢰 발견 (' + sc[t] + '개)' + (sc[t] >= WIN ? ' · 승리' : ' · 한 번 더') });
-      if (sc[t] >= WIN) { G.over = true; G.winner = t; }
-      else if (sc[0] + sc[1] >= G.n) { G.over = true; G.winner = sc[0] === sc[1] ? -1 : sc[0] > sc[1] ? 0 : 1; }
-    } else {
-      const opened = flood(G, m, i);
-      G.log.push({ t, s: '빈 칸 ' + opened.length + '개 열림 · 차례 넘어감' });
-      G.turn = 1 - t;
-    }
-    return true;
-  }
-  function commitDuel() {
-    G.seq++;
-    G.ev = { seq: G.seq };
-    seen = G.seq;
-    save();
-    O.send();
-    render();
-    scheduleAI();
-  }
-  // 혼자: 열기·깃발·한꺼번에 열기
-  function soloOpen(i) {
-    if (isDuel() || G.over) return;
+  function openCell(i) {
+    if (G.over) return;
     if (!G.seed) {                                   // 첫 클릭: 이 칸과 둘레엔 지뢰가 없게 배치
       G.seed = newSeed();
       G.avoid = [i, ...neighbors(i, G.w, G.h)];
       G.started = Date.now();
     }
     const m = mines();
-    if (G.open[i] === 9) return;                     // 깃발 꽂힌 칸은 안 열린다
+    if (G.open[i] === 9) return;
     if (G.open[i] >= 0 && G.open[i] <= 8) {          // 숫자 클릭: 깃발 수가 맞으면 나머지 둘레 열기
       const nb = neighbors(i, G.w, G.h), flags = nb.filter(j => G.open[j] === 9).length;
       if (flags !== G.open[i]) return;
-      for (const j of nb) if (G.open[j] === -1) { if (m[j]) return soloBoom(j); flood(G, m, j); }
-      soloCheck();
-      return;
+      for (const j of nb) if (G.open[j] === -1) { if (m[j]) return boom(j); flood(m, j); }
+      return check();
     }
     if (G.open[i] !== -1) return;
-    if (m[i]) return soloBoom(i);
+    if (m[i]) return boom(i);
     G.last = i;
-    flood(G, m, i);
-    soloCheck();
+    flood(m, i);
+    check();
   }
-  function soloBoom(i) {
+  function boom(i) {
     const m = mines();
     G.open[i] = 11; G.over = true; G.won = false; G.last = i;
     G.elapsed = Date.now() - G.started;
-    for (let k = 0; k < m.length; k++) if (m[k] && G.open[k] === -1) G.open[k] = 10;   // 10 = 드러난 지뢰
+    for (let k = 0; k < m.length; k++) if (m[k] && G.open[k] === -1) G.open[k] = 10;
     save(); render();
   }
-  function soloCheck() {
+  function check() {
     const m = mines();
-    const left = G.open.reduce((a, v, k) => a + (v === -1 || v === 9 ? (m[k] ? 0 : 1) : 0), 0);
+    const left = G.open.reduce((a, v, k) => a + ((v === -1 || v === 9) && !m[k] ? 1 : 0), 0);
     if (left === 0) {
       G.over = true; G.won = true; G.elapsed = Date.now() - G.started;
       for (let k = 0; k < m.length; k++) if (m[k]) G.open[k] = 9;
-      recordBest(G.elapsed);
+      G.rank = recordScore(G.elapsed);
     }
     save(); render();
   }
-  function soloFlag(i) {
-    if (isDuel() || G.over || !G.seed) { if (!isDuel() && !G.over && !G.seed) { /* 첫 클릭 전엔 깃발 없음 */ } return; }
+  function toggleFlag(i) {
+    if (G.over || !G.seed) return;
     if (G.open[i] === -1) G.open[i] = 9; else if (G.open[i] === 9) G.open[i] = -1; else return;
     save(); render();
   }
-  function loadBest() { try { return JSON.parse(localStorage.getItem(BEST_KEY) || '{}'); } catch (e) { return {}; } }
-  function recordBest(ms) {
-    const b = loadBest();
-    if (!b[S.size] || ms < b[S.size]) { b[S.size] = ms; try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch (e) {} G.newBest = true; }
-  }
 
-  // ---------- AI (대결) ----------
-  // 숫자 칸마다 "둘레 닫힌 칸 U 에 지뢰 R 개" 라는 제약을 만들고, 확실한 지뢰 → 부분집합 추론 → 확률 순으로 고른다
-  function analyze(g) {
-    const w = g.w, h = g.h, cons = [];
-    for (let i = 0; i < g.open.length; i++) {
-      const v = g.open[i];
-      if (v < 0 || v > 8) continue;
-      const nb = neighbors(i, w, h), U = nb.filter(j => g.open[j] === -1), found = nb.filter(j => g.open[j] >= 9).length;
-      if (U.length) cons.push({ U, R: v - found });
+  // ---------- 랭킹 ----------
+  // 기기 안 랭킹은 항상 저장하고, config.js 에 Firebase 값이 있으면 전체 랭킹(Firestore)에도 올린다
+  const LB = (window.HANPAN_CONFIG && window.HANPAN_CONFIG.leaderboard) || {};
+  const shared = !!(LB.firebaseProjectId && LB.firebaseApiKey);
+  const fsBase = () => 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(LB.firebaseProjectId) + '/databases/(default)/documents';
+  const fsCol = size => 'mines_' + size;
+  let remote = { size: '', rows: null, error: '' };
+  function loadLocal() { try { return JSON.parse(localStorage.getItem(RANK_KEY) || '{}'); } catch (e) { return {}; } }
+  function recordScore(ms) {
+    const all = loadLocal(), list = all[S.size] || [];
+    const row = { name: myName(), ms, at: Date.now(), mine: true };
+    list.push(row);
+    list.sort((a, b) => a.ms - b.ms);
+    all[S.size] = list.slice(0, TOP);
+    try { localStorage.setItem(RANK_KEY, JSON.stringify(all)); } catch (e) {}
+    if (shared) submitRemote(row);
+    return all[S.size].indexOf(row);
+  }
+  async function submitRemote(row) {
+    try {
+      const res = await fetch(fsBase() + '/' + fsCol(S.size) + '?key=' + encodeURIComponent(LB.firebaseApiKey), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: { name: { stringValue: row.name }, ms: { integerValue: String(row.ms) }, at: { timestampValue: new Date(row.at).toISOString() } } })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      remote = { size: '', rows: null, error: '' };
+      await fetchRemote(S.size);
+    } catch (e) { remote.error = '전체 랭킹에 올리지 못했습니다 (' + e.message + ')'; render(); }
+  }
+  async function fetchRemote(size) {
+    if (!shared) return;
+    try {
+      const res = await fetch(fsBase() + ':runQuery?key=' + encodeURIComponent(LB.firebaseApiKey), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ structuredQuery: { from: [{ collectionId: fsCol(size) }], orderBy: [{ field: { fieldPath: 'ms' }, direction: 'ASCENDING' }], limit: TOP } })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const rows = data.filter(d => d.document).map(d => {
+        const f = d.document.fields || {};
+        return { name: String((f.name && f.name.stringValue) || '익명').slice(0, 12), ms: Number(f.ms && f.ms.integerValue) || 0, at: Date.parse((f.at && f.at.timestampValue) || '') || 0 };
+      });
+      remote = { size, rows, error: '' };
+    } catch (e) {
+      remote = { size, rows: null, error: '전체 랭킹을 불러오지 못했습니다 (' + e.message + ')' };
     }
-    const sure = new Set(), safe = new Set();
-    for (const c of cons) { if (c.R >= c.U.length) c.U.forEach(j => sure.add(j)); if (c.R <= 0) c.U.forEach(j => safe.add(j)); }
-    for (const a of cons) for (const b of cons) {
-      if (a === b || a.U.length >= b.U.length) continue;
-      if (!a.U.every(j => b.U.includes(j))) continue;
-      const rest = b.U.filter(j => !a.U.includes(j)), dr = b.R - a.R;
-      if (rest.length && dr >= rest.length) rest.forEach(j => sure.add(j));
-      if (rest.length && dr <= 0) rest.forEach(j => safe.add(j));
+    render();
+  }
+  const fmtDate = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate(); };
+  function renderRank() {
+    $('rank-title').textContent = '랭킹 · ' + SIZE_NAME[S.size];
+    let rows, scope, note = '';
+    if (shared) {
+      if (remote.size !== S.size && !remote.error) { fetchRemote(S.size); }
+      rows = remote.size === S.size && remote.rows ? remote.rows : null;
+      scope = '전체';
+      if (!rows) { rows = loadLocal()[S.size] || []; scope = remote.error ? '이 기기' : '불러오는 중…'; }
+      note = remote.error || '';
+    } else {
+      rows = loadLocal()[S.size] || [];
+      scope = '이 기기';
+      note = '전체 랭킹은 아직 꺼져 있습니다. 이 기기에서 세운 기록만 보입니다.';
     }
-    const prob = new Map();
-    for (const c of cons) { const p = c.R / c.U.length; for (const j of c.U) prob.set(j, Math.max(prob.get(j) || 0, p)); }
-    return { sure: [...sure].filter(j => !safe.has(j)), safe, prob };
-  }
-  function aiPick(g, level) {
-    const { sure, safe, prob } = analyze(g);
-    const closed = [];
-    for (let i = 0; i < g.open.length; i++) if (g.open[i] === -1) closed.push(i);
-    if (!closed.length) return -1;
-    const sc = scores(g), density = (g.n - sc[0] - sc[1]) / closed.length;
-    // 쉬움은 절반 넘게, 보통은 넷 중 하나를 감으로 찍는다. 어려움은 늘 추론대로
-    const blind = level === 'easy' ? 0.55 : level === 'normal' ? 0.25 : 0;
-    if (Math.random() < blind) return closed[Math.floor(Math.random() * closed.length)];
-    if (sure.length) return sure[Math.floor(Math.random() * sure.length)];
-    let best = -1, bp = -1;
-    for (const i of closed) {
-      if (safe.has(i)) continue;
-      let p = prob.has(i) ? prob.get(i) : density;
-      if (level === 'normal') p += (Math.random() - 0.5) * 0.25;
-      if (p > bp) { bp = p; best = i; }
-    }
-    if (best < 0) best = closed[Math.floor(Math.random() * closed.length)];
-    return best;
-  }
-  function scheduleAI() {
-    clearTimeout(aiTimer);
-    if (!isDuel() || G.over || S.mode !== 'ai' || G.turn !== 1) return;
-    aiTimer = setTimeout(() => {
-      if (!isDuel() || G.over || S.mode !== 'ai' || G.turn !== 1) return;
-      const i = aiPick(G, S.level);
-      if (i >= 0 && duelOpen(i)) commitDuel();
-    }, 650);
-  }
-
-  // ---------- 진행 ----------
-  function newGame() {
-    if (S.mode === 'online' && O.status !== 'live') return;
-    clearTimeout(aiTimer);
-    if (S.mode === 'solo') { G = freshSolo(); save(); render(); return; }
-    G = freshDuel(G && G.kind === 'duel' ? G.seq + 1 : 0);
-    commitDuel();
-  }
-  function adoptRemote(g, firstSync) { G = g; seen = g.seq; render(); save(); scheduleAI(); }
-  function setMode(mode) {
-    if (S.mode === 'online') O.leave();
-    clearTimeout(aiTimer);
-    S.mode = mode;
-    if (mode === 'solo') G = freshSolo();
-    else G = freshDuel(G && G.kind === 'duel' ? G.seq + 1 : 0);
-    seen = G.seq || 0;
-    render(); save(); scheduleAI();
+    $('rank-scope').textContent = scope;
+    $('rank-note').textContent = note;
+    const ol = $('rank');
+    ol.textContent = '';
+    rows.slice(0, TOP).forEach((r, k) => {
+      const li = document.createElement('li');
+      if (G.over && G.won && G.rank === k && (!shared || remote.size !== S.size) && r.ms === G.elapsed) li.className = 'fresh';
+      const no = document.createElement('span'); no.className = 'no'; no.textContent = k + 1;
+      const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.name;
+      const tm = document.createElement('span'); tm.className = 'tm'; tm.textContent = (r.ms / 1000).toFixed(1) + '초';
+      const dt = document.createElement('span'); dt.className = 'dt'; dt.textContent = r.at ? fmtDate(r.at) : '';
+      li.append(no, nm, tm, dt);
+      ol.appendChild(li);
+    });
+    ol.hidden = !rows.length;
+    $('rank-empty').hidden = !!rows.length;
   }
 
   // ---------- 화면 ----------
@@ -549,35 +414,32 @@
     cells = [];
     for (let i = 0; i < G.w * G.h; i++) {
       const b = document.createElement('button');
-      b.type = 'button'; b.className = 'cell'; b.dataset.i = i;
-      b.setAttribute('role', 'gridcell');
+      b.type = 'button'; b.className = 'cell'; b.dataset.i = i; b.setAttribute('role', 'gridcell');
       cells.push(b); board.appendChild(b);
     }
   }
   let pressTimer = 0, pressed = -1, longPressed = false, chordPress = false;
   const pressedCells = [];
-  // 클래식 지뢰찾기처럼: 숫자 칸을 누르고 있거나(아무 버튼), 닫힌 칸을 양쪽 버튼·휠 버튼으로 누르면 둘레 8칸이 눌려 보인다
   function pressAround(i) {
     releaseAround();
     for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1) { cells[j].classList.add('pressed'); pressedCells.push(j); }
   }
   function releaseAround() { while (pressedCells.length) cells[pressedCells.pop()].classList.remove('pressed'); }
   function onCellClick(i, flag) {
-    if (!canAct()) return;
-    if (isDuel()) { if (duelOpen(i)) commitDuel(); return; }
-    if (flag || S.flagMode) soloFlag(i); else soloOpen(i);
+    if (G.over) return;
+    if (flag || S.flagMode) toggleFlag(i); else openCell(i);
   }
   board.addEventListener('click', e => {
     const b = e.target.closest('.cell'); if (!b) return;
     if (longPressed) { longPressed = false; return; }
-    if (chordPress) { chordPress = false; if (G.open[+b.dataset.i] === -1) return; }   // 양쪽 버튼: 닫힌 칸은 열지 않고 숫자 칸만 한꺼번에 열기
+    if (chordPress) { chordPress = false; if (G.open[+b.dataset.i] === -1) return; }
     onCellClick(+b.dataset.i, false);
   });
   board.addEventListener('contextmenu', e => {
     const b = e.target.closest('.cell'); if (!b) return;
     e.preventDefault();
-    if (chordPress) { chordPress = false; return; }          // 양쪽 버튼으로 둘레만 본 것: 깃발은 안 꽂는다
-    if (!isDuel()) onCellClick(+b.dataset.i, true);
+    if (chordPress) { chordPress = false; return; }
+    onCellClick(+b.dataset.i, true);
   });
   board.addEventListener('auxclick', e => { if (e.button === 1) e.preventDefault(); });
   board.addEventListener('pointerdown', e => {
@@ -586,135 +448,67 @@
     chordPress = e.buttons === 3 || e.button === 1;
     if (chordPress) e.preventDefault();
     if ((v >= 0 && v <= 8) || chordPress) pressAround(i);
-    if (isDuel() || e.pointerType === 'mouse') return;
+    if (e.pointerType === 'mouse') return;
     pressed = i; longPressed = false;
     pressTimer = setTimeout(() => { longPressed = true; onCellClick(pressed, true); }, 420);
   });
-  board.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });   // 휠 버튼 자동 스크롤 막기
+  board.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => board.addEventListener(ev, () => clearTimeout(pressTimer)));
   window.addEventListener('pointerup', releaseAround);
   window.addEventListener('pointercancel', releaseAround);
   window.addEventListener('blur', releaseAround);
 
-  const fmt = ms => { const s = Math.min(999, Math.floor(ms / 1000)); return String(s).padStart(3, '0'); };
+  const fmt = ms => String(Math.min(999, Math.floor(ms / 1000))).padStart(3, '0');
   function tickClock() {
-    if (!G || isDuel()) return;
+    if (!G) return;
     const ms = G.over ? G.elapsed : G.seed ? Date.now() - G.started : 0;
     $('clock').lastChild.textContent = fmt(ms);
   }
   function render() {
-    const duel = isDuel(), online = S.mode === 'online', act = canAct();
     if (cells.length !== G.w * G.h || +board.style.getPropertyValue('--w') !== G.w) buildBoard();
-    const m = G.over || duel ? mines() : null;
+    const m = G.over ? mines() : null;
     for (let i = 0; i < cells.length; i++) {
       const b = cells[i], v = G.open[i];
       let cls = 'cell';
       if (v >= 0 && v <= 8) cls += ' open' + (v ? ' n' + v : '');
-      else if (duel && (v === 9 || v === 10)) cls += ' mine-' + (v - 9);
-      else if (!duel && v === 9) cls += G.over && !G.won && !m[i] ? ' wrong' : ' flag';
-      else if (!duel && v === 10) cls += ' open mine';
-      else if (!duel && v === 11) cls += ' open boom';
+      else if (v === 9) cls += G.over && !G.won && !m[i] ? ' wrong' : ' flag';
+      else if (v === 10) cls += ' open mine';
+      else if (v === 11) cls += ' open boom';
       if (i === G.last && !G.over) cls += ' last';
       b.className = cls;
       b.textContent = v >= 1 && v <= 8 ? v : '';
-      b.disabled = !act || (duel ? v !== -1 : G.over);
-      b.setAttribute('aria-label', (i % G.w + 1) + '열 ' + (Math.floor(i / G.w) + 1) + '행 ' + (v === -1 ? '닫힘' : v <= 8 ? '숫자 ' + v : v === 9 ? (duel ? '홍 지뢰' : '깃발') : v === 10 ? (duel ? '청 지뢰' : '지뢰') : '터진 지뢰'));
+      b.disabled = G.over;
+      b.setAttribute('aria-label', (i % G.w + 1) + '열 ' + (Math.floor(i / G.w) + 1) + '행 ' + (v === -1 ? '닫힘' : v <= 8 ? '숫자 ' + v : v === 9 ? '깃발' : v === 10 ? '지뢰' : '터진 지뢰'));
     }
-    board.classList.toggle('can', act);
-
-    $('sides').hidden = !duel;
-    $('solo-bar').hidden = duel;
-    $('sec-log').hidden = !duel;
-    $('sec-best').hidden = duel;
-    $('fs-size').hidden = S.mode !== 'solo';
-    $('fs-level').hidden = S.mode !== 'ai';
+    board.classList.toggle('can', !G.over);
+    const flags = G.open.filter(v => v === 9).length;
+    $('mines-left').lastChild.textContent = String(Math.max(0, G.n - flags)).padStart(3, '0');
+    tickClock();
+    $('btn-flagmode').setAttribute('aria-pressed', String(S.flagMode));
     let text;
-    const connText = online ? O.statusText() : null;
-    if (duel) {
-      const sc = scores(G);
-      for (let t = 0; t < 2; t++) {
-        $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
-        $('score-' + t).textContent = '';
-        $('score-' + t).append(String(sc[t]));
-        const sm = document.createElement('small'); sm.textContent = '/ ' + WIN; $('score-' + t).appendChild(sm);
-        $('side-' + t).classList.toggle('active', !G.over && G.turn === t);
-      }
-      if (connText) text = connText;
-      else if (G.over) {
-        const me = S.mode === 'ai' ? 0 : online ? O.my : -1;
-        text = G.winner < 0 ? '무승부 ' + sc[0] + ' : ' + sc[1] : (me >= 0 ? (G.winner === me ? '이겼습니다! ' : '졌습니다. ') : TEAM[G.winner] + ' 승리 — ') + sc[0] + ' : ' + sc[1];
-      } else text = label(G.turn) + ' 차례 — ' + (act ? '지뢰라고 생각하는 칸을 누르세요.' : (S.mode === 'ai' ? '생각하는 중…' : '기다리는 중…'));
-      $('note').textContent = G.over ? '' : '지뢰를 맞히면 1점에 한 번 더, 숫자가 나오면 차례가 넘어갑니다. 남은 지뢰 ' + (G.n - sc[0] - sc[1]) + '개';
-    } else {
-      const flags = G.open.filter(v => v === 9).length;
-      $('mines-left').lastChild.textContent = String(Math.max(0, G.n - flags)).padStart(3, '0');
-      tickClock();
-      $('btn-flagmode').setAttribute('aria-pressed', String(S.flagMode));
-      if (G.over) text = G.won ? '성공! ' + (G.elapsed / 1000).toFixed(1) + '초' + (G.newBest ? ' · 새 기록!' : '') : '펑! 지뢰를 밟았습니다.';
-      else text = G.seed ? '지뢰가 아닌 칸을 모두 여세요.' : '아무 칸이나 눌러 시작하세요. 첫 칸은 안전합니다.';
-      $('note').textContent = G.over ? '새 판을 눌러 다시 도전하세요.' : '우클릭 · 길게 누르기 · 깃발 모드로 깃발을 꽂습니다.';
-      const best = loadBest(), ul = $('best');
-      ul.textContent = '';
-      for (const [k, name] of [['easy', '초급'], ['mid', '중급'], ['hard', '고급']]) {
-        const li = document.createElement('li');
-        const s1 = document.createElement('span'); s1.textContent = name;
-        const b = document.createElement('b'); b.textContent = best[k] ? (best[k] / 1000).toFixed(1) + '초' : '—';
-        li.append(s1, b); ul.appendChild(li);
-      }
-    }
+    if (G.over) text = G.won ? '성공! ' + (G.elapsed / 1000).toFixed(1) + '초' + (G.rank >= 0 ? ' · ' + (G.rank + 1) + '위' : '') : '펑! 지뢰를 밟았습니다.';
+    else text = G.seed ? '지뢰가 아닌 칸을 모두 여세요.' : '아무 칸이나 눌러 시작하세요. 첫 칸은 안전합니다.';
     $('status').textContent = text;
-    $('status').classList.toggle('final', G.over && !connText);
-
-    if (duel) {
-      const logEl = $('log');
-      logEl.textContent = '';
-      for (const e of G.log) {
-        const li = document.createElement('li');
-        li.dataset.team = e.t;
-        const dot = document.createElement('span'); dot.className = 'dot';
-        const s = document.createElement('span'); s.textContent = TEAM[e.t] + ' · ' + e.s;
-        li.append(dot, s); logEl.appendChild(li);
-      }
-      logEl.hidden = !G.log.length;
-      $('log-empty').hidden = !!G.log.length;
-      logEl.scrollTop = logEl.scrollHeight;
-    }
-    $('mode-solo').checked = S.mode === 'solo';
-    $('mode-ai').checked = S.mode === 'ai';
-    $('mode-2p').checked = S.mode === '2p';
-    $('mode-online').checked = online;
+    $('status').classList.toggle('final', G.over);
+    $('note').textContent = G.over ? '새 판을 눌러 다시 도전하세요.' : '우클릭 · 길게 누르기 · 깃발 모드로 깃발을 꽂습니다. 숫자를 누르고 있으면 둘레가 보입니다.';
     $('size-' + S.size).checked = true;
-    $('level-' + S.level).checked = true;
-    O.renderPanel(online);
-    $('btn-new').disabled = online && O.status !== 'live';
+    renderRank();
   }
 
   function bindControls() {
-    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
-    document.querySelectorAll('input[name="size"]').forEach(r => r.addEventListener('change', () => { S.size = r.value; G = freshSolo(); save(); render(); }));
-    document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
-    $('btn-new').addEventListener('click', newGame);
+    document.querySelectorAll('input[name="size"]').forEach(r => r.addEventListener('change', () => { S.size = r.value; G = freshGame(); save(); render(); }));
+    $('btn-new').addEventListener('click', () => { G = freshGame(); save(); render(); });
     $('btn-flagmode').addEventListener('click', () => { S.flagMode = !S.flagMode; render(); });
-    clockTimer = setInterval(tickClock, 500);
+    const nm = $('name');
+    nm.value = localStorage.getItem(NAME_KEY) || '';
+    nm.addEventListener('input', () => { try { localStorage.setItem(NAME_KEY, nm.value.trim().slice(0, 12)); } catch (e) {} });
+    setInterval(tickClock, 500);
   }
   function start() {
-    const saved = loadSaved();
-    if (saved && typeof saved === 'object') {
-      if (['solo', 'ai', '2p', 'online'].includes(saved.mode)) S.mode = saved.mode;
-      if (SIZES[saved.size]) S.size = saved.size;
-      if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
-      G = S.mode === 'solo' ? cleanSolo(saved.game) : cleanDuel(saved.game);
-    }
-    if (!G) G = S.mode === 'solo' ? freshSolo() : freshDuel(0);
-    seen = G.seq || 0;
+    loadSaved();
+    if (!G) G = freshGame();
     bindControls();
-    O.mountPanel($('fs-online'));
-    if (!O.boot(saved && saved.room)) {
-      if (S.mode === 'online') G = freshDuel(G.seq + 1);
-      seen = G.seq || 0;
-      render();
-      scheduleAI();
-    }
+    render();
   }
   start();
 })();

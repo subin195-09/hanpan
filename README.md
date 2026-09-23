@@ -16,7 +16,7 @@ reversi/ omok/ yut/ alkkagi/ matgo/ onecard/ mines/   (spot/ 은 목록에서 �
   thumb.svg       놀이방 목록에 보이는 판 그림 (정사각형)
 ```
 
-게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 원카드(`onecard/engine.js` 순수 엔진, AI·온라인만) · 지뢰찾기(혼자, 랭킹 보드).
+게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 원카드(`onecard/engine.js` 순수 엔진, AI·온라인만. 카드 그림은 `onecard/cards/`의 Byron Knoll 세트, 퍼블릭 도메인) · 지뢰찾기(혼자, 랭킹 보드).
 
 ## 게임 추가하는 법
 

@@ -3,7 +3,7 @@
 window.HANPAN_GAMES = [
   {
     id: 'reversi',
-    title: '리버시',
+    title: '오델로',
     blurb: '상대 돌을 사이에 끼워 뒤집는 8×8 전략 게임. 마지막 한 수까지 역전이 나옵니다.',
     meta: '한 판 10~15분 · 수읽기',
     online: true

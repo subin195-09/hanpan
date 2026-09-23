@@ -1,7 +1,7 @@
 /* 원카드 규칙 엔진 — 화면과 무관한 순수 상태 함수. index.html 과 node 테스트가 같이 쓴다.
  * 카드 id: 0~51 = 무늬(0♠ 1♥ 2♦ 3♣)*13 + 순위(0=A … 12=K), 52 = 컬러 조커(+5), 53 = 흑 조커(+7)
  * 규칙(2인): 같은 무늬·같은 숫자를 낸다. 2 = +2, A = +3, 조커 = +5/+7. 공격은 공격 카드로 되받아 누적.
- *   J·K = 한 번 더, 7 = 무늬 바꾸기, 조커는 아무 때나(공격 중엔 공격으로) 낼 수 있다.
+ *   공격은 같거나 더 센 공격 카드로만 막는다. J·K = 한 번 더, 7 = 무늬 바꾸기, 조커는 아무 때나(공격 중엔 공격으로) 낼 수 있다.
  *   한 장 남기면 '원카드' 선언을 해야 하고, 안 하고 차례를 넘기면 벌칙 1장. 손패 20장 초과면 파산. */
 (function (root) {
   const SUITS = ['♠', '♥', '♦', '♣'], SUIT_NAME = ['스페이드', '하트', '다이아', '클로버'];
@@ -55,7 +55,8 @@
   function canPlay(G, id) {
     if (G.stage !== 'play' || G.over) return false;
     const t = top(G);
-    if (G.attack > 0) return attackOf(id) > 0 && (isJoker(id) || isJoker(t) || suitOf(id) === G.suit || rankOf(id) === rankOf(t));
+    // 공격은 같거나 더 센 공격 카드로만 막는다 (2 → 2·A·조커, A → A·조커, 컬러 조커 → 흑 조커, 흑 조커는 못 막음)
+    if (G.attack > 0) return attackOf(id) > 0 && attackOf(id) >= attackOf(t) && (isJoker(id) || isJoker(t) || suitOf(id) === G.suit || rankOf(id) === rankOf(t));
     if (isJoker(id)) return true;
     if (isJoker(t)) return true;                                  // 조커 위엔 아무 카드나
     return suitOf(id) === G.suit || rankOf(id) === rankOf(t);

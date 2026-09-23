@@ -5,7 +5,10 @@
 ```
 index.html        놀이방 첫 화면 — games.js 목록으로 그려진다
 games.js          게임 목록 (게임 추가 시 한 항목 추가)
+about.html        사이트·게임 소개 (애드센스 심사용 콘텐츠이기도 하다)
 privacy.html      개인정보처리방침
+ads.txt           애드센스 승인 뒤 한 줄 붙여 넣는 자리
+robots.txt sitemap.xml   검색 엔진용. tools/sitemap.js 로 다시 만든다
 shared/
   config.js       사이트 설정 — 광고·통계를 켤 때 이 파일만 고친다
   online.js       온라인 2인 공용 모듈 (PeerJS WebRTC: 방 만들기/참가/재접속/동기화)
@@ -79,4 +82,27 @@ service cloud.firestore {
 
 ## 도메인을 붙일 때
 
-모든 링크가 상대 경로라서 코드 수정은 필요 없다. 도메인이 정해지면 `sitemap.xml`과 `robots.txt`를 루트에 추가하고, 각 페이지의 `og:image`를 절대 주소(PNG 권장)로 바꾸면 공유 미리보기가 잘 나온다.
+도메인이 정해지면 두 가지 중 하나로 붙인다. 코드 수정은 없다(모든 링크가 상대 경로).
+
+**A. GitHub Pages 에 그대로 붙이기** (가장 간단, 광고 없이 쓸 때)
+1. 저장소 루트에 `CNAME` 파일을 만들고 도메인 한 줄(`hanpannori.com`)만 적어 푸시한다.
+2. Cloudflare DNS 에 레코드를 넣는다: `A` 레코드 4개(`@` → 185.199.108.153 / 185.199.109.153 / 185.199.110.153 / 185.199.111.153), `CNAME` 레코드(`www` → `subin195-09.github.io`). 프록시(주황 구름)는 끈다.
+3. 저장소 Settings → Pages → Custom domain 에 도메인을 넣고 "Enforce HTTPS" 를 켠다.
+
+**B. Cloudflare Pages 로 옮기기** (광고를 붙일 때 권장 — 상업 이용 허용)
+1. Cloudflare 대시보드 → Workers & Pages → Create → Pages → Connect to Git → `subin195-09/hanpan`.
+2. Build settings: Framework preset `None`, Build command 비움, Build output directory `/`. Deploy.
+3. 프로젝트 → Custom domains → 도메인과 `www.` 둘 다 추가(DNS 는 자동). Bulk Redirects 에서 `www` → 루트로 301 넘김.
+4. 이후 `main` 에 푸시할 때마다 자동 배포된다. GitHub Pages 는 Settings → Pages 에서 꺼서 주소를 하나로 만든다.
+
+도메인을 붙인 뒤 `node tools/sitemap.js https://도메인/` 을 한 번 돌려 `sitemap.xml` 과 `robots.txt` 를 갱신한다.
+
+## 애드센스 신청 체크리스트
+
+- 본인 도메인에서 사이트가 열려야 한다(github.io 주소는 신청 불가).
+- https://adsense.google.com 에서 개인 계정으로 사이트 등록 → "사이트 소유 확인" 은 **ads.txt 방식**이 가장 쉽다: 애드센스가 알려 주는 한 줄을 루트 `ads.txt` 에 붙여 넣고 푸시.
+- 심사 기간(며칠~몇 주) 동안 `shared/config.js` 의 `adsenseClient` 에 `ca-pub-…` 를 넣어 두면 모든 페이지에 애드센스 스크립트가 들어간다(빈 광고 자리는 숨겨진 채 유지).
+- 승인 뒤 광고 단위 2개(디스플레이, 반응형)를 만들어 슬롯 번호를 `adSlots` 의 `hub-bottom`, `game-side` 에 넣는다.
+- 개인정보처리방침(`privacy.html`)에 광고 쿠키 안내가 이미 있고, `about.html` 에 사이트·게임 소개 글이 있다. 심사에서 "콘텐츠 부족"이 나오면 게임별 소개 글을 더 늘린다.
+
+공유 미리보기를 더 잘 나오게 하려면 각 페이지의 `og:image` 를 절대 주소의 PNG 로 바꾼다(선택).

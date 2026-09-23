@@ -13,10 +13,13 @@
     const home = document.createElement('a');
     home.href = root + 'index.html';
     home.textContent = cfg.siteName || '한 판 놀이방';
+    const about = document.createElement('a');
+    about.href = root + 'about.html';
+    about.textContent = '소개';
     const privacy = document.createElement('a');
     privacy.href = root + 'privacy.html';
     privacy.textContent = '개인정보처리방침';
-    f.append(home, privacy);
+    f.append(home, about, privacy);
     host.appendChild(f);
   }
 

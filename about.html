@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>소개 · 한 판 놀이방</title>
+<meta name="description" content="한 판 놀이방은 설치도 로그인도 없이 브라우저에서 바로 두는 보드게임·카드게임 모음입니다. 혼자서는 AI와, 같이 있으면 한 화면에서, 떨어져 있으면 초대 링크로 친구와 한 판 둡니다.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  :root { --ground: #ECEEF0; --ink: #171B20; --ink-soft: #57616D; --line: #C9CFD6; --accent: #B4431F; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ground: #101316; --ink: #E5E9ED; --ink-soft: #96A1AD; --line: #2B323A; --accent: #F08A5D; }
+  }
+  :root[data-theme="dark"] { --ground: #101316; --ink: #E5E9ED; --ink-soft: #96A1AD; --line: #2B323A; --accent: #F08A5D; }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 1rem/1.75 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+  .page { max-width: 44rem; margin-inline: auto; padding-inline: 16px; padding-block: 36px 56px; display: grid; gap: 20px; }
+  h1 { margin: 0; font: 400 2.2rem/1.15 "Black Han Sans", "Gothic A1", sans-serif; text-wrap: balance; }
+  h2 { margin: 12px 0 0; font-size: 1.0625rem; font-weight: 700; }
+  h3 { margin: 8px 0 0; font-size: 1rem; font-weight: 700; }
+  p, ul, dl { margin: 0; }
+  ul { padding-left: 1.2em; display: grid; gap: 6px; }
+  .lede { color: var(--ink-soft); }
+  a { color: var(--accent); }
+  .games { display: grid; gap: 14px; }
+  .games article { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .games p { color: var(--ink-soft); font-size: 0.9375rem; }
+</style>
+</head>
+<body>
+<div class="page">
+  <a class="home" href="index.html">← 한 판 놀이방</a>
+  <h1>한 판 놀이방은 어떤 곳인가요</h1>
+  <p class="lede">설치도 로그인도 없이 브라우저에서 바로 두는 보드게임·카드게임 모음입니다. 어릴 때 방바닥에서 하던 놀이를 그대로 옮기되, 혼자서는 AI와, 같이 있으면 한 화면에서, 떨어져 있으면 초대 링크 하나로 친구와 한 판 둘 수 있게 만들었습니다.</p>
+
+  <h2>세 가지 방법으로 둡니다</h2>
+  <ul>
+    <li><b>AI</b> — 쉬움·보통·어려움 세 단계. 어려움은 수를 읽거나 확률을 계산하고, 쉬움은 일부러 실수도 합니다.</li>
+    <li><b>한 화면 2인</b> — 기기 하나를 가운데 두고 번갈아 둡니다. 손패가 비밀인 카드게임은 이 방식이 없습니다.</li>
+    <li><b>온라인 2인</b> — 방을 만들면 6자리 코드와 초대 링크가 생깁니다. 상대가 링크를 누르면 바로 연결되고, 판 내용은 두 사람의 브라우저 사이에서만 오갑니다. 서버에 저장되는 것은 없습니다.</li>
+  </ul>
+
+  <h2>놀이 소개</h2>
+  <div class="games">
+    <article><h3><a href="reversi/index.html">오델로(리버시)</a></h3><p>8×8 판에서 상대 돌을 내 돌 사이에 끼워 뒤집는 놀이입니다. 19세기 영국에서 만들어진 리버시가 일본에서 오델로라는 이름으로 다듬어져 세계로 퍼졌습니다. 돌 수가 많다고 유리한 게 아니라 모서리와 변을 누가 잡느냐가 승부를 가르고, 마지막 몇 수에 판이 통째로 뒤집히는 일이 흔합니다.</p></article>
+    <article><h3><a href="omok/index.html">오목</a></h3><p>15×15 판에 돌을 놓아 가로·세로·대각선으로 다섯 개를 먼저 이으면 이깁니다. 규칙은 한 줄이지만 열린 셋과 넷을 동시에 만드는 수를 찾는 재미가 있어, 바둑판만 있으면 누구나 바로 시작할 수 있는 놀이로 오래 사랑받았습니다.</p></article>
+    <article><h3><a href="yut/index.html">윷놀이</a></h3><p>윷가락 네 개를 던져 도·개·걸·윷·모 만큼 말을 움직여 네 말을 먼저 내보내는 우리 민속놀이입니다. 상대 말을 잡으면 한 번 더 던지고, 내 말끼리는 업어서 함께 갑니다. 여기서는 던지는 힘을 직접 조절해서 너무 세게 던지면 낙(무효)이 되고, 숨은 구간에서 놓으면 확률이 올라갑니다.</p></article>
+    <article><h3><a href="alkkagi/index.html">장기 알까기</a></h3><p>장기말을 손가락으로 튕겨 상대 말을 판 밖으로 떨어뜨리는 놀이입니다. 왕은 크고 무거워 잘 안 밀리지만 멀리 못 가고, 졸은 가볍고 빨라 잘 날아가지만 부딪히면 자기가 튕겨 나갑니다. 상대 왕을 먼저 떨어뜨리면 이깁니다.</p></article>
+    <article><h3><a href="matgo/index.html">맞고</a></h3><p>화투 48장으로 두 사람이 겨루는 고스톱입니다. 광·열끗·띠·피를 모아 3점이 되면 고를 부를지 스톱할지 정하고, 흔들기·폭탄·쪽·뻑과 피박·광박·고박까지 흔히 치는 규칙을 그대로 넣었습니다. 돈이 오가지 않고 점수만 누적되는 놀이입니다.</p></article>
+    <article><h3><a href="mines/index.html">지뢰찾기</a></h3><p>숫자를 단서로 지뢰가 아닌 칸을 모두 여는 고전 퍼즐입니다. 옛 윈도우 지뢰찾기의 회색 창과 스마일 버튼을 그대로 살렸고, 초급·중급·고급 기록이 랭킹에 남습니다.</p></article>
+    <article><h3><a href="onecard/index.html">원카드</a></h3><p>같은 무늬나 숫자를 내며 손패를 먼저 비우는 카드게임입니다. 2·A·조커로 공격을 주고받고, 7로 무늬를 바꾸고, 한 장 남으면 "원카드!"를 외쳐야 합니다. 한국에서 트럼프로 가장 많이 하는 놀이 중 하나입니다.</p></article>
+  </div>
+
+  <h2>만든 사람과 문의</h2>
+  <p>한 사람이 취미로 만들고 있습니다. 규칙이 틀렸거나 고장 난 곳이 있으면 <a href="https://github.com/subin195-09/hanpan/issues" rel="noopener">저장소 이슈</a>로 알려 주세요. 카드와 화투 그림은 각 게임 화면에 적힌 자유 라이선스 작품을 씁니다.</p>
+</div>
+<script src="shared/config.js"></script>
+<script src="shared/site.js"></script>
+</body>
+</html>

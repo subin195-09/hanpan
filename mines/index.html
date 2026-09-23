@@ -111,6 +111,7 @@
   .cell.wrong::before { content: "✕"; font-size: calc(var(--cs) * 0.7); border: 0; width: auto; height: auto; margin: 0; }
   .cell.wrong::after { content: none; }
   .cell.last { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .cell.pressed { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }   /* 숫자를 누르는 동안 둘레가 눌린 것처럼 */
   .cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; z-index: 1; }
   .board.can .cell:not(.open):not(:disabled):hover { background: var(--cell-hi); }
 
@@ -233,6 +234,7 @@
           <summary>규칙 보기</summary>
           <ul>
             <li><b>혼자</b>: 숫자는 둘레 여덟 칸에 있는 지뢰 수입니다. 지뢰가 아닌 칸을 모두 열면 성공. 첫 클릭은 항상 안전합니다. 우클릭이나 길게 누르기(또는 깃발 모드)로 깃발을 꽂고, 깃발을 다 꽂은 숫자를 누르면 나머지 둘레가 한꺼번에 열립니다.</li>
+            <li>숫자를 누르고 있으면(양쪽 버튼이나 휠 버튼도 됩니다) 둘레 여덟 칸이 눌려 보여 세기 쉽습니다. 떼도 깃발 수가 맞지 않으면 열리지 않습니다.</li>
             <li><b>대결(지뢰 뺏기)</b>: 16×16에 지뢰 51개. 번갈아 한 칸씩 엽니다. 지뢰를 찾으면 1점을 얻고 한 번 더, 숫자가 나오면 차례가 넘어갑니다. 26개를 먼저 찾으면 승리. 숫자를 열어 준 만큼 상대에게 힌트가 되니 어디를 여는지도 전략입니다.</li>
           </ul>
         </details>
@@ -546,7 +548,14 @@
       cells.push(b); board.appendChild(b);
     }
   }
-  let pressTimer = 0, pressed = -1, longPressed = false;
+  let pressTimer = 0, pressed = -1, longPressed = false, chordPress = false;
+  const pressedCells = [];
+  // 클래식 지뢰찾기처럼: 숫자 칸을 누르고 있거나(아무 버튼), 닫힌 칸을 양쪽 버튼·휠 버튼으로 누르면 둘레 8칸이 눌려 보인다
+  function pressAround(i) {
+    releaseAround();
+    for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1) { cells[j].classList.add('pressed'); pressedCells.push(j); }
+  }
+  function releaseAround() { while (pressedCells.length) cells[pressedCells.pop()].classList.remove('pressed'); }
   function onCellClick(i, flag) {
     if (!canAct()) return;
     if (isDuel()) { if (duelOpen(i)) commitDuel(); return; }
@@ -555,19 +564,31 @@
   board.addEventListener('click', e => {
     const b = e.target.closest('.cell'); if (!b) return;
     if (longPressed) { longPressed = false; return; }
+    if (chordPress) { chordPress = false; if (G.open[+b.dataset.i] === -1) return; }   // 양쪽 버튼: 닫힌 칸은 열지 않고 숫자 칸만 한꺼번에 열기
     onCellClick(+b.dataset.i, false);
   });
   board.addEventListener('contextmenu', e => {
     const b = e.target.closest('.cell'); if (!b) return;
     e.preventDefault();
+    if (chordPress) { chordPress = false; return; }          // 양쪽 버튼으로 둘레만 본 것: 깃발은 안 꽂는다
     if (!isDuel()) onCellClick(+b.dataset.i, true);
   });
+  board.addEventListener('auxclick', e => { if (e.button === 1) e.preventDefault(); });
   board.addEventListener('pointerdown', e => {
-    const b = e.target.closest('.cell'); if (!b || isDuel() || e.pointerType === 'mouse') return;
-    pressed = +b.dataset.i; longPressed = false;
+    const b = e.target.closest('.cell'); if (!b) return;
+    const i = +b.dataset.i, v = G.open[i];
+    chordPress = e.buttons === 3 || e.button === 1;
+    if (chordPress) e.preventDefault();
+    if ((v >= 0 && v <= 8) || chordPress) pressAround(i);
+    if (isDuel() || e.pointerType === 'mouse') return;
+    pressed = i; longPressed = false;
     pressTimer = setTimeout(() => { longPressed = true; onCellClick(pressed, true); }, 420);
   });
+  board.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });   // 휠 버튼 자동 스크롤 막기
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => board.addEventListener(ev, () => clearTimeout(pressTimer)));
+  window.addEventListener('pointerup', releaseAround);
+  window.addEventListener('pointercancel', releaseAround);
+  window.addEventListener('blur', releaseAround);
 
   const fmt = ms => { const s = Math.min(999, Math.floor(ms / 1000)); return String(s).padStart(3, '0'); };
   function tickClock() {

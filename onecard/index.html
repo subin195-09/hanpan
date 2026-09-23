@@ -241,7 +241,7 @@
         </details>
       </section>
       <section>
-        <p class="fine">카드 그림: <a href="https://commons.wikimedia.org/wiki/Category:Playing_cards_set_by_Byron_Knoll" rel="noopener" target="_blank">Byron Knoll</a>의 트럼프 세트 (퍼블릭 도메인).</p>
+        <p class="fine">카드 그림: <a href="https://commons.wikimedia.org/wiki/Category:Playing_cards_set_by_Byron_Knoll" rel="noopener" target="_blank">Byron Knoll</a>의 트럼프 세트, 조커는 Dmitry Fomin의 <a href="https://commons.wikimedia.org/wiki/File:Atlas_deck_joker_red.svg" rel="noopener" target="_blank">Atlas 덱</a> (모두 퍼블릭 도메인·CC0).</p>
       </section>
       <div class="ad-slot" data-ad="game-side" hidden></div>
     </aside>
@@ -393,7 +393,7 @@
     el.dataset.id = id;
     el.setAttribute('aria-label', M.name(id));
     // Byron Knoll 트럼프 세트 (퍼블릭 도메인). 인물 카드는 PNG, 나머지는 SVG
-    const rk = M.rankOf(id), png = !M.isJoker(id) && rk >= 10;
+    const rk = M.rankOf(id), png = M.isJoker(id) || rk >= 10;   // 인물 카드·조커는 PNG
     const img = document.createElement('img');
     img.src = 'cards/' + String(id).padStart(2, '0') + (png ? '.png' : '.svg');
     img.alt = ''; img.draggable = false;

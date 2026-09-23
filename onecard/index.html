@@ -252,7 +252,7 @@
 <script src="../shared/config.js"></script>
 <script src="../shared/online.js"></script>
 <script src="../shared/site.js"></script>
-<script src="engine.js"></script>
+<script src="engine.js?v=3"></script>
 <script>
 (() => {
   const M = window.OneCard;
@@ -459,7 +459,15 @@
     $('btn-declare').disabled = !(act && G.hands[G.turn].length <= 2 && !G.declared[G.turn]);
     $('btn-draw').disabled = !(act && G.stage === 'play');
     $('btn-draw').textContent = G.attack > 0 ? '공격 ' + G.attack + '장 먹기' : '카드 먹기';
-    $('hint').textContent = act && G.stage === 'play' ? (M.playable(G, G.turn).length ? '노란 테두리 카드를 낼 수 있습니다.' : '낼 카드가 없습니다. 먹으세요.') : '';
+    // 왜 못 내는지까지 알려 준다
+    let hint = '';
+    if (act && G.stage === 'play') {
+      const top = M.top(G), need = G.attack > 0
+        ? '막으려면 ' + (M.isJoker(top) ? (top === M.JOKER_B ? '막을 카드 없음' : '흑 조커') : (M.rankOf(top) === 1 ? '2·A·조커' : 'A·조커') + (M.isJoker(top) ? '' : ' (숫자가 다르면 ' + M.SUITS[G.suit] + ' 무늬)')) + ' 필요'
+        : M.isJoker(top) ? '조커 위엔 아무 카드나' : M.SUITS[G.suit] + ' 무늬나 ' + M.RANKS[M.rankOf(top)] + ', 조커를 낼 수 있음';
+      hint = M.playable(G, G.turn).length ? '노란 테두리 카드를 낼 수 있습니다. (' + need + ')' : '낼 카드가 없습니다. 먹으세요. (' + need + ')';
+    }
+    $('hint').textContent = hint;
     const pr = $('prompt');
     pr.textContent = ''; pr.hidden = true;
     if (act && G.stage === 'suit') {

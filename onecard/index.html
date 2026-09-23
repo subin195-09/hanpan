@@ -35,11 +35,66 @@
   @media (max-width: 900px) { .table { grid-template-columns: minmax(0, 1fr); gap: 28px; } h1 { font-size: 1.75rem; } }
   .play { display: grid; gap: 10px; }
 
+  /* 레트로 창 (옛 윈도우 스타일을 직접 그린 것) */
+  .win {
+    --g: #C0C0C0; --g-hi: #FFFFFF; --g-lo: #808080; --g-dk: #404040;
+    display: grid; max-width: 100%; padding: 3px; background: var(--g); color: #000;
+    font: 400 0.8125rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    border-top: 1px solid var(--g); border-left: 1px solid var(--g); border-right: 1px solid var(--g-dk); border-bottom: 1px solid var(--g-dk);
+    box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-lo);
+  }
+  .titlebar { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 6px; margin: 1px 1px 0; background: linear-gradient(90deg, #000080, #1084D0); color: #FFF; font-weight: 700; }
+  .titlebar .ico { width: 14px; height: 14px; flex: none; }
+  .titlebar .ttl { flex: 1; }
+  .titlebar .wb { width: 16px; height: 14px; background: var(--g); box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-lo); display: grid; place-items: center; font: 700 9px/1 ui-monospace, monospace; color: #000; }
+  .menubar { display: flex; gap: 2px; padding: 2px 4px 3px; position: relative; }
+  .menubar button { appearance: none; border: 0; background: transparent; padding: 1px 6px; font: inherit; color: #000; cursor: pointer; }
+  .menubar button:hover, .menubar button[aria-expanded="true"] { background: #000080; color: #FFF; }
+  .menubar button:focus-visible { outline: 1px dotted #000; }
+  .menu { position: absolute; left: 4px; top: 100%; z-index: 20; min-width: 150px; padding: 2px; background: var(--g); box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-dk), 2px 2px 0 rgba(0, 0, 0, 0.35); display: grid; }
+  .menu button { text-align: left; padding: 3px 22px; white-space: nowrap; }
+  .menu button[aria-checked="true"]::before { content: "✓"; position: absolute; margin-left: -14px; }
+  .menu hr { width: 100%; margin: 2px 0; border: 0; border-top: 1px solid var(--g-lo); border-bottom: 1px solid var(--g-hi); }
+  .client {
+    position: relative; margin: 0 1px; padding: 12px; background: #008000; display: grid; gap: 10px;
+    border-top: 2px solid var(--g-lo); border-left: 2px solid var(--g-lo); border-right: 2px solid var(--g-hi); border-bottom: 2px solid var(--g-hi);
+  }
+  .statusbar { display: flex; gap: 4px; margin: 3px 1px 1px; }
+  .statusbar > span { flex: 1; min-height: 1.6em; padding: 2px 6px; font-size: 0.8125rem; box-shadow: inset 1px 1px 0 var(--g-lo), inset -1px -1px 0 var(--g-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .statusbar > span.sm { flex: 0 0 auto; }
+  .wbtn {
+    appearance: none; padding: 4px 14px; min-width: 76px; background: var(--g); color: #000; cursor: pointer;
+    font: 400 0.8125rem/1.3 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    border: 1px solid; border-color: var(--g-hi) var(--g-dk) var(--g-dk) var(--g-hi);
+    box-shadow: inset -1px -1px 0 var(--g-lo), inset 1px 1px 0 var(--g);
+  }
+  .wbtn:active { border-color: var(--g-dk) var(--g-hi) var(--g-hi) var(--g-dk); box-shadow: inset 1px 1px 0 var(--g-lo); }
+  .wbtn:disabled { color: var(--g-lo); text-shadow: 1px 1px 0 var(--g-hi); cursor: default; }
+  .wbtn.hot { font-weight: 900; }
+  .wbtn:focus-visible { outline: 1px dotted #000; outline-offset: -4px; }
+  .dlg {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 10; min-width: 240px; max-width: calc(100% - 24px);
+    background: var(--g); color: #000; padding: 3px;
+    border: 1px solid; border-color: var(--g-hi) var(--g-dk) var(--g-dk) var(--g-hi); box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  }
+  .dlg .titlebar { margin: 0; }
+  .dlg-body { display: grid; gap: 12px; padding: 14px 16px 12px; text-align: center; }
+  .dlg-body b { font-size: 0.9375rem; }
+  .dlg-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+  .suitbtn { font-size: 1.4rem; line-height: 1; min-width: 48px; padding: 4px 10px; }
+  .suitbtn.red { color: #D6362B; }
+  .hud { display: flex; align-items: center; gap: 10px; color: #FFF; font-weight: 700; }
+  .hud .who { padding: 2px 8px; background: rgba(0, 0, 0, 0.35); }
+  .hud .who[data-team="0"] { border-left: 4px solid #FF6B5E; }
+  .hud .who[data-team="1"] { border-left: 4px solid #7FB0FF; }
+  .hud .who.active { background: #000080; }
+  .hud .badge { margin-left: auto; }
+
   /* 카드 */
   .pc {
     position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); flex: none;
-    border-radius: calc(var(--cw) * 0.09); background: #FFFFFF; border: 1px solid #B9B9B9; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    color: #1A1A1A; font-family: "Rubik", "Gothic A1", sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none;
+    border-radius: calc(var(--cw) * 0.08); background: #FFFFFF; border: 1px solid #000; box-shadow: none;
+    color: #000; font-family: "Rubik", "Gothic A1", sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none;
   }
   .pc.red { color: #D6362B; }
   .pc .r { position: absolute; left: 7%; top: 5%; font-size: calc(var(--cw) * 0.3); font-weight: 900; line-height: 1; }
@@ -51,66 +106,53 @@
   .pc.joker.black { background: linear-gradient(160deg, #3A3A3A, #111); color: #FFF; border-color: #000; }
   .pc.joker .big { font: 900 calc(var(--cw) * 0.22)/1.1 "Rubik", sans-serif; text-align: center; letter-spacing: 0.05em; writing-mode: vertical-rl; }
   .pc.joker .big b { font-size: calc(var(--cw) * 0.5); writing-mode: horizontal-tb; }
-  .pc.back { background: repeating-linear-gradient(45deg, #2C5FC4 0 5px, #1F4A9E 5px 10px); border-color: #14346E; }
-  .pc.back::after { content: ""; position: absolute; inset: 6px; border-radius: 4px; border: 1.5px solid rgba(255, 255, 255, 0.55); }
+  .pc.back { background: #FFF; border-color: #000; }
+  .pc.back::after {
+    content: ""; position: absolute; inset: 4px; border-radius: 3px; border: 2px solid #1F4A9E;
+    background: repeating-linear-gradient(45deg, #2C5FC4 0 3px, #FFF 3px 4px), repeating-linear-gradient(-45deg, #2C5FC4 0 3px, transparent 3px 4px);
+    background-blend-mode: multiply;
+  }
   button.pc { padding: 0; cursor: pointer; font: inherit; }
-  button.pc:disabled { cursor: default; opacity: 0.55; }
-  button.pc.can { opacity: 1; outline: 3px solid #F2C94C; outline-offset: 1px; transform: translateY(-6px); }
+  button.pc:disabled { cursor: default; }
+  button.pc.can { opacity: 1; outline: 2px solid #FFFF00; outline-offset: 1px; transform: translateY(-6px); }
   button.pc.can:hover { transform: translateY(-12px); }
   .pc:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   .pc.mini { --cw: calc(var(--cw-base, 64px) * 0.6); }
 
   /* 자리 */
-  .seat { display: grid; gap: 8px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
-  .seat.active { border-color: var(--team); box-shadow: inset 0 0 0 1px var(--team); }
-  .seat[data-team="0"] { --team: var(--red); }
-  .seat[data-team="1"] { --team: var(--blue); }
-  .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
-  .seat-name { font-weight: 700; color: var(--team); }
-  .seat-meta { font-size: 0.8125rem; color: var(--ink-soft); }
-  .badge { padding: 2px 8px; border-radius: 999px; background: var(--accent); color: #FFF; font-size: 0.75rem; font-weight: 700; }
+  .seat { display: grid; gap: 6px; }
+  .badge { padding: 2px 8px; background: #FF0000; color: #FFF; font-size: 0.75rem; font-weight: 900; border: 1px solid #FFF; }
   .hand { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.4 + 12px); padding-top: 12px; }
   .hand .back { margin-left: calc(var(--cw) * -0.55); } .hand .back:first-child { margin-left: 0; }
 
   /* 가운데 */
-  .center {
-    position: relative; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 22px 16px;
-    border-radius: 12px; background: radial-gradient(circle at center, #3A7D5E 0%, var(--felt) 60%, #234D3A 100%); border: 3px solid var(--felt-edge);
-    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
-  }
+  .center { position: relative; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 14px 8px; }
   .stack { position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); }
   .stack .pc { position: absolute; left: 0; top: 0; }
   .stack .pc:nth-child(2) { transform: rotate(-3deg); }
   .stack .pc:nth-child(3) { transform: rotate(4deg); }
   .deckbtn { cursor: pointer; }
   .deckbtn:disabled { cursor: default; }
-  .deckbtn.can { outline: 3px solid #F2C94C; outline-offset: 2px; }
+  .deckbtn.can { outline: 2px solid #FFFF00; outline-offset: 2px; }
   .info { display: grid; gap: 4px; color: #FFF; text-align: center; min-width: 90px; }
   .info .suit { font-size: 2rem; line-height: 1; }
-  .info .suit.red { color: #FF9B93; }
-  .info .lab { font-size: 0.75rem; opacity: 0.85; }
-  .info .atk { font: 900 1.5rem/1 "Rubik", sans-serif; color: #F2C94C; }
+  .info .suit.red { color: #FF6B5E; }
+  .info .lab { font-size: 0.75rem; opacity: 0.9; }
+  .info .atk { font: 900 1.5rem/1 "Rubik", sans-serif; color: #FFFF00; }
   .pile-new { animation: slap 0.28s ease-out; }
   @keyframes slap { from { transform: scale(1.35) rotate(-8deg); opacity: 0.4; } to { transform: none; opacity: 1; } }
   .hand .in { animation: slide 0.3s ease-out; }
   @keyframes slide { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-  .status { margin: 0; min-height: 1.6em; font-weight: 700; }
-  .status.final { font: 900 1.3rem/1.35 "Gothic A1", sans-serif; }
-  .note { margin: 0; min-height: 1.5em; font-size: 0.8125rem; color: var(--ink-soft); }
-  .actions-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .actions-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .actions-row .hint { color: #FFF; font-size: 0.8125rem; }
   .btn { appearance: none; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; cursor: pointer; }
   .btn.primary { background: var(--ink); color: var(--on-ink); font-weight: 700; }
   .btn.shout { background: var(--accent); border-color: var(--accent); color: #FFF; font: 900 1rem/1.2 "Gothic A1", sans-serif; padding: 10px 22px; }
   .btn.small { padding: 6px 12px; }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  .prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--accent); }
-  .prompt b { font-size: 1rem; }
-  .suitbtn { font-size: 1.5rem; line-height: 1; padding: 6px 14px; }
-  .suitbtn.red { color: var(--red); }
-  .result { display: grid; gap: 8px; padding: 14px 16px; border-radius: 8px; background: var(--surface); border: 2px solid #F2C94C; }
-  .result h3 { margin: 0; font: 900 1.4rem/1.2 "Gothic A1", sans-serif; }
+
 
   /* 옆 패널 */
   .panel { display: grid; gap: 22px; }
@@ -161,32 +203,50 @@
 
   <main class="table">
     <div class="play">
-      <div class="seat" id="seat-1" data-team="1">
-        <div class="seat-head"><span class="seat-name" id="name-1">청</span><span class="seat-meta" id="meta-1"></span><span class="badge" id="badge-1" hidden>원카드!</span></div>
-        <div class="hand" id="hand-1"></div>
-      </div>
-
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-      <div class="center">
-        <div class="stack" id="deck"></div>
-        <div class="info">
-          <span class="lab">현재 무늬</span><span class="suit" id="suit">♠</span>
-          <span class="atk" id="atk" hidden></span>
+      <div class="win">
+        <div class="titlebar" aria-hidden="true">
+          <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="2" width="13" height="18" rx="2" fill="#fff" stroke="#000"/><rect x="8" y="4" width="13" height="18" rx="2" fill="#2C5FC4" stroke="#000"/></svg>
+          <span class="ttl">원카드</span>
+          <span class="wb">_</span><span class="wb">□</span><span class="wb">×</span>
         </div>
-        <div class="stack" id="pile"></div>
-      </div>
-      <div class="prompt" id="prompt" hidden></div>
-      <div class="result" id="result" hidden></div>
-      <p class="note" id="note"></p>
-
-      <div class="seat" id="seat-0" data-team="0">
-        <div class="seat-head"><span class="seat-name" id="name-0">홍</span><span class="seat-meta" id="meta-0"></span><span class="badge" id="badge-0" hidden>원카드!</span></div>
-        <div class="actions-row">
-          <button type="button" class="btn shout" id="btn-declare">원카드!</button>
-          <button type="button" class="btn primary" id="btn-draw">카드 먹기</button>
-          <span class="note" id="hint"></span>
+        <div class="menubar">
+          <button type="button" id="menu-game" aria-haspopup="true" aria-expanded="false">게임(<u>G</u>)</button>
+          <button type="button" id="menu-help">도움말(<u>H</u>)</button>
+          <div class="menu" id="menu" hidden role="menu">
+            <button type="button" data-act="next">새 게임</button>
+            <button type="button" data-act="reset">처음부터 새로</button>
+            <hr>
+            <button type="button" data-act="easy" role="menuitemradio">쉬움</button>
+            <button type="button" data-act="normal" role="menuitemradio">보통</button>
+            <button type="button" data-act="hard" role="menuitemradio">어려움</button>
+          </div>
         </div>
-        <div class="hand" id="hand-0"></div>
+        <div class="client">
+          <div class="seat" id="seat-1" data-team="1">
+            <div class="hud"><span class="who" id="who-1" data-team="1"></span><span class="badge" id="badge-1" hidden>원카드!</span></div>
+            <div class="hand" id="hand-1"></div>
+          </div>
+          <div class="center">
+            <div class="stack" id="deck"></div>
+            <div class="info">
+              <span class="lab">현재 무늬</span><span class="suit" id="suit">♠</span>
+              <span class="atk" id="atk" hidden></span>
+            </div>
+            <div class="stack" id="pile"></div>
+          </div>
+          <div class="seat" id="seat-0" data-team="0">
+            <div class="hud"><span class="who" id="who-0" data-team="0"></span><span class="badge" id="badge-0" hidden>원카드!</span></div>
+            <div class="actions-row">
+              <button type="button" class="wbtn hot" id="btn-declare">원카드!</button>
+              <button type="button" class="wbtn" id="btn-draw">카드 먹기</button>
+              <span class="hint" id="hint"></span>
+            </div>
+            <div class="hand" id="hand-0"></div>
+          </div>
+          <div class="dlg" id="prompt" hidden role="dialog" aria-label="무늬 고르기"></div>
+          <div class="dlg" id="result" hidden role="dialog" aria-label="판 종료"></div>
+        </div>
+        <div class="statusbar"><span id="status" role="status" aria-live="polite"></span><span class="sm" id="note"></span></div>
       </div>
     </div>
 
@@ -404,10 +464,9 @@
   function render() {
     const online = S.mode === 'online', me = myTeam(), act = canAct();
     for (let t = 0; t < 2; t++) {
-      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
-      $('meta-' + t).textContent = G.hands[t].length + '장' + (G.first === t && !G.over ? ' · 선' : '');
+      $('who-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '') + ' · ' + G.hands[t].length + '장' + (G.first === t && !G.over ? ' · 선' : '');
+      $('who-' + t).classList.toggle('active', !G.over && G.turn === t);
       $('badge-' + t).hidden = !G.declared[t];
-      $('seat-' + t).classList.toggle('active', !G.over && G.turn === t);
       const hand = $('hand-' + t);
       hand.textContent = '';
       const mine = t === me || (S.mode === 'ai' && t === 0), shown = mine || G.over;
@@ -450,7 +509,6 @@
     else if (G.attack > 0) text = label(G.turn) + ' 차례 — 공격 ' + G.attack + '장! ' + (act ? '되받거나 먹으세요.' : '…');
     else text = label(G.turn) + ' 차례' + (act ? ' — 카드를 내거나 먹으세요.' : (S.mode === 'ai' ? ' — 생각하는 중…' : ' — 기다리는 중…'));
     $('status').textContent = text;
-    $('status').classList.toggle('final', G.over && !connText);
     const mineT = me >= 0 ? me : 0;
     $('btn-declare').disabled = !(act && G.hands[G.turn].length <= 2 && !G.declared[G.turn]);
     $('btn-draw').disabled = !(act && G.stage === 'play');
@@ -458,23 +516,32 @@
     $('hint').textContent = act && G.stage === 'play' ? (M.playable(G, G.turn).length ? '노란 테두리 카드를 낼 수 있습니다.' : '낼 카드가 없습니다. 먹으세요.') : '';
     const pr = $('prompt');
     pr.textContent = ''; pr.hidden = true;
+    const dlgTitle = t => { const d = document.createElement('div'); d.className = 'titlebar'; d.innerHTML = '<span class="ttl"></span><span class="wb">×</span>'; d.querySelector('.ttl').textContent = t; return d; };
     if (act && G.stage === 'suit') {
       pr.hidden = false;
-      const b = document.createElement('b'); b.textContent = '7! 바꿀 무늬를 고르세요';
-      pr.appendChild(b);
-      M.SUITS.forEach((s, k) => { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn suitbtn' + (k === 1 || k === 2 ? ' red' : ''); bt.textContent = s; bt.setAttribute('aria-label', M.SUIT_NAME[k]); bt.addEventListener('click', () => doSuit(k)); pr.appendChild(bt); });
+      pr.appendChild(dlgTitle('무늬 고르기'));
+      const body = document.createElement('div'); body.className = 'dlg-body';
+      const b = document.createElement('b'); b.textContent = '7을 냈습니다. 바꿀 무늬를 고르세요.';
+      const row = document.createElement('div'); row.className = 'dlg-row';
+      M.SUITS.forEach((s, k) => { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'wbtn suitbtn' + (k === 1 || k === 2 ? ' red' : ''); bt.textContent = s; bt.setAttribute('aria-label', M.SUIT_NAME[k]); bt.addEventListener('click', () => doSuit(k)); row.appendChild(bt); });
+      body.append(b, row); pr.appendChild(body);
     }
     const rs = $('result');
     rs.textContent = ''; rs.hidden = !G.over;
     if (G.over) {
-      const h = document.createElement('h3'); h.textContent = TEAM[G.winner] + (roleOf(G.winner) ? '(' + roleOf(G.winner) + ')' : '') + ' 승리 · ' + G.why;
-      rs.appendChild(h);
+      rs.appendChild(dlgTitle('원카드'));
+      const body = document.createElement('div'); body.className = 'dlg-body';
+      const h = document.createElement('b'); h.textContent = TEAM[G.winner] + (roleOf(G.winner) ? '(' + roleOf(G.winner) + ')' : '') + ' 승리 — ' + G.why;
+      const sc = document.createElement('span'); sc.textContent = '이번 대결 ' + TEAM[0] + ' ' + G.wins[0] + '승 : ' + TEAM[1] + ' ' + G.wins[1] + '승';
       const first = G.winner >= 0 ? G.winner : G.first;
       const canDeal = S.mode === 'ai' || (O.status === 'live' && O.my === first);
-      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'btn primary'; nb.textContent = '다음 판 (선: ' + TEAM[first] + ')';
+      const row = document.createElement('div'); row.className = 'dlg-row';
+      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'wbtn hot'; nb.textContent = '다음 판 (선: ' + TEAM[first] + ')';
       nb.disabled = !canDeal; nb.addEventListener('click', nextRound);
-      rs.appendChild(nb);
-      if (!canDeal && online) { const p = document.createElement('p'); p.className = 'fine'; p.textContent = '이긴 쪽이 다음 판을 돌리길 기다리는 중…'; rs.appendChild(p); }
+      row.appendChild(nb);
+      body.append(h, sc, row);
+      if (!canDeal && online) { const p = document.createElement('span'); p.textContent = '이긴 쪽이 다음 판을 돌리길 기다리는 중…'; body.appendChild(p); }
+      rs.appendChild(body);
     }
     $('note').textContent = G.over ? '' : '더미 ' + G.draw.length + '장 · 바닥 ' + G.pile.length + '장';
     const sc = $('score');
@@ -491,6 +558,7 @@
     logEl.hidden = !G.log.length;
     $('log-empty').hidden = !!G.log.length;
     logEl.scrollTop = logEl.scrollHeight;
+    document.querySelectorAll('#menu [role="menuitemradio"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.act === S.level)));
     $('mode-ai').checked = S.mode === 'ai';
     $('mode-online').checked = online;
     $('level-' + S.level).checked = true;
@@ -505,6 +573,19 @@
     $('btn-new').addEventListener('click', newMatch);
     $('btn-draw').addEventListener('click', doDraw);
     $('btn-declare').addEventListener('click', doDeclare);
+    const menu = $('menu'), mg = $('menu-game');
+    const closeMenu = () => { menu.hidden = true; mg.setAttribute('aria-expanded', 'false'); };
+    mg.addEventListener('click', e => { e.stopPropagation(); menu.hidden = !menu.hidden; mg.setAttribute('aria-expanded', String(!menu.hidden)); });
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+    menu.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const a = b.dataset.act;
+      if (a === 'next') { if (G.over) nextRound(); else newMatch(); }
+      else if (a === 'reset') newMatch();
+      else if (['easy', 'normal', 'hard'].includes(a)) { S.level = a; save(); render(); }
+    });
+    $('menu-help').addEventListener('click', () => { const d = document.querySelector('details'); d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
   }
   function start() {
     const saved = loadSaved();

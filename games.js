@@ -36,18 +36,19 @@ window.HANPAN_GAMES = [
     meta: '한 판 5~10분 · 운과 배짱',
     online: true
   },
-  {
-    id: 'onecard',
-    title: '원카드',
-    blurb: '2·A·조커 공격을 주고받고, 7로 무늬를 바꾸고, J·K로 한 번 더. 한 장 남으면 "원카드!"를 외치세요.',
-    meta: '한 판 3~5분 · 눈치',
-    online: true
-  },
+
   {
     id: 'mines',
     title: '지뢰찾기',
     blurb: '클래식 지뢰찾기. 초급·중급·고급, 첫 클릭 안전, 깃발과 한꺼번에 열기. 걸린 시간으로 랭킹에 이름을 올립니다.',
     meta: '한 판 1~10분 · 추리 · 혼자',
     online: false
+  },
+  {
+    id: 'onecard',
+    title: '원카드',
+    blurb: '2·A·조커 공격을 주고받고, 7로 무늬를 바꾸고, J·K로 한 번 더. 한 장 남으면 "원카드!"를 외치세요.',
+    meta: '한 판 3~5분 · 눈치',
+    online: true
   }
 ];

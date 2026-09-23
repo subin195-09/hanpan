@@ -19,7 +19,7 @@
     --accent: #D9481C; --on-ink: #F6F7F9;
     --cell: #C7CDD6; --cell-hi: #EEF1F5; --cell-lo: #8F98A5; --open: #DEE2E8; --open-line: #B9C1CC;
     --red: #D33B2F; --gold: #C9932A;
-    --cs: 30px;
+    --cs: 32px;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -35,7 +35,7 @@
     --cell: #4A5260; --cell-hi: #6B7482; --cell-lo: #2C3139; --open: #262B32; --open-line: #3B424C;
     --red: #F0584B; --gold: #E0B050;
   }
-  @media (max-width: 640px) { :root { --cs: 22px; } }
+  @media (max-width: 640px) { :root { --cs: 24px; } }
 
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; background: var(--ground); color: var(--ink); font: 400 1rem/1.6 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
@@ -47,49 +47,90 @@
   @media (max-width: 900px) { .table { grid-template-columns: minmax(0, 1fr); gap: 28px; } h1 { font-size: 1.75rem; } }
   .play { display: grid; gap: 12px; min-width: 0; }
 
-  .solo-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
-  .counter { font: 700 1.4rem/1 "IBM Plex Mono", ui-monospace, monospace; padding: 6px 10px; border-radius: 4px; background: var(--ink); color: #FF6B4A; letter-spacing: 0.05em; }
-  .counter small { font: 500 0.6875rem/1 "Gothic A1", sans-serif; color: #C9CFD8; margin-right: 6px; letter-spacing: 0; }
+  /* 레트로 창: 옛 윈도우 지뢰찾기 느낌을 직접 그린 것 (원본 그림은 쓰지 않는다) */
+  .win {
+    --g: #C0C0C0; --g-hi: #FFFFFF; --g-lo: #808080; --g-dk: #404040;
+    display: grid; justify-self: start; max-width: 100%;
+    padding: 3px; background: var(--g); color: #000;
+    font: 400 0.8125rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    border-top: 1px solid var(--g); border-left: 1px solid var(--g); border-right: 1px solid var(--g-dk); border-bottom: 1px solid var(--g-dk);
+    box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-lo);
+  }
+  .titlebar { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 6px; margin: 1px 1px 0; background: linear-gradient(90deg, #000080, #1084D0); color: #FFF; font-weight: 700; }
+  .titlebar .ico { width: 14px; height: 14px; flex: none; }
+  .titlebar .ttl { flex: 1; }
+  .titlebar .wb { width: 16px; height: 14px; background: var(--g); box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-lo); display: grid; place-items: center; font: 700 9px/1 ui-monospace, monospace; color: #000; }
+  .menubar { display: flex; gap: 2px; padding: 2px 4px 3px; position: relative; }
+  .menubar button { appearance: none; border: 0; background: transparent; padding: 1px 6px; font: inherit; color: #000; cursor: pointer; }
+  .menubar button:hover, .menubar button[aria-expanded="true"] { background: #000080; color: #FFF; }
+  .menubar button:focus-visible { outline: 1px dotted #000; }
+  .menu { position: absolute; left: 4px; top: 100%; z-index: 20; min-width: 150px; padding: 2px; background: var(--g); box-shadow: inset 1px 1px 0 var(--g-hi), inset -1px -1px 0 var(--g-dk), 2px 2px 0 rgba(0, 0, 0, 0.35); display: grid; }
+  .menu button { text-align: left; padding: 3px 22px 3px 22px; white-space: nowrap; }
+  .menu button[aria-checked="true"]::before { content: "✓"; position: absolute; margin-left: -14px; }
+  .menu hr { width: 100%; margin: 2px 0; border: 0; border-top: 1px solid var(--g-lo); border-bottom: 1px solid var(--g-hi); }
+  .frame { padding: 6px; margin: 0 1px 1px; border-top: 3px solid var(--g-hi); border-left: 3px solid var(--g-hi); border-right: 3px solid var(--g-lo); border-bottom: 3px solid var(--g-lo); display: grid; gap: 6px; }
+  .win-top {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 6px;
+    border-top: 2px solid var(--g-lo); border-left: 2px solid var(--g-lo); border-right: 2px solid var(--g-hi); border-bottom: 2px solid var(--g-hi);
+  }
+  .led {
+    display: block; width: 78px; height: 46px; background: #000;
+    border-top: 1px solid var(--g-lo); border-left: 1px solid var(--g-lo); border-right: 1px solid var(--g-hi); border-bottom: 1px solid var(--g-hi);
+  }
+  .led svg { display: block; width: 100%; height: 100%; }
+  .smiley {
+    appearance: none; width: 34px; height: 34px; padding: 2px; cursor: pointer; background: var(--g);
+    border-top: 2px solid var(--g-hi); border-left: 2px solid var(--g-hi); border-right: 2px solid var(--g-lo); border-bottom: 2px solid var(--g-lo);
+  }
+  .smiley:active { border-top-color: var(--g-lo); border-left-color: var(--g-lo); border-right-color: var(--g-hi); border-bottom-color: var(--g-hi); }
+  .smiley svg { display: block; width: 100%; height: 100%; }
+  .smiley:focus-visible { outline: 2px dotted #000; outline-offset: -4px; }
+  .win .board-wrap {
+    padding: 0; overflow: hidden; max-width: 100%;
+    border-top: 3px solid var(--g-lo); border-left: 3px solid var(--g-lo); border-right: 3px solid var(--g-hi); border-bottom: 3px solid var(--g-hi);
+  }
+  .tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .status { margin: 0; min-height: 1.6em; font-weight: 700; }
   .status.final { font: 900 1.3rem/1.35 "Gothic A1", sans-serif; }
   .note { margin: 0; min-height: 1.5em; font-size: 0.8125rem; color: var(--ink-soft); }
 
-  .board-wrap { overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
   .board {
-    display: grid; grid-template-columns: repeat(var(--w), var(--cs)); gap: 2px; width: max-content; padding: 6px;
-    border-radius: 6px; background: var(--cell-lo); touch-action: manipulation; user-select: none; -webkit-user-select: none;
+    display: grid; grid-template-columns: repeat(var(--w), var(--cs)); width: max-content;
+    background: #C0C0C0; touch-action: manipulation; user-select: none; -webkit-user-select: none;
   }
   .cell {
-    appearance: none; width: var(--cs); height: var(--cs); padding: 0; border: 0; border-radius: 3px;
-    background: var(--cell); box-shadow: inset 2px 2px 0 var(--cell-hi), inset -2px -2px 0 var(--cell-lo);
-    font: 700 calc(var(--cs) * 0.6)/1 "IBM Plex Mono", ui-monospace, monospace; color: var(--ink);
+    appearance: none; width: var(--cs); height: var(--cs); padding: 0; border: 0;
+    background: #C0C0C0;
+    box-shadow: inset 3px 3px 0 #FFFFFF, inset -3px -3px 0 #808080;
+    font: 900 calc(var(--cs) * 0.62)/1 "IBM Plex Mono", ui-monospace, monospace; color: #000;
     cursor: pointer; display: grid; place-items: center; position: relative;
   }
   .cell:disabled { cursor: default; }
-  .cell.open { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); cursor: default; }
-  .cell.n1 { color: #2B63C9; } .cell.n2 { color: #2E8B3D; } .cell.n3 { color: #D33B2F; } .cell.n4 { color: #1F3A8A; }
-  .cell.n5 { color: #8B2E2E; } .cell.n6 { color: #1F8A8A; } .cell.n7 { color: #222; } .cell.n8 { color: #666; }
-  :root[data-theme="dark"] .cell.n7, :root:not([data-theme="light"]) .cell.n7 { color: #DDD; }
+  .cell.open { background: #C0C0C0; box-shadow: inset 1px 1px 0 #808080; cursor: default; }
+  .cell.n1 { color: #0000FF; } .cell.n2 { color: #008000; } .cell.n3 { color: #FF0000; } .cell.n4 { color: #000080; }
+  .cell.n5 { color: #800000; } .cell.n6 { color: #008080; } .cell.n7 { color: #000000; } .cell.n8 { color: #808080; }
   .cell.flag::before {
-    content: ""; width: 0; height: 0; margin-left: 20%;
-    border-top: calc(var(--cs) * 0.22) solid transparent; border-bottom: calc(var(--cs) * 0.22) solid transparent;
-    border-left: calc(var(--cs) * 0.34) solid var(--red);
+    content: ""; width: 0; height: 0; margin-left: 18%;
+    border-top: calc(var(--cs) * 0.2) solid transparent; border-bottom: calc(var(--cs) * 0.2) solid transparent;
+    border-left: calc(var(--cs) * 0.32) solid #FF0000;
   }
-  .cell.flag::after { content: ""; position: absolute; left: 34%; top: 20%; width: 2px; height: 60%; background: var(--ink); }
+  .cell.flag::after { content: ""; position: absolute; left: 32%; top: 18%; width: calc(var(--cs) * 0.08); height: 58%; background: #000;
+    box-shadow: calc(var(--cs) * -0.12) calc(var(--cs) * 0.5) 0 calc(var(--cs) * 0.02) #000; }
+  .cell.q { color: #000; }
+  .cell.q::before { content: "?"; font-size: calc(var(--cs) * 0.62); }
+  .cell.open.q { color: #000; }
   /* 폭탄 모양: 검은 몸통에 가시, 반짝임 */
   .cell.mine, .cell.boom, .cell.wrong {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg stroke='%23111' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1'/%3E%3C/g%3E%3Ccircle cx='12' cy='12' r='7' fill='%23111'/%3E%3Ccircle cx='9.4' cy='9.4' r='1.9' fill='%23fff'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: center; background-size: 74% 74%;
   }
-  .cell.mine { background-color: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
-  .cell.boom { background-color: var(--red); box-shadow: none; }
-  .cell.wrong { background-color: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
+  .cell.mine { background-color: #C0C0C0; box-shadow: inset 1px 1px 0 #808080; }
+  .cell.boom { background-color: #FF0000; box-shadow: inset 1px 1px 0 #808080; }
+  .cell.wrong { background-color: #C0C0C0; box-shadow: inset 1px 1px 0 #808080; }
   .cell.wrong::before { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(45deg, transparent 44%, var(--red) 44% 56%, transparent 56%), linear-gradient(-45deg, transparent 44%, var(--red) 44% 56%, transparent 56%); }
-  .cell.last { outline: 3px solid var(--accent); outline-offset: -3px; }
-  .cell.pressed { background: var(--open); box-shadow: inset 0 0 0 1px var(--open-line); }
-  .cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; z-index: 1; }
-  .board.can .cell:not(.open):not(:disabled):hover { background: var(--cell-hi); }
+    background: linear-gradient(45deg, transparent 44%, #FF0000 44% 56%, transparent 56%), linear-gradient(-45deg, transparent 44%, #FF0000 44% 56%, transparent 56%); }
+  .cell.pressed { box-shadow: inset 1px 1px 0 #808080; }
+  .cell:focus-visible { outline: 2px dotted #000; outline-offset: -3px; z-index: 1; }
 
   .btn { appearance: none; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; cursor: pointer; }
   .btn.primary { background: var(--ink); color: var(--on-ink); font-weight: 700; }
@@ -145,15 +186,39 @@
 
   <main class="table">
     <div class="play">
-      <div class="solo-bar">
-        <span class="counter" id="mines-left"><small>남은 지뢰</small>000</span>
-        <span class="counter" id="clock"><small>시간</small>000</span>
-        <button type="button" class="btn small" id="btn-flagmode" aria-pressed="false">🚩 깃발 모드</button>
-        <button type="button" class="btn small primary" id="btn-new">새 판</button>
-      </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
-      <div class="board-wrap"><div class="board" id="board" role="grid" aria-label="지뢰밭"></div></div>
-      <p class="note" id="note"></p>
+      <div class="win" id="win">
+        <div class="titlebar" aria-hidden="true">
+          <svg class="ico" viewBox="0 0 24 24"><g stroke="#000" stroke-width="2.2" stroke-linecap="round"><path d="M12 2v20M2 12h20M4.9 4.9l14.2 14.2M19.1 4.9L4.9 19.1"/></g><circle cx="12" cy="12" r="7" fill="#000"/><circle cx="9.4" cy="9.4" r="1.9" fill="#fff"/></svg>
+          <span class="ttl">지뢰찾기</span>
+          <span class="wb">_</span><span class="wb">□</span><span class="wb">×</span>
+        </div>
+        <div class="menubar">
+          <button type="button" id="menu-game" aria-haspopup="true" aria-expanded="false">게임(<u>G</u>)</button>
+          <button type="button" id="menu-help">도움말(<u>H</u>)</button>
+          <div class="menu" id="menu" hidden role="menu">
+            <button type="button" data-act="new">새 게임</button>
+            <hr>
+            <button type="button" data-act="easy" role="menuitemradio">초급</button>
+            <button type="button" data-act="mid" role="menuitemradio">중급</button>
+            <button type="button" data-act="hard" role="menuitemradio">고급</button>
+            <hr>
+            <button type="button" data-act="marks" role="menuitemcheckbox">물음표(?) 표시</button>
+          </div>
+        </div>
+        <div class="frame">
+          <div class="win-top">
+            <span class="led" id="mines-left" aria-label="남은 지뢰"></span>
+            <button type="button" class="smiley" id="btn-new" data-face="ok" aria-label="새 판"></button>
+            <span class="led" id="clock" aria-label="시간"></span>
+          </div>
+          <div class="board-wrap" id="board-wrap"><div class="board" id="board" role="grid" aria-label="지뢰밭"></div></div>
+        </div>
+      </div>
+      <div class="tools">
+        <button type="button" class="btn small" id="btn-flagmode" aria-pressed="false">🚩 깃발 모드</button>
+        <p class="note" id="note"></p>
+      </div>
     </div>
 
     <aside class="panel">
@@ -185,9 +250,9 @@
           <summary>규칙 보기</summary>
           <ul>
             <li>숫자는 둘레 여덟 칸에 있는 지뢰 수입니다. 지뢰가 아닌 칸을 모두 열면 성공. 첫 클릭은 항상 안전합니다.</li>
-            <li>우클릭이나 길게 누르기(또는 깃발 모드)로 깃발을 꽂습니다. 깃발을 다 꽂은 숫자를 누르면 나머지 둘레가 한꺼번에 열립니다.</li>
+            <li>우클릭이나 길게 누르기(또는 깃발 모드)로 깃발을 꽂습니다. 한 번 더 누르면 물음표(?)가 되고(게임 메뉴에서 끌 수 있음), 또 누르면 지워집니다. 깃발을 다 꽂은 숫자를 누르면 나머지 둘레가 한꺼번에 열립니다.</li>
             <li>숫자를 누르고 있으면(양쪽 버튼이나 휠 버튼도 됩니다) 둘레 여덟 칸이 눌려 보여 세기 쉽습니다. 떼도 깃발 수가 맞지 않으면 열리지 않습니다.</li>
-            <li>성공하면 걸린 시간이 랭킹에 올라갑니다. 크기별로 따로 셉니다.</li>
+            <li>성공하면 걸린 시간이 랭킹에 올라갑니다. 크기별로 따로 셉니다. 스마일 얼굴을 누르면 새 판입니다.</li>
           </ul>
         </details>
       </section>
@@ -237,8 +302,8 @@
   const countAround = (mines, i, w, h) => neighbors(i, w, h).reduce((a, j) => a + mines[j], 0);
 
   // ---------- 상태 ----------
-  // open[i]: -1 닫힘 · 0~8 숫자 · 9 깃발 · 10 드러난 지뢰 · 11 밟은 지뢰
-  const S = { size: 'mid', flagMode: false };
+  // open[i]: -1 닫힘 · 0~8 숫자 · 9 깃발 · 10 드러난 지뢰 · 11 밟은 지뢰 · 12 물음표
+  const S = { size: 'mid', flagMode: false, marks: true };
   let G = null;
   function freshGame() {
     const [w, h, n] = SIZES[S.size];
@@ -250,7 +315,7 @@
     if (mineCache.key !== key) mineCache = { key, mines: G.seed ? placeMines(G.w, G.h, G.n, G.seed, new Set(G.avoid)) : null };
     return mineCache.mines;
   }
-  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ size: S.size, game: G })); } catch (e) {} }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify({ size: S.size, marks: S.marks, game: G })); } catch (e) {} }
   function loadSaved() {
     try {
       const d = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
@@ -261,7 +326,8 @@
       G = freshGame();
       G.seed = Number.isInteger(g.seed) ? g.seed : 0;
       G.avoid = Array.isArray(g.avoid) ? g.avoid.filter(Number.isInteger) : [];
-      G.open = g.open.map(v => (Number.isInteger(v) && v >= -1 && v <= 11 ? v : -1));
+      G.open = g.open.map(v => (Number.isInteger(v) && v >= -1 && v <= 12 ? v : -1));
+      if (typeof d.marks === 'boolean') S.marks = d.marks;
       G.elapsed = typeof g.elapsed === 'number' ? g.elapsed : 0;
       G.over = !!g.over; G.won = !!g.won; G.rank = Number.isInteger(g.rank) ? g.rank : -1;
       G.started = G.seed && !G.over ? Date.now() - G.elapsed : 0;
@@ -274,10 +340,10 @@
     const stack = [start];
     while (stack.length) {
       const i = stack.pop();
-      if (G.open[i] !== -1 || m[i]) continue;
+      if ((G.open[i] !== -1 && G.open[i] !== 12) || m[i]) continue;
       const c = countAround(m, i, G.w, G.h);
       G.open[i] = c;
-      if (c === 0) for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1) stack.push(j);
+      if (c === 0) for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1 || G.open[j] === 12) stack.push(j);
     }
   }
   function openCell(i) {
@@ -292,10 +358,10 @@
     if (G.open[i] >= 0 && G.open[i] <= 8) {          // 숫자 클릭: 깃발 수가 맞으면 나머지 둘레 열기
       const nb = neighbors(i, G.w, G.h), flags = nb.filter(j => G.open[j] === 9).length;
       if (flags !== G.open[i]) return;
-      for (const j of nb) if (G.open[j] === -1) { if (m[j]) return boom(j); flood(m, j); }
+      for (const j of nb) if (G.open[j] === -1 || G.open[j] === 12) { if (m[j]) return boom(j); flood(m, j); }
       return check();
     }
-    if (G.open[i] !== -1) return;
+    if (G.open[i] !== -1 && G.open[i] !== 12) return;
     if (m[i]) return boom(i);
     G.last = i;
     flood(m, i);
@@ -305,12 +371,12 @@
     const m = mines();
     G.open[i] = 11; G.over = true; G.won = false; G.last = i;
     G.elapsed = Date.now() - G.started;
-    for (let k = 0; k < m.length; k++) if (m[k] && G.open[k] === -1) G.open[k] = 10;
+    for (let k = 0; k < m.length; k++) if (m[k] && (G.open[k] === -1 || G.open[k] === 12)) G.open[k] = 10;
     save(); render();
   }
   function check() {
     const m = mines();
-    const left = G.open.reduce((a, v, k) => a + ((v === -1 || v === 9) && !m[k] ? 1 : 0), 0);
+    const left = G.open.reduce((a, v, k) => a + ((v === -1 || v === 9 || v === 12) && !m[k] ? 1 : 0), 0);
     if (left === 0) {
       G.over = true; G.won = true; G.elapsed = Date.now() - G.started;
       for (let k = 0; k < m.length; k++) if (m[k]) G.open[k] = 9;
@@ -318,9 +384,9 @@
     }
     save(); render();
   }
-  function toggleFlag(i) {
+  function toggleFlag(i) {                            // 닫힘 → 깃발 → (물음표) → 닫힘
     if (G.over || !G.seed) return;
-    if (G.open[i] === -1) G.open[i] = 9; else if (G.open[i] === 9) G.open[i] = -1; else return;
+    if (G.open[i] === -1) G.open[i] = 9; else if (G.open[i] === 9) G.open[i] = S.marks ? 12 : -1; else if (G.open[i] === 12) G.open[i] = -1; else return;
     save(); render();
   }
 
@@ -422,7 +488,7 @@
   const pressedCells = [];
   function pressAround(i) {
     releaseAround();
-    for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1) { cells[j].classList.add('pressed'); pressedCells.push(j); }
+    for (const j of neighbors(i, G.w, G.h)) if (G.open[j] === -1 || G.open[j] === 12) { cells[j].classList.add('pressed'); pressedCells.push(j); }
   }
   function releaseAround() { while (pressedCells.length) cells[pressedCells.pop()].classList.remove('pressed'); }
   function onCellClick(i, flag) {
@@ -432,7 +498,7 @@
   board.addEventListener('click', e => {
     const b = e.target.closest('.cell'); if (!b) return;
     if (longPressed) { longPressed = false; return; }
-    if (chordPress) { chordPress = false; if (G.open[+b.dataset.i] === -1) return; }
+    if (chordPress) { chordPress = false; if (G.open[+b.dataset.i] === -1 || G.open[+b.dataset.i] === 12) return; }
     onCellClick(+b.dataset.i, false);
   });
   board.addEventListener('contextmenu', e => {
@@ -448,22 +514,69 @@
     chordPress = e.buttons === 3 || e.button === 1;
     if (chordPress) e.preventDefault();
     if ((v >= 0 && v <= 8) || chordPress) pressAround(i);
+    if (!G.over) setFace('oh');
     if (e.pointerType === 'mouse') return;
     pressed = i; longPressed = false;
     pressTimer = setTimeout(() => { longPressed = true; onCellClick(pressed, true); }, 420);
   });
   board.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
   ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => board.addEventListener(ev, () => clearTimeout(pressTimer)));
-  window.addEventListener('pointerup', releaseAround);
-  window.addEventListener('pointercancel', releaseAround);
-  window.addEventListener('blur', releaseAround);
+  const releaseAll = () => { releaseAround(); if (G) setFace(faceFor()); };
+  window.addEventListener('pointerup', releaseAll);
+  window.addEventListener('pointercancel', releaseAll);
+  window.addEventListener('blur', releaseAll);
 
-  const fmt = ms => String(Math.min(999, Math.floor(ms / 1000))).padStart(3, '0');
+  // 7세그먼트 LED 숫자 (직접 그린 SVG). 켜진 획은 빨강, 꺼진 획은 어두운 빨강
+  const SEG = { 0: 'abcdef', 1: 'bc', 2: 'abdeg', 3: 'abcdg', 4: 'bcfg', 5: 'acdfg', 6: 'acdefg', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg', '-': 'g' };
+  const SEG_PATH = {
+    a: 'M3 1h12l-2 2H5z', b: 'M17 2v11l-2-2V4z', c: 'M17 15v11l-2-2V17z', d: 'M3 27h12l-2-2H5z',
+    e: 'M1 15v11l2-2V17z', f: 'M1 2v11l2-2V4z', g: 'M3 14h12l-1.5 1.5h-9z M3 14h12l-1.5-1.5h-9z'
+  };
+  const ledCache = {};
+  function ledSvg(text) {
+    if (ledCache[text]) return ledCache[text];
+    let out = '<svg viewBox="0 0 60 28" aria-hidden="true">';
+    [...text].forEach((ch, k) => {
+      const on = SEG[ch] || '';
+      out += '<g transform="translate(' + (2 + k * 19.5) + ' 0)">';
+      for (const sname in SEG_PATH) out += '<path d="' + SEG_PATH[sname] + '" fill="' + (on.includes(sname) ? '#FF0000' : '#3A0000') + '"/>';
+      out += '</g>';
+    });
+    ledCache[text] = out + '</svg>';
+    return ledCache[text];
+  }
+  function setLed(el, n) {
+    const v = Math.max(-99, Math.min(999, n));
+    const text = v < 0 ? '-' + String(-v).padStart(2, '0') : String(v).padStart(3, '0');
+    if (el.dataset.v !== text) { el.dataset.v = text; el.innerHTML = ledSvg(text); }
+  }
   function tickClock() {
     if (!G) return;
     const ms = G.over ? G.elapsed : G.seed ? Date.now() - G.started : 0;
-    $('clock').lastChild.textContent = fmt(ms);
+    setLed($('clock'), Math.floor(ms / 1000));
   }
+  // 창은 판 크기에 딱 맞고, 판이 화면보다 넓으면 칸을 줄여서 스크롤 없이 들어가게 한다
+  function fitCells() {
+    const avail = $('win').parentElement.clientWidth - 30;             // 창 테두리·안쪽 여백
+    const base = window.innerWidth <= 640 ? 24 : 32;
+    const cs = Math.max(10, Math.min(base, Math.floor(avail / G.w)));
+    document.documentElement.style.setProperty('--cs', cs + 'px');
+  }
+  // 스마일 버튼: 평소 · 누르는 동안(놀람) · 성공(선글라스) · 실패(엑스 눈). 직접 그린 SVG
+  const FACE = {
+    base: '<circle cx="12" cy="12" r="10" fill="#FFE41B" stroke="#000" stroke-width="1.4"/>',
+    ok: '<circle cx="8.5" cy="9.5" r="1.4" fill="#000"/><circle cx="15.5" cy="9.5" r="1.4" fill="#000"/><path d="M7.5 14.5q4.5 4 9 0" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"/>',
+    oh: '<circle cx="8.5" cy="9.5" r="1.4" fill="#000"/><circle cx="15.5" cy="9.5" r="1.4" fill="#000"/><circle cx="12" cy="15.5" r="2.2" fill="none" stroke="#000" stroke-width="1.6"/>',
+    win: '<path d="M4 8.5h16" stroke="#000" stroke-width="1.6"/><ellipse cx="8.5" cy="10" rx="3" ry="2.2" fill="#000"/><ellipse cx="15.5" cy="10" rx="3" ry="2.2" fill="#000"/><path d="M7.5 15q4.5 4 9 0" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"/>',
+    dead: '<path d="M6.5 7.5l4 4M10.5 7.5l-4 4M13.5 7.5l4 4M17.5 7.5l-4 4" stroke="#000" stroke-width="1.6" stroke-linecap="round"/><path d="M7.5 17q4.5-4 9 0" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round"/>'
+  };
+  let faceNow = '';
+  function setFace(f) {
+    if (faceNow === f) return;
+    faceNow = f;
+    $('btn-new').innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + FACE.base + FACE[f] + '</svg>';
+  }
+  const faceFor = () => (G.over ? (G.won ? 'win' : 'dead') : 'ok');
   function render() {
     if (cells.length !== G.w * G.h || +board.style.getPropertyValue('--w') !== G.w) buildBoard();
     const m = G.over ? mines() : null;
@@ -472,18 +585,23 @@
       let cls = 'cell';
       if (v >= 0 && v <= 8) cls += ' open' + (v ? ' n' + v : '');
       else if (v === 9) cls += G.over && !G.won && !m[i] ? ' wrong' : ' flag';
+      else if (v === 12) cls += ' q';
       else if (v === 10) cls += ' open mine';
       else if (v === 11) cls += ' open boom';
       if (i === G.last && !G.over) cls += ' last';
       b.className = cls;
       b.textContent = v >= 1 && v <= 8 ? v : '';
       b.disabled = G.over;
-      b.setAttribute('aria-label', (i % G.w + 1) + '열 ' + (Math.floor(i / G.w) + 1) + '행 ' + (v === -1 ? '닫힘' : v <= 8 ? '숫자 ' + v : v === 9 ? '깃발' : v === 10 ? '지뢰' : '터진 지뢰'));
+      b.setAttribute('aria-label', (i % G.w + 1) + '열 ' + (Math.floor(i / G.w) + 1) + '행 ' + (v === -1 ? '닫힘' : v <= 8 ? '숫자 ' + v : v === 9 ? '깃발' : v === 10 ? '지뢰' : v === 12 ? '물음표' : '터진 지뢰'));
     }
     board.classList.toggle('can', !G.over);
+    fitCells();
     const flags = G.open.filter(v => v === 9).length;
-    $('mines-left').lastChild.textContent = String(Math.max(0, G.n - flags)).padStart(3, '0');
+    setLed($('mines-left'), G.n - flags);
     tickClock();
+    setFace(faceFor());
+    document.querySelectorAll('#menu [role="menuitemradio"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.act === S.size)));
+    $('menu').querySelector('[data-act="marks"]').setAttribute('aria-checked', String(S.marks));
     $('btn-flagmode').setAttribute('aria-pressed', String(S.flagMode));
     let text;
     if (G.over) text = G.won ? '성공! ' + (G.elapsed / 1000).toFixed(1) + '초' + (G.rank >= 0 ? ' · ' + (G.rank + 1) + '위' : '') : '펑! 지뢰를 밟았습니다.';
@@ -498,6 +616,22 @@
   function bindControls() {
     document.querySelectorAll('input[name="size"]').forEach(r => r.addEventListener('change', () => { S.size = r.value; G = freshGame(); save(); render(); }));
     $('btn-new').addEventListener('click', () => { G = freshGame(); save(); render(); });
+    // 게임 메뉴
+    const menu = $('menu'), mg = $('menu-game');
+    const closeMenu = () => { menu.hidden = true; mg.setAttribute('aria-expanded', 'false'); };
+    mg.addEventListener('click', e => { e.stopPropagation(); menu.hidden = !menu.hidden; mg.setAttribute('aria-expanded', String(!menu.hidden)); });
+    document.addEventListener('click', closeMenu);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+    menu.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const act = b.dataset.act;
+      if (act === 'new') { G = freshGame(); }
+      else if (SIZES[act]) { S.size = act; G = freshGame(); }
+      else if (act === 'marks') { S.marks = !S.marks; }
+      save(); render();
+    });
+    $('menu-help').addEventListener('click', () => { const d = document.querySelector('details'); d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); });
+    window.addEventListener('resize', () => { fitCells(); });
     $('btn-flagmode').addEventListener('click', () => { S.flagMode = !S.flagMode; render(); });
     const nm = $('name');
     nm.value = localStorage.getItem(NAME_KEY) || '';

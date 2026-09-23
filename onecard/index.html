@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko" data-root="../">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>원카드 한 판</title>
+<meta name="description" content="설치 없이 바로 하는 원카드. 2·A·조커 공격을 주고받고, 7로 무늬 바꾸고, J·K로 한 번 더. 한 장 남으면 원카드! AI 또는 초대 링크로 친구와.">
+<meta property="og:title" content="원카드 한 판">
+<meta property="og:description" content="2·A·조커 공격을 주고받고, 한 장 남으면 원카드! AI 또는 초대 링크로 친구와.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="thumb.svg">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&family=Rubik:wght@700;900&display=swap">
+<link rel="stylesheet" href="../shared/site.css">
+<style>
+  html { color-scheme: light dark; }
+  [hidden] { display: none !important; }
+  :root {
+    --ground: #EEF0EA; --surface: #F8F9F5; --ink: #1E221C; --ink-soft: #626A5C; --line: #D3D8CC;
+    --accent: #D6362B; --on-ink: #F8F9F5; --felt: #2E6B4F; --felt-edge: #1F4A36;
+    --red: #D6362B; --blue: #2C5FC4; --cw: 64px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --ground: #14171A; --surface: #1E2226; --ink: #EAEDE6; --ink-soft: #9BA396; --line: #343A3F; --accent: #F0584B; --on-ink: #14171A; --felt: #25563F; --felt-edge: #163526; --red: #F0584B; --blue: #5A8BE8; }
+  }
+  :root[data-theme="dark"] { --ground: #14171A; --surface: #1E2226; --ink: #EAEDE6; --ink-soft: #9BA396; --line: #343A3F; --accent: #F0584B; --on-ink: #14171A; --felt: #25563F; --felt-edge: #163526; --red: #F0584B; --blue: #5A8BE8; }
+  @media (max-width: 640px) { :root { --cw: 48px; } }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 1rem/1.6 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
+  .page { max-width: 1120px; margin-inline: auto; padding-inline: 16px; padding-block: 24px 48px; display: grid; gap: 20px; }
+  .masthead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; }
+  h1 { margin: 0; font: 900 2.2rem/1.15 "Gothic A1", "Apple SD Gothic Neo", sans-serif; letter-spacing: -0.02em; }
+  .masthead p { margin: 0; color: var(--ink-soft); }
+  .table { display: grid; grid-template-columns: minmax(0, 760px) minmax(250px, 1fr); gap: 32px; align-items: start; }
+  @media (max-width: 900px) { .table { grid-template-columns: minmax(0, 1fr); gap: 28px; } h1 { font-size: 1.75rem; } }
+  .play { display: grid; gap: 10px; }
+
+  /* 카드 */
+  .pc {
+    position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); flex: none;
+    border-radius: calc(var(--cw) * 0.09); background: #FFFFFF; border: 1px solid #B9B9B9; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    color: #1A1A1A; font-family: "Rubik", "Gothic A1", sans-serif; overflow: hidden; user-select: none; -webkit-user-select: none;
+  }
+  .pc.red { color: #D6362B; }
+  .pc .r { position: absolute; left: 7%; top: 5%; font-size: calc(var(--cw) * 0.3); font-weight: 900; line-height: 1; }
+  .pc .r small { display: block; font-size: calc(var(--cw) * 0.24); }
+  .pc .r2 { position: absolute; right: 7%; bottom: 5%; transform: rotate(180deg); font-size: calc(var(--cw) * 0.3); font-weight: 900; line-height: 1; }
+  .pc .r2 small { display: block; font-size: calc(var(--cw) * 0.24); }
+  .pc .big { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--cw) * 0.62); }
+  .pc.joker { background: linear-gradient(160deg, #FFF6D5, #FFE6EE 50%, #DDEBFF); }
+  .pc.joker.black { background: linear-gradient(160deg, #3A3A3A, #111); color: #FFF; border-color: #000; }
+  .pc.joker .big { font: 900 calc(var(--cw) * 0.22)/1.1 "Rubik", sans-serif; text-align: center; letter-spacing: 0.05em; writing-mode: vertical-rl; }
+  .pc.joker .big b { font-size: calc(var(--cw) * 0.5); writing-mode: horizontal-tb; }
+  .pc.back { background: repeating-linear-gradient(45deg, #2C5FC4 0 5px, #1F4A9E 5px 10px); border-color: #14346E; }
+  .pc.back::after { content: ""; position: absolute; inset: 6px; border-radius: 4px; border: 1.5px solid rgba(255, 255, 255, 0.55); }
+  button.pc { padding: 0; cursor: pointer; font: inherit; }
+  button.pc:disabled { cursor: default; opacity: 0.55; }
+  button.pc.can { opacity: 1; outline: 3px solid #F2C94C; outline-offset: 1px; transform: translateY(-6px); }
+  button.pc.can:hover { transform: translateY(-12px); }
+  .pc:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .pc.mini { --cw: calc(var(--cw-base, 64px) * 0.6); }
+
+  /* 자리 */
+  .seat { display: grid; gap: 8px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); }
+  .seat.active { border-color: var(--team); box-shadow: inset 0 0 0 1px var(--team); }
+  .seat[data-team="0"] { --team: var(--red); }
+  .seat[data-team="1"] { --team: var(--blue); }
+  .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .seat-name { font-weight: 700; color: var(--team); }
+  .seat-meta { font-size: 0.8125rem; color: var(--ink-soft); }
+  .badge { padding: 2px 8px; border-radius: 999px; background: var(--accent); color: #FFF; font-size: 0.75rem; font-weight: 700; }
+  .hand { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.4 + 12px); padding-top: 12px; }
+  .hand .back { margin-left: calc(var(--cw) * -0.55); } .hand .back:first-child { margin-left: 0; }
+
+  /* 가운데 */
+  .center {
+    position: relative; display: flex; align-items: center; justify-content: center; gap: 28px; padding: 22px 16px;
+    border-radius: 12px; background: radial-gradient(circle at center, #3A7D5E 0%, var(--felt) 60%, #234D3A 100%); border: 3px solid var(--felt-edge);
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+  .stack { position: relative; width: var(--cw); height: calc(var(--cw) * 1.4); }
+  .stack .pc { position: absolute; left: 0; top: 0; }
+  .stack .pc:nth-child(2) { transform: rotate(-3deg); }
+  .stack .pc:nth-child(3) { transform: rotate(4deg); }
+  .deckbtn { cursor: pointer; }
+  .deckbtn:disabled { cursor: default; }
+  .deckbtn.can { outline: 3px solid #F2C94C; outline-offset: 2px; }
+  .info { display: grid; gap: 4px; color: #FFF; text-align: center; min-width: 90px; }
+  .info .suit { font-size: 2rem; line-height: 1; }
+  .info .suit.red { color: #FF9B93; }
+  .info .lab { font-size: 0.75rem; opacity: 0.85; }
+  .info .atk { font: 900 1.5rem/1 "Rubik", sans-serif; color: #F2C94C; }
+  .pile-new { animation: slap 0.28s ease-out; }
+  @keyframes slap { from { transform: scale(1.35) rotate(-8deg); opacity: 0.4; } to { transform: none; opacity: 1; } }
+  .hand .in { animation: slide 0.3s ease-out; }
+  @keyframes slide { from { transform: translateY(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .status { margin: 0; min-height: 1.6em; font-weight: 700; }
+  .status.final { font: 900 1.3rem/1.35 "Gothic A1", sans-serif; }
+  .note { margin: 0; min-height: 1.5em; font-size: 0.8125rem; color: var(--ink-soft); }
+  .actions-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { appearance: none; padding: 10px 18px; border: 1px solid var(--ink); border-radius: 4px; background: transparent; color: var(--ink); font: 500 0.875rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; cursor: pointer; }
+  .btn.primary { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .btn.shout { background: var(--accent); border-color: var(--accent); color: #FFF; font: 900 1rem/1.2 "Gothic A1", sans-serif; padding: 10px 22px; }
+  .btn.small { padding: 6px 12px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; background: var(--surface); border: 1px solid var(--accent); }
+  .prompt b { font-size: 1rem; }
+  .suitbtn { font-size: 1.5rem; line-height: 1; padding: 6px 14px; }
+  .suitbtn.red { color: var(--red); }
+  .result { display: grid; gap: 8px; padding: 14px 16px; border-radius: 8px; background: var(--surface); border: 2px solid #F2C94C; }
+  .result h3 { margin: 0; font: 900 1.4rem/1.2 "Gothic A1", sans-serif; }
+
+  /* 옆 패널 */
+  .panel { display: grid; gap: 22px; }
+  .panel section { display: grid; gap: 12px; }
+  .panel section + section { padding-top: 22px; border-top: 1px solid var(--line); }
+  h2 { margin: 0; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; color: var(--ink-soft); }
+  fieldset { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+  legend { padding: 0; margin-bottom: 6px; font-size: 0.875rem; font-weight: 500; }
+  .seg-row { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+  .seg-row input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg-row label { flex: 1 1 auto; padding: 8px 12px; text-align: center; font-size: 0.875rem; cursor: pointer; white-space: nowrap; }
+  .seg-row label + input + label { border-left: 1px solid var(--line); }
+  .seg-row input:checked + label { background: var(--ink); color: var(--on-ink); font-weight: 700; }
+  .seg-row input:focus-visible + label { outline: 3px solid var(--accent); outline-offset: -3px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .fine { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  #online-msg { color: var(--ink); font-weight: 500; }
+  #lobby, #room { display: grid; gap: 10px; }
+  .join { display: flex; gap: 8px; }
+  .join input { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: 700 1rem/1.2 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.15em; text-transform: uppercase; }
+  .join input::placeholder { letter-spacing: 0; color: var(--ink-soft); font: 400 0.875rem "Gothic A1", system-ui, sans-serif; }
+  .join input:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+  .room-code { margin: 0; display: flex; align-items: baseline; gap: 10px; }
+  .room-code strong { font: 700 1.75rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; }
+  .score { display: flex; gap: 16px; font-size: 0.9375rem; }
+  .score b { font: 900 1.4rem/1 "Rubik", sans-serif; }
+  .score span[data-team="0"] b { color: var(--red); } .score span[data-team="1"] b { color: var(--blue); }
+  .log { margin: 0; padding: 0; list-style: none; max-height: 240px; overflow-y: auto; display: grid; gap: 2px; font-size: 0.8125rem; }
+  .log li { display: flex; align-items: baseline; gap: 8px; }
+  .log li[data-team="0"] { --team: var(--red); }
+  .log li[data-team="1"] { --team: var(--blue); }
+  .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
+  .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+  details { font-size: 0.875rem; }
+  summary { cursor: pointer; font-weight: 500; }
+  summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  details ul { margin: 10px 0 0; padding-left: 1.2em; color: var(--ink-soft); display: grid; gap: 4px; max-width: 38em; }
+  @media (prefers-reduced-motion: reduce) { .pile-new, .hand .in { animation: none; } button.pc.can, button.pc.can:hover { transform: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <a class="home" href="../index.html">← 한 판 놀이방</a>
+    <h1>원카드 한 판</h1>
+    <p>공격 카드를 주고받다 한 장 남으면 "원카드!" 먼저 다 내면 이깁니다.</p>
+  </header>
+
+  <main class="table">
+    <div class="play">
+      <div class="seat" id="seat-1" data-team="1">
+        <div class="seat-head"><span class="seat-name" id="name-1">청</span><span class="seat-meta" id="meta-1"></span><span class="badge" id="badge-1" hidden>원카드!</span></div>
+        <div class="hand" id="hand-1"></div>
+      </div>
+
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="center">
+        <div class="stack" id="deck"></div>
+        <div class="info">
+          <span class="lab">현재 무늬</span><span class="suit" id="suit">♠</span>
+          <span class="atk" id="atk" hidden></span>
+        </div>
+        <div class="stack" id="pile"></div>
+      </div>
+      <div class="prompt" id="prompt" hidden></div>
+      <div class="result" id="result" hidden></div>
+      <p class="note" id="note"></p>
+
+      <div class="seat" id="seat-0" data-team="0">
+        <div class="seat-head"><span class="seat-name" id="name-0">홍</span><span class="seat-meta" id="meta-0"></span><span class="badge" id="badge-0" hidden>원카드!</span></div>
+        <div class="actions-row">
+          <button type="button" class="btn shout" id="btn-declare">원카드!</button>
+          <button type="button" class="btn primary" id="btn-draw">카드 먹기</button>
+          <span class="note" id="hint"></span>
+        </div>
+        <div class="hand" id="hand-0"></div>
+      </div>
+    </div>
+
+    <aside class="panel">
+      <section>
+        <h2>놀이 설정</h2>
+        <fieldset>
+          <legend>상대</legend>
+          <div class="seg-row">
+            <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-online" hidden></fieldset>
+        <fieldset id="fs-level">
+          <legend>AI 난이도</legend>
+          <div class="seg-row">
+            <input type="radio" name="level" id="level-easy" value="easy"><label for="level-easy">쉬움</label>
+            <input type="radio" name="level" id="level-normal" value="normal"><label for="level-normal">보통</label>
+            <input type="radio" name="level" id="level-hard" value="hard"><label for="level-hard">어려움</label>
+          </div>
+        </fieldset>
+        <div class="actions"><button type="button" class="btn" id="btn-new">처음부터 새로</button></div>
+        <p class="fine">손패가 비밀이라 한 화면 2인은 없습니다. 판이 끝나면 이긴 쪽이 다음 판을 돌립니다.</p>
+      </section>
+      <section>
+        <h2>이번 대결</h2>
+        <div class="score" id="score"></div>
+      </section>
+      <section>
+        <h2>지난 수</h2>
+        <p class="log-empty" id="log-empty">아직 낸 카드가 없습니다.</p>
+        <ol class="log" id="log" hidden></ol>
+      </section>
+      <section>
+        <details>
+          <summary>규칙 보기</summary>
+          <ul>
+            <li>52장 + 조커 2장, 처음 7장씩. 바닥 카드와 같은 무늬나 같은 숫자를 냅니다. 낼 카드가 없거나 내기 싫으면 한 장 먹습니다.</li>
+            <li>공격: <b>2</b>는 +2, <b>A</b>는 +3, <b>컬러 조커</b>는 +5, <b>흑 조커</b>는 +7. 공격은 공격 카드(같은 무늬·같은 숫자·조커)로 되받아 누적하고, 못 막으면 쌓인 만큼 먹습니다.</li>
+            <li><b>J</b>·<b>K</b>는 한 번 더 냅니다. <b>7</b>은 원하는 무늬로 바꿉니다. 조커는 아무 때나 낼 수 있고, 조커 위엔 아무 카드나 낼 수 있습니다.</li>
+            <li>두 장 이하가 되면 "원카드!"를 누를 수 있습니다. 한 장 남기고 선언 없이 차례를 넘기면 벌칙 1장.</li>
+            <li>손패를 다 내면 승리, 20장을 넘으면 파산 패. 이긴 횟수가 누적됩니다.</li>
+          </ul>
+        </details>
+      </section>
+      <div class="ad-slot" data-ad="game-side" hidden></div>
+    </aside>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="../shared/config.js"></script>
+<script src="../shared/online.js"></script>
+<script src="../shared/site.js"></script>
+<script src="engine.js"></script>
+<script>
+(() => {
+  const M = window.OneCard;
+  const TEAM = ['홍', '청'];
+  const STORE_KEY = 'onecard-standalone-v1';
+  const $ = id => document.getElementById(id);
+  const newSeed = () => 1 + Math.floor(Math.random() * 2147483646);
+
+  const S = { mode: 'ai', level: 'normal' };
+  let G = null, seen = 0, aiTimer = 0;
+  function freshGame(seq, first, wins) {
+    const g = M.deal(newSeed(), first || 0);
+    g.wins = wins ? wins.slice() : [0, 0];
+    g.seq = seq || 0; g.ev = null;
+    return g;
+  }
+  const O = Hanpan.createOnline({
+    id: 'onecard',
+    seats: { host: 0, guest: 1, none: -1 },
+    text: { host: '방장 · 홍(첫 판 선)', guest: '참가자 · 청', note: '방장이 홍, 참가자가 청입니다. 카드는 방장 쪽에서 섞어 보냅니다.' },
+    isOnline: () => S.mode === 'online',
+    setOnline: () => { S.mode = 'online'; },
+    onNewRoom: kind => { G = freshGame(kind === 'guest' ? 0 : (G ? G.seq + 1 : 0)); seen = kind === 'guest' ? -1 : G.seq; },
+    onLeave: () => {},
+    getState: () => G,
+    onState: (g, firstSync) => { const clean = cleanGame(g); if (clean) adoptRemote(clean, firstSync); },
+    render: () => render(),
+    save: () => save()
+  });
+  function save() {
+    try {
+      const d = { mode: S.mode, level: S.level, game: G };
+      if (S.mode === 'online' && O.roomInfo()) d.room = O.roomInfo();
+      localStorage.setItem(STORE_KEY, JSON.stringify(d));
+    } catch (e) {}
+  }
+  function loadSaved() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
+  const okId = v => Number.isInteger(v) && v >= 0 && v < 54;
+  const idList = a => (Array.isArray(a) && a.every(okId) ? a.slice() : null);
+  const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
+  function cleanGame(d) {
+    if (!d || typeof d !== 'object') return null;
+    const seed = int(d.seed, 1, 2147483647), first = int(d.first, 0, 1), turn = int(d.turn, 0, 1);
+    if (seed === null || first === null || turn === null) return null;
+    const hands = Array.isArray(d.hands) && d.hands.length === 2 ? d.hands.map(idList) : null;
+    const pile = idList(d.pile), draw = idList(d.draw);
+    if (!hands || hands.some(h => !h) || !pile || !pile.length || !draw) return null;
+    const all = [...hands[0], ...hands[1], ...pile, ...draw];
+    if (all.length !== 54 || new Set(all).size !== 54) return null;
+    const stage = ['play', 'suit', 'over'].includes(d.stage) ? d.stage : null;
+    if (!stage) return null;
+    return {
+      seed, first, turn, hands, pile, draw,
+      suit: int(d.suit, -1, 3) === null ? -1 : d.suit, attack: int(d.attack, 0, 200) || 0,
+      declared: [0, 1].map(i => !!(d.declared && d.declared[i])), stage,
+      over: !!d.over, winner: d.winner === 0 || d.winner === 1 ? d.winner : -1, why: String(d.why || '').slice(0, 60),
+      log: Array.isArray(d.log) ? d.log.slice(-80).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 80) })) : [],
+      last: d.last && typeof d.last === 'object' ? { t: d.last.t === 1 ? 1 : 0, id: okId(d.last.id) ? d.last.id : -1, type: d.last.type === 'draw' ? 'draw' : 'play', n: int(d.last.n, 0, 60) || 0 } : null,
+      drawn: int(d.drawn, 0, 1e6) || 0,
+      wins: Array.isArray(d.wins) && d.wins.length === 2 ? d.wins.map(v => int(v, 0, 1e6) || 0) : [0, 0],
+      seq: int(d.seq, 0, 1e9) || 0, ev: d.ev && typeof d.ev === 'object' ? { seq: int(d.ev.seq, 0, 1e9) || 0 } : null
+    };
+  }
+
+  // ---------- 진행 ----------
+  const myTeam = () => (S.mode === 'ai' ? 0 : O.my);
+  function canAct() {
+    if (G.over) return false;
+    if (S.mode === 'ai') return G.turn === 0;
+    return O.status === 'live' && G.turn === O.my;
+  }
+  function roleOf(t) {
+    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
+    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
+    return '';
+  }
+  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+  function commit() {
+    G.seq++;
+    G.ev = { seq: G.seq };
+    seen = G.seq;
+    if (G.over && G.winner >= 0 && !G.counted) { G.wins[G.winner]++; G.counted = true; }
+    save();
+    O.send();
+    render();
+    scheduleAI();
+  }
+  function act(fn) { if (fn()) commit(); }
+  function doPlay(id) { if (canAct()) act(() => M.play(G, id)); }
+  function doSuit(s) { if (canAct()) act(() => M.chooseSuit(G, s)); }
+  function doDraw() { if (canAct()) act(() => M.drawCards(G)); }
+  function doDeclare() { if (canAct()) act(() => M.declare(G)); }
+  function nextRound() {
+    if (!G.over) return;
+    const first = G.winner >= 0 ? G.winner : G.first;
+    if (S.mode === 'online' && (O.status !== 'live' || O.my !== first)) return;
+    G = freshGame(G.seq + 1, first, G.wins);
+    commit();
+  }
+  function newMatch() {
+    if (S.mode === 'online' && O.status !== 'live') return;
+    clearTimeout(aiTimer);
+    G = freshGame(G ? G.seq + 1 : 0, 0, [0, 0]);
+    commit();
+  }
+  function adoptRemote(g, firstSync) { G = g; seen = g.seq; render(); save(); scheduleAI(); }
+  function setMode(mode) {
+    if (S.mode === 'online') O.leave();
+    clearTimeout(aiTimer);
+    S.mode = mode;
+    G = freshGame(G ? G.seq + 1 : 0);
+    seen = G.seq;
+    render(); save(); scheduleAI();
+  }
+
+  // ---------- AI ----------
+  function scheduleAI() {
+    clearTimeout(aiTimer);
+    if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+    aiTimer = setTimeout(() => {
+      if (G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      // 두 장 이하면 대개 선언한다 (쉬움은 자주 까먹는다)
+      if (G.hands[1].length <= 2 && !G.declared[1] && Math.random() < (S.level === 'easy' ? 0.5 : S.level === 'normal' ? 0.85 : 0.98)) { M.declare(G); }
+      const a = M.aiMove(G, S.level);
+      let ok = false;
+      if (a.type === 'play') ok = M.play(G, a.id, a.suit); else if (a.type === 'draw') ok = M.drawCards(G); else ok = M.chooseSuit(G, a.suit);
+      if (ok) commit();
+    }, G.stage === 'suit' ? 400 : 800);
+  }
+
+  // ---------- 카드 그리기 ----------
+  function cardEl(id, opts) {
+    const o = opts || {};
+    const el = document.createElement(o.button ? 'button' : 'div');
+    if (o.button) el.type = 'button';
+    el.className = 'pc' + (o.cls ? ' ' + o.cls : '');
+    if (id < 0) { el.classList.add('back'); el.setAttribute('aria-label', '뒤집힌 카드'); return el; }
+    el.dataset.id = id;
+    el.setAttribute('aria-label', M.name(id));
+    if (M.isJoker(id)) {
+      el.classList.add('joker'); if (id === M.JOKER_B) el.classList.add('black');
+      const b = document.createElement('span'); b.className = 'big';
+      const s = document.createElement('b'); s.textContent = '★';
+      b.append('JOKER', s); el.appendChild(b);
+      return el;
+    }
+    const su = M.suitOf(id), rk = M.rankOf(id), red = su === 1 || su === 2;
+    if (red) el.classList.add('red');
+    const r = document.createElement('span'); r.className = 'r'; r.textContent = M.RANKS[rk];
+    const rs = document.createElement('small'); rs.textContent = M.SUITS[su]; r.appendChild(rs);
+    const r2 = r.cloneNode(true); r2.className = 'r2';
+    const big = document.createElement('span'); big.className = 'big'; big.textContent = M.SUITS[su];
+    el.append(r, big, r2);
+    return el;
+  }
+
+  // ---------- 화면 ----------
+  let lastPileTop = -1, lastHandCount = [-1, -1];
+  function render() {
+    const online = S.mode === 'online', me = myTeam(), act = canAct();
+    for (let t = 0; t < 2; t++) {
+      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
+      $('meta-' + t).textContent = G.hands[t].length + '장' + (G.first === t && !G.over ? ' · 선' : '');
+      $('badge-' + t).hidden = !G.declared[t];
+      $('seat-' + t).classList.toggle('active', !G.over && G.turn === t);
+      const hand = $('hand-' + t);
+      hand.textContent = '';
+      const mine = t === me || (S.mode === 'ai' && t === 0), shown = mine || G.over;
+      const grew = G.hands[t].length > lastHandCount[t] && lastHandCount[t] >= 0;
+      G.hands[t].forEach((id, k) => {
+        if (!shown) { hand.appendChild(cardEl(-1)); return; }
+        const can = act && t === G.turn && M.canPlay(G, id);
+        const b = cardEl(id, { button: true, cls: (can ? 'can' : '') + (grew && k >= lastHandCount[t] ? ' in' : '') });
+        b.disabled = !can;
+        if (can) b.addEventListener('click', () => doPlay(id));
+        hand.appendChild(b);
+      });
+      lastHandCount[t] = G.hands[t].length;
+    }
+    // 가운데: 더미·무늬·공격·바닥
+    const deck = $('deck');
+    deck.textContent = '';
+    const db = cardEl(-1, { button: true, cls: 'deckbtn' + (act && G.stage === 'play' ? ' can' : '') });
+    db.disabled = !(act && G.stage === 'play');
+    db.setAttribute('aria-label', '더미 ' + G.draw.length + '장 · 카드 먹기');
+    db.addEventListener('click', doDraw);
+    deck.appendChild(db);
+    const pile = $('pile');
+    pile.textContent = '';
+    const tops = G.pile.slice(-3);
+    tops.forEach((id, k) => { const c = cardEl(id); if (k === tops.length - 1 && id !== lastPileTop && lastPileTop >= 0) c.classList.add('pile-new'); pile.appendChild(c); });
+    lastPileTop = M.top(G);
+    const su = $('suit');
+    su.textContent = G.suit >= 0 ? M.SUITS[G.suit] : '★';
+    su.classList.toggle('red', G.suit === 1 || G.suit === 2);
+    $('atk').hidden = !G.attack;
+    $('atk').textContent = '공격 +' + G.attack;
+
+    // 문구·버튼
+    const connText = online ? O.statusText() : null;
+    let text;
+    if (connText) text = connText;
+    else if (G.over) text = (me >= 0 ? (G.winner === me ? '이겼습니다! ' : '졌습니다. ') : TEAM[G.winner] + ' 승리 — ') + TEAM[G.winner] + (roleOf(G.winner) ? '(' + roleOf(G.winner) + ')' : '') + ' ' + G.why;
+    else if (G.stage === 'suit') text = act ? '무늬를 고르세요.' : label(G.turn) + ' — 무늬 고르는 중…';
+    else if (G.attack > 0) text = label(G.turn) + ' 차례 — 공격 ' + G.attack + '장! ' + (act ? '되받거나 먹으세요.' : '…');
+    else text = label(G.turn) + ' 차례' + (act ? ' — 카드를 내거나 먹으세요.' : (S.mode === 'ai' ? ' — 생각하는 중…' : ' — 기다리는 중…'));
+    $('status').textContent = text;
+    $('status').classList.toggle('final', G.over && !connText);
+    const mineT = me >= 0 ? me : 0;
+    $('btn-declare').disabled = !(act && G.hands[G.turn].length <= 2 && !G.declared[G.turn]);
+    $('btn-draw').disabled = !(act && G.stage === 'play');
+    $('btn-draw').textContent = G.attack > 0 ? '공격 ' + G.attack + '장 먹기' : '카드 먹기';
+    $('hint').textContent = act && G.stage === 'play' ? (M.playable(G, G.turn).length ? '노란 테두리 카드를 낼 수 있습니다.' : '낼 카드가 없습니다. 먹으세요.') : '';
+    const pr = $('prompt');
+    pr.textContent = ''; pr.hidden = true;
+    if (act && G.stage === 'suit') {
+      pr.hidden = false;
+      const b = document.createElement('b'); b.textContent = '7! 바꿀 무늬를 고르세요';
+      pr.appendChild(b);
+      M.SUITS.forEach((s, k) => { const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn suitbtn' + (k === 1 || k === 2 ? ' red' : ''); bt.textContent = s; bt.setAttribute('aria-label', M.SUIT_NAME[k]); bt.addEventListener('click', () => doSuit(k)); pr.appendChild(bt); });
+    }
+    const rs = $('result');
+    rs.textContent = ''; rs.hidden = !G.over;
+    if (G.over) {
+      const h = document.createElement('h3'); h.textContent = TEAM[G.winner] + (roleOf(G.winner) ? '(' + roleOf(G.winner) + ')' : '') + ' 승리 · ' + G.why;
+      rs.appendChild(h);
+      const first = G.winner >= 0 ? G.winner : G.first;
+      const canDeal = S.mode === 'ai' || (O.status === 'live' && O.my === first);
+      const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'btn primary'; nb.textContent = '다음 판 (선: ' + TEAM[first] + ')';
+      nb.disabled = !canDeal; nb.addEventListener('click', nextRound);
+      rs.appendChild(nb);
+      if (!canDeal && online) { const p = document.createElement('p'); p.className = 'fine'; p.textContent = '이긴 쪽이 다음 판을 돌리길 기다리는 중…'; rs.appendChild(p); }
+    }
+    $('note').textContent = G.over ? '' : '더미 ' + G.draw.length + '장 · 바닥 ' + G.pile.length + '장';
+    const sc = $('score');
+    sc.textContent = '';
+    for (let t = 0; t < 2; t++) { const sp = document.createElement('span'); sp.dataset.team = t; const b = document.createElement('b'); b.textContent = G.wins[t]; sp.append(TEAM[t] + ' ', b, '승'); sc.appendChild(sp); }
+    const logEl = $('log');
+    logEl.textContent = '';
+    for (const e of G.log) {
+      const li = document.createElement('li'); li.dataset.team = e.t;
+      const dot = document.createElement('span'); dot.className = 'dot';
+      const s = document.createElement('span'); s.textContent = TEAM[e.t] + ' · ' + e.s;
+      li.append(dot, s); logEl.appendChild(li);
+    }
+    logEl.hidden = !G.log.length;
+    $('log-empty').hidden = !!G.log.length;
+    logEl.scrollTop = logEl.scrollHeight;
+    $('mode-ai').checked = S.mode === 'ai';
+    $('mode-online').checked = online;
+    $('level-' + S.level).checked = true;
+    $('fs-level').hidden = S.mode !== 'ai';
+    O.renderPanel(online);
+    $('btn-new').disabled = online && O.status !== 'live';
+  }
+
+  function bindControls() {
+    document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
+    document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
+    $('btn-new').addEventListener('click', newMatch);
+    $('btn-draw').addEventListener('click', doDraw);
+    $('btn-declare').addEventListener('click', doDeclare);
+  }
+  function start() {
+    const saved = loadSaved();
+    if (saved && typeof saved === 'object') {
+      if (['ai', 'online'].includes(saved.mode)) S.mode = saved.mode;
+      if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
+      G = cleanGame(saved.game);
+      if (G && saved.game && saved.game.counted) G.counted = true;
+    }
+    if (!G) G = freshGame(0);
+    seen = G.seq;
+    bindControls();
+    O.mountPanel($('fs-online'));
+    if (!O.boot(saved && saved.room)) {
+      if (S.mode === 'online') G = freshGame(G.seq + 1);
+      seen = G.seq;
+      render();
+      scheduleAI();
+    }
+  }
+  start();
+})();
+</script>
+</body>
+</html>

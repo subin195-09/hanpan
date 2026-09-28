@@ -5,6 +5,9 @@
  * 셈: 난 사람이 진 사람마다 점수를 받는다(누적은 주고받기라 합이 0). 피박(둘 7장 미만, 셋 6장 미만)·광박·멍박은 진 사람마다 따로.
  *   고박: 고를 부르고 지면 — 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 낸다(독박).
  *   쪽·따닥·뻑 먹기·싹쓸이·폭탄은 다른 사람 모두에게서 피를 한 장씩 가져온다.
+ *   조커(보너스패, 넣을지는 고른다): 48·49번, 둘 다 쌍피(피 2장). 달이 없어 아무 패와도 짝이 되지 않는다.
+ *     손에서 내면 바로 내 피가 되고 더미에서 한 장을 손에 보충한 뒤 패를 한 장 더 낸다. 더미에서 뒤집히면 내 피가 되고 한 장 더 뒤집는다.
+ *     처음 바닥에 깔리면 선이 갖고 더미에서 바닥을 채운다. 그 차례에 뻑이 나면 뒤집힌 조커는 뻑 더미에 붙었다가(G.stuck) 그 달을 먹는 사람이 가져간다.
  *   코인(놀이용, 진짜 돈 아님): 1점에 RATE 코인, 처음 START 코인. 가진 것보다 많이 잃으면 가진 만큼만 내고 파산하며,
  *   파산한 사람은 다음 판을 돌릴 때 START 코인을 다시 받는다(bust 에 횟수가 남는다). */
 (function (root) {
@@ -27,6 +30,9 @@
   };
   const CARDS = [];
   for (let m = 1; m <= 12; m++) SPEC[m].forEach(([t, sub], k) => CARDS.push({ id: (m - 1) * 4 + k, m, t, sub: sub || '', pv: t === 'p' ? (sub === 'ssang' ? 2 : 1) : 0 }));
+  const JOKERS = [48, 49];
+  JOKERS.forEach(id => CARDS.push({ id, m: 0, t: 'p', sub: 'joker', pv: 2 }));
+  const isJoker = id => id >= 48;
   const C = id => CARDS[id];
   const MAX_PLAYERS = 3, RATE = 100, START = 10000;
   const RULES = { 2: { hand: 10, floor: 8, pibak: 7 }, 3: { hand: 7, floor: 6, pibak: 6 } };   // pibak: 진 사람 피가 이보다 적으면 피박
@@ -42,7 +48,7 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  const byMonth = (arr, m) => arr.filter(id => C(id).m === m);
+  const byMonth = (arr, m) => arr.filter(id => C(id).m === m);   // 조커(달 0)는 어느 달에도 안 걸린다
   const countMonth = (arr, m) => byMonth(arr, m).length;
 
   // ---------- 점수 ----------
@@ -77,14 +83,15 @@
   }
 
   // ---------- 판 시작 ----------
-  // bank: { coins: [자리별 코인], bust: [자리별 파산 횟수] } — 없으면 모두 START 코인으로 시작
+  // bank: { coins: [자리별 코인], bust: [자리별 파산 횟수], jokers: 0 | 2 } — 없으면 모두 START 코인, 조커 없이 시작
   function deal(seed, first, carry, total, n, bank) {
     const N = n === 2 ? 2 : 3, HAND = RULES[N].hand, FLOOR = RULES[N].floor;
     const zeros = () => Array(N).fill(0);
+    const jokers = bank && bank.jokers === 2 ? 2 : 0;
     const r = rng(seed);
     let deck;
     for (let tries = 0; tries < 50; tries++) {
-      deck = CARDS.map(c => c.id);
+      deck = CARDS.map(c => c.id).filter(id => id < 48 + jokers);
       for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
       const hs = seatsOf(N).map(i => deck.slice(HAND * i, HAND * (i + 1))), fl = deck.slice(HAND * N, HAND * N + FLOOR);
       // 바닥에 같은 달 3장 이상, 손에 같은 달 4장(총통)은 다시 섞는다
@@ -95,17 +102,26 @@
     const coins = seatsOf(N).map(i => (bank && Number.isInteger(bank.coins && bank.coins[i]) ? Math.max(0, bank.coins[i]) : START));
     const bust = seatsOf(N).map(i => (bank && Number.isInteger(bank.bust && bank.bust[i]) ? Math.max(0, bank.bust[i]) : 0));
     coins.forEach((c, i) => { if (c <= 0) { coins[i] = START; bust[i]++; } });   // 파산한 사람은 다시 받는다
-    return {
-      seed, n: N, first, turn: first, coins, bust, carry: carry || 0, total: total && total.length === N ? total.slice() : zeros(),
+    const G = {
+      seed, n: N, jokers, stuck: {}, first, turn: first, coins, bust, carry: carry || 0, total: total && total.length === N ? total.slice() : zeros(),
       hands: seatsOf(N).map(i => deck.slice(HAND * i, HAND * (i + 1))), floor: deck.slice(HAND * N, HAND * N + FLOOR), deck: deck.slice(HAND * N + FLOOR).reverse(),   // pop() 이 다음 장
       caps: seatsOf(N).map(() => []), go: zeros(), goAt: zeros(), mult: zeros(),
       stage: 'play', pend: null, over: false, winner: -1, result: null, log: [], last: null
     };
+    // 바닥에 깔린 조커는 선이 갖고, 더미에서 바닥을 채운다
+    for (let guard = 0; guard < 4 && G.floor.some(isJoker); guard++) {
+      const got = G.floor.filter(isJoker);
+      G.floor = G.floor.filter(id => !isJoker(id));
+      G.caps[first].push(...got);
+      got.forEach(() => G.floor.push(G.deck.pop()));
+      G.log.push({ t: first, s: '바닥의 조커 ' + got.length + '장을 선이 가져감' });
+    }
+    return G;
   }
 
   // ---------- 한 차례 ----------
   function newPend(G) {
-    return { take: [], hold: null, stay: -1, flipped: -1, pi: 0, notes: [], floorAtStart: G.floor.length, played: -1, bomb: false };
+    return { take: [], hold: null, stay: -1, flipped: -1, pi: 0, notes: [], floorAtStart: G.floor.length, played: -1, bomb: false, jk: [] };   // jk: 이번 차례에 뒤집힌 조커
   }
   const remove = (arr, id) => { const i = arr.indexOf(id); if (i >= 0) arr.splice(i, 1); };
 
@@ -121,6 +137,16 @@
       return flip(G);
     }
     if (!hand.includes(card)) return false;
+    if (isJoker(card)) {                                               // 조커: 바로 내 피로, 한 장 보충하고 한 장 더 낸다
+      if (G.stage !== 'play') return false;
+      remove(hand, card);
+      G.caps[t].push(card);
+      const drew = G.deck.length > hand.length ? G.deck.pop() : -1;    // 남은 차례에 뒤집을 패는 남겨 둔다
+      if (drew >= 0) hand.push(drew);
+      G.log.push({ t, s: '조커 냄 · 피 2장' + (drew >= 0 ? ' · 한 장 보충' : '') });
+      G.last = { t, played: card, flipped: -1, take: [card], notes: ['조커'], bonus: [] };
+      return true;
+    }
     const m = C(card).m, matches = byMonth(G.floor, m), inHand = countMonth(hand, m);
     if (G.stage === 'play' && inHand >= 3 && matches.length === 0 && shake === undefined) {
       G.stage = 'shake';
@@ -162,6 +188,8 @@
   }
   function flip(G) {
     const P = G.pend;
+    while (G.deck.length && isJoker(G.deck[G.deck.length - 1])) P.jk.push(G.deck.pop());   // 조커가 나오면 한 장 더 뒤집는다
+    if (!G.deck.length) return finish(G);
     const d = G.deck.pop();
     P.flipped = d;
     const m = C(d).m, matches = byMonth(G.floor, m);
@@ -174,14 +202,16 @@
       if (matches.length >= 1) {                                       // 따닥: 낸 패·짝·남은 짝·뒤집은 패 모두
         P.take.push(...P.hold, d, ...matches); matches.forEach(id => remove(G.floor, id));
         P.hold = null; P.pi++; P.notes.push('따닥');
-      } else {                                                         // 뻑: 셋 다 바닥에 남는다
+      } else {                                                         // 뻑: 셋 다 바닥에 남는다. 뒤집힌 조커도 거기 붙는다
         G.floor.push(P.hold[0], P.hold[1], d); P.hold = null; P.notes.push('뻑');
+        P.jk.forEach(j => { G.floor.push(j); G.stuck[j] = m; });
+        P.stuck = P.jk; P.jk = [];
       }
       return finish(G);
     }
     if (matches.length === 0) { G.floor.push(d); return finish(G); }
     if (matches.length === 1) { P.take.push(d, matches[0]); remove(G.floor, matches[0]); return finish(G); }
-    if (matches.length === 2) { G.stage = 'pick'; P.pick = { card: d, opts: matches.slice(), step: 'flip' }; return true; }
+    if (matches.length === 2) { sweep(G); G.stage = 'pick'; P.pick = { card: d, opts: matches.slice(), step: 'flip' }; return true; }
     P.take.push(d, ...matches); matches.forEach(id => remove(G.floor, id));
     P.pi++; P.notes.push('뻑 먹기');
     return finish(G);
@@ -194,9 +224,18 @@
     remove(src, pick1); G.caps[to].push(pick1);
     return true;
   }
+  // 뻑 더미에 붙어 있던 조커: 그 달 패가 바닥에서 다 나가면 같이 가져간다
+  function sweep(G) {
+    for (const j of G.floor.filter(isJoker)) {
+      if (countMonth(G.floor, G.stuck[j]) === 0) { remove(G.floor, j); delete G.stuck[j]; G.pend.take.push(j); }
+    }
+  }
   function finish(G) {
     const P = G.pend, t = G.turn, N = G.n, o = (t + 1) % N;
     if (P.hold) { P.take.push(...P.hold); P.hold = null; }
+    if (P.jk.length) { P.take.push(...P.jk); P.notes.push('조커'); }
+    const bonus = P.jk.concat(P.stuck || []);
+    sweep(G);
     G.caps[t].push(...P.take);
     if (G.floor.length === 0 && P.take.length && P.floorAtStart > 0) { P.pi++; P.notes.push('싹쓸이'); }
     let stolen = 0;
@@ -207,7 +246,7 @@
     if (P.take.length) parts.push(P.take.length + '장 가져감');
     if (P.notes.length) parts.push(P.notes.join('·') + (stolen ? ' (피 ' + stolen + '장 뺏음)' : ''));
     G.log.push({ t, s: parts.join(' · ') });
-    G.last = { t, played: P.played, flipped: P.flipped, take: P.take.slice(), notes: P.notes.slice() };
+    G.last = { t, played: P.played, flipped: P.flipped, take: P.take.slice(), notes: P.notes.slice(), bonus };
     G.pend = null;
     const sc = best(G.caps[t]).s;
     const canStop = sc >= 3 && sc > G.goAt[t];
@@ -283,6 +322,7 @@
   // ---------- 이름 ----------
   function cardName(id) {
     const c = C(id);
+    if (isJoker(id)) return '조커';
     const kind = c.t === 'g' ? (c.sub === 'bi' ? '비광' : '광') : c.t === 'y' ? YEOL_NAME[c.m] : c.t === 't' ? ({ hong: '홍단', cheong: '청단', cho: '초단', bi: '비띠' })[c.sub] : (c.sub === 'ssang' ? '쌍피' : '피');
     return c.m + '월 ' + kind;
   }
@@ -315,6 +355,8 @@
   function aiPlay(G, level) {
     const t = G.turn, hand = G.hands[t], caps = G.caps[t], opp = G.caps.filter((_, i) => i !== t);
     if (!hand.length) return { card: -1 };
+    const jk = hand.find(isJoker);
+    if (jk !== undefined) return { card: jk };                         // 조커는 들고 있을 이유가 없다
     const seen = new Set([...G.floor, ...[].concat(...G.caps), ...hand]);
     const cands = hand.map(card => {
       const m = C(card).m, matches = byMonth(G.floor, m), inHand = countMonth(hand, m);
@@ -354,5 +396,5 @@
     return Math.random() < Math.max(0.05, Math.min(0.9, p));
   }
 
-  root.GoStop = { MAX_PLAYERS, RULES, RATE, START, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
+  root.GoStop = { MAX_PLAYERS, RULES, RATE, START, JOKERS, isJoker, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
 })(typeof window !== 'undefined' ? window : globalThis);

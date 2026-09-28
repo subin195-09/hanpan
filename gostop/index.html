@@ -86,6 +86,14 @@
   .card.pickable { outline: 3px solid #FFF; outline-offset: 1px; cursor: pointer; animation: beckon 1s ease-in-out infinite; }
   @keyframes beckon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   .card.new { box-shadow: 0 0 0 3px var(--gold); }
+  /* 도움 표시: 내 손패 아래쪽에 붙는 딱지 */
+  .card .tag { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 1px; font: 700 0.625rem/1.2 "Gothic A1", sans-serif; letter-spacing: -0.02em; text-align: center; color: #FFF; background: rgba(30, 23, 16, 0.82); pointer-events: none; white-space: nowrap; }
+  .card .tag.sure { background: #1F7A4A; }
+  .card .tag.bomb { background: #B4261F; }
+  .card .tag.shake { background: #B86A00; }
+  .card .tag.joker { background: #7A3FB0; }
+  .card .tag.risk { background: rgba(30, 23, 16, 0.7); font-weight: 500; }
+  @media (max-width: 640px) { .card .tag { font-size: 0.5625rem; } }
   .card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   /* 상대·나 영역 */
@@ -261,6 +269,20 @@
             <input type="radio" name="count" id="count-3" value="3"><label for="count-3">3명 (고스톱)</label>
           </div>
         </fieldset>
+        <fieldset id="fs-jokers">
+          <legend>조커 (쌍피 보너스패)</legend>
+          <div class="seg-row">
+            <input type="radio" name="jokers" id="jokers-2" value="2"><label for="jokers-2">2장</label>
+            <input type="radio" name="jokers" id="jokers-0" value="0"><label for="jokers-0">없음</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-hints">
+          <legend>도움 표시 (굳은자·폭탄·흔들기·뻑 주의)</legend>
+          <div class="seg-row">
+            <input type="radio" name="hints" id="hints-1" value="1"><label for="hints-1">켬</label>
+            <input type="radio" name="hints" id="hints-0" value="0"><label for="hints-0">끔</label>
+          </div>
+        </fieldset>
         <fieldset id="fs-online" hidden></fieldset>
         <fieldset id="fs-level">
           <legend>AI 난이도</legend>
@@ -292,6 +314,8 @@
             <li>쪽(낸 패에 뒤집은 패가 붙음) · 따닥 · 뻑 먹기 · 싹쓸이는 다른 사람 모두에게서 피를 한 장씩 가져옵니다. 같은 달 3장을 들고 흔들면 2배, 바닥의 한 장에 3장을 한꺼번에 내는 폭탄은 2배에 피 한 장씩.</li>
             <li>난 사람은 진 사람마다 점수를 받습니다. 진 사람 피가 적으면(둘이 칠 땐 7장 미만, 셋이 칠 땐 6장 미만) 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박 — 그 사람만 2배.</li>
             <li>고박: 고를 부른 사람이 지면, 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 냅니다(진 두 사람이 모두 고를 불렀으면 각자 냅니다).</li>
+            <li>조커(고르면 2장, 복주머니와 엽전): 둘 다 쌍피입니다. 손에서 내면 바로 내 피가 되고 더미에서 한 장을 보충한 뒤 패를 한 장 더 냅니다. 더미에서 뒤집히면 내 피가 되고 한 장 더 뒤집습니다. 처음 바닥에 깔리면 선이 갖습니다. 그 차례에 뻑이 나면 뒤집힌 조커는 뻑 더미에 붙었다가 그 달을 먹는 사람이 가져갑니다.</li>
+            <li>도움 표시: 내 손패에 <b>굳은자</b>(내면 확실히 먹고 남이 가로챌 수 없음), <b>폭탄</b>, <b>흔들기</b>, <b>뻑 주의</b>(같은 달 두 장의 행방을 모름) 딱지가 붙습니다. 내 손패·바닥·이미 먹힌 패만 보고 셉니다.</li>
             <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배.</li>
             <li>코인: 모두 10,000코인으로 시작하고 1점에 100코인입니다. 가진 것보다 많이 잃으면 가진 만큼만 내고 파산하며, 파산하면 다음 판에 10,000코인을 다시 받고 파산 횟수가 남습니다. 코인은 놀이용 점수일 뿐 돈이 아니고, 사거나 바꿀 수 없습니다.</li>
             <li>온라인은 최대 3명. 방장이 인원(2명·3명)을 고르고 "시작"을 누르면 시작합니다. 모자란 자리는 AI가 앉고, 사람이 셋 모이면 늘 셋이 칩니다. 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 칩니다.</li>
@@ -299,7 +323,7 @@
         </details>
       </section>
       <section>
-        <p class="fine">화투 그림: 위키미디어 공용 <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hwatu" rel="license noopener" target="_blank">SVG Hwatu</a> (Spenĉjo, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" rel="license noopener" target="_blank">CC BY-SA 4.0</a>).</p>
+        <p class="fine">조커 두 장은 같은 화풍에 맞춰 직접 그렸습니다. 화투 그림: 위키미디어 공용 <a href="https://commons.wikimedia.org/wiki/Category:SVG_Hwatu" rel="license noopener" target="_blank">SVG Hwatu</a> (Spenĉjo, <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.ko" rel="license noopener" target="_blank">CC BY-SA 4.0</a>).</p>
       </section>
       <div class="ad-slot" data-ad="game-side" hidden></div>
     </aside>
@@ -310,7 +334,7 @@
 <script src="../shared/config.js"></script>
 <script src="../shared/online.js?v=2"></script>
 <script src="../shared/site.js"></script>
-<script src="engine.js?v=3"></script>
+<script src="engine.js?v=4"></script>
 <script>
 (() => {
   const M = window.GoStop, C = id => M.CARDS[id], MAXN = M.MAX_PLAYERS;
@@ -324,7 +348,7 @@
   let slotOf = {}, leftAt = {}, slotSeed = 0;   // slotOf: 달 → 칸, leftAt: 그 달이 바닥을 떠난 수(seq)
 
   // ---------- 상태 ----------
-  const S = { mode: 'ai', level: 'normal', count: 3 };   // count: 몇 명이 칠지 (2 = 맞고, 3 = 고스톱)
+  const S = { mode: 'ai', level: 'normal', count: 3, jokers: 2, hints: true };   // count: 몇 명이 칠지 (2 = 맞고, 3 = 고스톱)
   let G = null, seen = 0, aiTimer = 0, pending = false, pendingTimer = 0;
   let busy = false, lastSig = '';
   const inbox = [];               // 참가자: 방장이 보낸 판 (연출이 끝나는 대로 하나씩)
@@ -336,7 +360,7 @@
   const coin = v => Number(v).toLocaleString('ko-KR') + '코인';
   function freshGame(seq, players, firstKey, carry, total, bank) {
     const first = Math.max(0, players.findIndex(p => p.key && p.key === firstKey));
-    const g = M.deal(newSeed(), first, carry || 0, total && total.length === players.length ? total : null, players.length, bank);
+    const g = M.deal(newSeed(), first, carry || 0, total && total.length === players.length ? total : null, players.length, Object.assign({ jokers: S.jokers }, bank));
     g.players = players;
     g.seq = seq || 0;
     return g;
@@ -374,13 +398,14 @@
   });
   function save() {
     try {
-      const d = { mode: S.mode, level: S.level, count: S.count, name: P.name, game: G };
+      const d = { mode: S.mode, level: S.level, count: S.count, jokers: S.jokers, hints: S.hints, name: P.name, game: G };
       if (S.mode === 'online' && P.roomInfo()) d.room = P.roomInfo();
       localStorage.setItem(STORE_KEY, JSON.stringify(d));
     } catch (e) {}
   }
   function loadSaved() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
-  const okId = v => Number.isInteger(v) && v >= 0 && v < 48;
+  const okId = v => Number.isInteger(v) && v >= 0 && v < 50;
+  const mOf = id => (M.isJoker(id) ? (G.stuck && G.stuck[id]) || 0 : C(id).m);   // 바닥에서 어느 달 자리에 놓이는가 (뻑 더미에 붙은 조커는 그 달)
   const idList = a => (Array.isArray(a) && a.every(okId) ? a.slice() : null);
   const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
   function cleanGame(d) {
@@ -399,17 +424,26 @@
       pend = {
         take: idList(Q.take) || [], hold: Array.isArray(Q.hold) ? idList(Q.hold) : null, stay: okId(Q.stay) ? Q.stay : -1,
         flipped: okId(Q.flipped) ? Q.flipped : -1, pi: int(Q.pi, 0, 9) || 0, notes: Array.isArray(Q.notes) ? Q.notes.map(String).slice(0, 8) : [],
-        floorAtStart: int(Q.floorAtStart, 0, 48) || 0, played: okId(Q.played) ? Q.played : -1, bomb: !!Q.bomb
+        floorAtStart: int(Q.floorAtStart, 0, 48) || 0, played: okId(Q.played) ? Q.played : -1, bomb: !!Q.bomb,
+        jk: (idList(Q.jk) || []).filter(M.isJoker), stuck: (idList(Q.stuck) || []).filter(M.isJoker)
       };
       if (Q.pick && okId(Q.pick.card) && idList(Q.pick.opts) && (Q.pick.step === 'play' || Q.pick.step === 'flip')) pend.pick = { card: Q.pick.card, opts: idList(Q.pick.opts), step: Q.pick.step };
     }
     const stage = ['play', 'shake', 'pick', 'flip', 'go', 'over'].includes(d.stage) ? d.stage : null;
     if (!stage) return null;
     if ((stage === 'pick') !== !!(pend && pend.pick) || (stage === 'shake' && !(pend && hands[turn].includes(pend.played)))) return null;
-    // 48장이 정확히 한 번씩 있어야 한다
+    // 모든 패(48장 + 조커)가 정확히 한 번씩 있어야 한다
+    const jokers = d.jokers === 2 ? 2 : 0, cards = 48 + jokers;
     const all = [].concat(deck, floor, ...hands, ...caps);
-    if (pend) { all.push(...pend.take); if (pend.hold) all.push(...pend.hold); if (pend.pick) all.push(pend.pick.card); }
-    if (all.length !== 48 || new Set(all).size !== 48) return null;
+    if (pend) { all.push(...pend.take, ...pend.jk); if (pend.hold) all.push(...pend.hold); if (pend.pick) all.push(pend.pick.card); }
+    if (all.length !== cards || new Set(all).size !== cards || all.some(id => id >= cards)) return null;
+    // 바닥의 조커는 뻑 더미에 붙은 것뿐이다
+    const stuck = {};
+    for (const j of floor.filter(M.isJoker)) {
+      const m = int(d.stuck && d.stuck[j], 1, 12);
+      if (m === null) return null;
+      stuck[j] = m;
+    }
     const over = !!d.over, winner = int(d.winner, 0, N - 1);
     const seat = v => int(v, 0, N - 1) || 0;
     const three = (src, lo, hi) => Array.from({ length: N }, (_, i) => int(src && src[i], lo, hi) || 0);
@@ -423,7 +457,7 @@
       }))
       : Array.from({ length: N }, () => ({ key: '', name: '', kind: 'none' }));
     return {
-      seed, n: N, first, turn, carry: int(d.carry, 0, 10) || 0, total: three(d.total, -1e7, 1e7),
+      seed, n: N, jokers, stuck, first, turn, carry: int(d.carry, 0, 10) || 0, total: three(d.total, -1e7, 1e7),
       coins: Array.from({ length: N }, (_, i) => { const v = int(d.coins && d.coins[i], 0, 1e9); return v === null ? M.START : v; }), bust: three(d.bust, 0, 1e6),
       hands, floor, deck, caps, go: three(d.go, 0, 20), goAt: three(d.goAt, 0, 200), mult: three(d.mult, 0, 10),
       stage, pend, over, winner: over && winner !== null ? winner : -1,
@@ -435,7 +469,7 @@
         pays: Array.isArray(R.pays) ? R.pays.slice(0, N - 1).map(p => ({ t: seat(p && p.t), pts: int(p && p.pts, 0, 1e7) || 0, owe: int(p && p.owe, 0, 1e7) || 0, coin: int(p && p.coin, 0, 1e9) || 0, tags: Array.isArray(p && p.tags) ? p.tags.map(s => String(s).slice(0, 8)).slice(0, 6) : [] })) : []
       } : null,
       log: Array.isArray(d.log) ? d.log.slice(-60).map(e => ({ t: seat(e && e.t), s: String((e && e.s) || '').slice(0, 80) })) : [],
-      last: d.last && typeof d.last === 'object' ? { t: seat(d.last.t), played: okId(d.last.played) ? d.last.played : -1, flipped: okId(d.last.flipped) ? d.last.flipped : -1, take: idList(d.last.take) || [], notes: Array.isArray(d.last.notes) ? d.last.notes.map(String).slice(0, 8) : [] } : null,
+      last: d.last && typeof d.last === 'object' ? { t: seat(d.last.t), played: okId(d.last.played) ? d.last.played : -1, flipped: okId(d.last.flipped) ? d.last.flipped : -1, take: idList(d.last.take) || [], notes: Array.isArray(d.last.notes) ? d.last.notes.map(String).slice(0, 8) : [], bonus: (idList(d.last.bonus) || []).filter(M.isJoker) } : null,
       players, seq: int(d.seq, 0, 1e9) || 0
     };
   }
@@ -552,11 +586,17 @@
   let wantTable = false;
   function newTable() {
     wantTable = false;
-    if (S.mode !== 'ai' || G.n === S.count) return;
+    if (S.mode !== 'ai' || (G.n === S.count && G.jokers === S.jokers)) return;
     clearTimeout(aiTimer);
     const mine = G.players[0].kind === 'me' ? { coins: [G.coins[0]], bust: [G.bust[0]] } : null;
     G = freshGame(G.seq, aiPlayers(), '', 0, null, mine);
     commit();
+  }
+  function setJokers(n) {
+    S.jokers = n === 2 ? 2 : 0;
+    save();
+    if (S.mode === 'ai') { if (busy) wantTable = true; else newTable(); }
+    else render();                                               // 온라인: 다음에 돌리는 판부터 적용
   }
   function setCount(n) {
     S.count = n;
@@ -635,6 +675,18 @@
     b.addEventListener('click', fn);
     return b;
   }
+  // 도움 표시: 내 손패·바닥·이미 먹힌 패만 보고 센다 (상대 손패와 더미는 보지 않는다)
+  function hintOf(id, hand) {
+    if (M.isJoker(id)) return ['joker', '조커'];
+    const m = C(id).m, same = x => !M.isJoker(x) && C(x).m === m;
+    const onFloor = G.floor.filter(same).length, inHand = hand.filter(same).length, taken = [].concat(...G.caps).filter(same).length;
+    const unknown = 4 - onFloor - inHand - taken;
+    if (inHand >= 3 && onFloor === 1) return ['bomb', '폭탄'];
+    if (inHand >= 3 && onFloor === 0) return ['shake', '흔들기'];
+    if (onFloor >= 1 && unknown === 0) return ['sure', '굳은자'];
+    if (onFloor === 1 && inHand === 1 && unknown === 2) return ['risk', '뻑 주의'];
+    return null;
+  }
   function capsInto(container, caps, newIds) {
     container.textContent = '';
     const groups = [['광', id => C(id).t === 'g'], ['열끗', id => C(id).t === 'y'], ['띠', id => C(id).t === 't'], ['피', id => C(id).t === 'p']];
@@ -704,8 +756,9 @@
       for (const id of G.hands[t]) {
         if (!shown) { hand.appendChild(cardEl(-1, { mini: opp })); continue; }
         const mine = t === me && can && G.stage === 'play';
-        const b = cardEl(id, { button: t === me, mini: opp, cls: mine && G.floor.some(f => C(f).m === C(id).m) ? 'can' : '' });
+        const b = cardEl(id, { button: t === me, mini: opp, cls: mine && (M.isJoker(id) || G.floor.some(f => C(f).m === C(id).m)) ? 'can' : '' });
         if (t === me) { b.disabled = !mine; if (mine) b.addEventListener('click', () => act({ type: 'play', card: id })); }
+        if (t === me && S.hints && !G.over) { const h = hintOf(id, G.hands[t]); if (h) b.appendChild(mk('span', 'tag ' + h[0], h[1])); }
         hand.appendChild(b);
       }
       if (t === me && can && G.stage === 'play' && !G.hands[t].length) hand.appendChild(button('btn primary', '더미 뒤집기', () => act({ type: 'play', card: -1 })));
@@ -724,7 +777,7 @@
       deckEl.appendChild(pd);
     }
     floor.appendChild(deckEl);
-    const months = [...new Set(G.floor.map(id => C(id).m))].sort((a, b) => a - b);
+    const months = [...new Set(G.floor.map(mOf))].sort((a, b) => a - b);
     // 방금 비워진 칸은 이번 수 동안 비워 둔다 (먹힌 패가 아직 보이는 자리에 새 패를 내려놓지 않도록)
     for (const k of Object.keys(slotOf)) {
       const m = +k;
@@ -746,7 +799,7 @@
       const slot = mk('div', 'slot');
       slot.style.left = (col * 25) + '%';
       slot.style.top = (row * 25) + '%';
-      for (const id of G.floor.filter(f => C(f).m === m)) {
+      for (const id of G.floor.filter(f => mOf(f) === m)) {
         const pickable = pickOpts.has(id) && can;
         const el = cardEl(id, { button: pickable, cls: pickable ? 'pickable' : '' });
         if (pickable) el.addEventListener('click', () => act({ type: 'pick', card: id }));
@@ -862,6 +915,9 @@
     $('mode-online').checked = online;
     $('level-' + S.level).checked = true;
     $('count-' + S.count).checked = true;
+    $('jokers-' + S.jokers).checked = true;
+    $('hints-' + (S.hints ? 1 : 0)).checked = true;
+    $('fs-jokers').hidden = online && !isHost();
     $('fs-count').hidden = online && !isHost();
     $('count-legend').textContent = online ? '인원 (모자라면 AI)' : '인원 (나 + AI)';
     $('fs-level').hidden = online && !isHost();
@@ -873,7 +929,7 @@
   // 화면을 새로 그리기 전 카드 위치를 기억해 두고, 그린 뒤 '낸 패 → 바닥', '더미 → 바닥', '먹은 패 → 내 쪽'으로 날린다
   const fx = document.createElement('div'); fx.id = 'fx'; document.body.appendChild(fx);
   const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  function sigOf(g) { return g.seed + ':' + (g.last ? g.last.t + '/' + g.last.played + '/' + g.last.flipped + '/' + g.last.take.join(',') : ''); }
+  function sigOf(g) { return g.seed + ':' + (g.last ? g.last.t + '/' + g.last.played + '/' + g.last.flipped + '/' + g.last.take.join(',') + '/' + (g.last.bonus || []).join(',') : ''); }
   function snapshot() {
     const map = new Map();
     const where = el => (el.closest('.caps') ? 'caps' + el.closest('.seat').dataset.team : el.closest('#floor') ? 'floor' : el.closest('.hand') ? 'hand' : 'etc');
@@ -933,14 +989,15 @@
     prev.set('floor', floorNow);
     const t = L.t, deckR = prev.get('deck'), floorR = prev.get('floor');
     const cw = deckR.width, ch = deckR.height;
-    const monthOf = id => C(id).m;
+    const monthOf = id => (M.isJoker(id) ? -id : C(id).m);        // 조커는 어느 패와도 짝이 아니다
+    const bonus = L.bonus || [];
     const wasOn = (id, w) => prev.has(id) && prev.get(id).w === w;
     const moving = [L.played, L.flipped].filter(id => id >= 0);
     const months = new Set(moving.map(monthOf));
     // 다른 사람 피를 가져온 것
     const stolen = [...document.querySelectorAll('#caps-' + t + ' .card[data-id]')].map(el => +el.dataset.id).filter(id => prev.has(id) && /^caps/.test(prev.get(id).w) && prev.get(id).w !== 'caps' + t);
     // 이번 수에 얽힌 패: 낸 패·뒤집은 패·먹은 패·뺏은 피, 그리고 같은 달이라 바닥에서 자리가 바뀔 수 있는 패
-    const ids = new Set([...moving, ...L.take, ...stolen]);
+    const ids = new Set([...moving, ...L.take, ...stolen, ...bonus]);
     prev.forEach((v, id) => { if (typeof id === 'number' && v.w === 'floor' && months.has(monthOf(id))) ids.add(id); });
     document.querySelectorAll('.card[data-id]').forEach(el => { if (ids.has(+el.dataset.id)) el.style.visibility = 'hidden'; });
     busy = true;
@@ -984,9 +1041,18 @@
         landed.set(monthOf(L.played), at(g));
         await pause(180);
       }
+      const show = { left: Math.max(floorR.left + 8, deckR.left - cw * 1.35), top: deckR.top, width: cw, height: ch };
+      for (const [k, j] of bonus.entries()) {
+        // 조커가 뒤집혔다: 보여 주고 더미 위쪽에 잠깐 세워 둔 뒤 한 장 더 뒤집는다
+        const g = await fly(j, deckR, show, 200, false, true);
+        ghost.set(j, g);
+        g.style.transition = 'transform 140ms ease-out';
+        g.style.transform = 'scale(1.3)';
+        await pause(520);
+        await glide(g, { left: deckR.left + k * cw * 0.5, top: deckR.top - ch * 1.08, width: cw, height: ch }, 260);
+      }
       if (L.flipped >= 0) {
         // 더미 옆 빈 자리에서 먼저 뒤집어 보여 주고, 잠깐 뒤 짝을 찾아간다
-        const show = { left: Math.max(floorR.left + 8, deckR.left - cw * 1.35), top: deckR.top, width: cw, height: ch };
         const g = await fly(L.flipped, deckR, show, 200, false, true);
         ghost.set(L.flipped, g);
         g.style.transition = 'transform 140ms ease-out';
@@ -1023,6 +1089,8 @@
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
     document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
     document.querySelectorAll('input[name="count"]').forEach(r => r.addEventListener('change', () => setCount(Number(r.value))));
+    document.querySelectorAll('input[name="jokers"]').forEach(r => r.addEventListener('change', () => setJokers(Number(r.value))));
+    document.querySelectorAll('input[name="hints"]').forEach(r => r.addEventListener('change', () => { S.hints = r.value === '1'; save(); render(); }));
     $('btn-new').addEventListener('click', newMatch);
   }
   function start() {
@@ -1031,8 +1099,10 @@
       if (['ai', 'online'].includes(saved.mode)) S.mode = saved.mode;
       if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
       if ([2, 3].includes(saved.count)) S.count = saved.count;
+      if ([0, 2].includes(saved.jokers)) S.jokers = saved.jokers;
+      if (typeof saved.hints === 'boolean') S.hints = saved.hints;
       G = cleanGame(saved.game);
-      if (G && S.mode === 'ai') S.count = G.n;
+      if (G && S.mode === 'ai') { S.count = G.n; S.jokers = G.jokers; }
       if (G && S.mode === 'ai' && !G.players.every((p, i) => p.kind === (i ? 'ai' : 'me'))) G = null;   // 온라인에서 하던 판은 혼자 이어 가지 않는다
     }
     if (!G) G = freshGame(0, S.mode === 'ai' ? aiPlayers() : nobody());

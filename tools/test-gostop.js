@@ -5,8 +5,12 @@ const assert = (c, m) => { if (!c) throw new Error(m); };
 function check(G, tag) {
   const all = [].concat(G.deck, G.floor, ...G.hands, ...G.caps);
   const P = G.pend;
-  if (P) { all.push(...P.take); if (P.hold) all.push(...P.hold); if (P.pick) all.push(P.pick.card); }
-  assert(all.length === 48 && new Set(all).size === 48, tag + ': 패 수 ' + all.length + ' (' + G.stage + ')');
+  if (P) { all.push(...P.take, ...P.jk); if (P.hold) all.push(...P.hold); if (P.pick) all.push(P.pick.card); }
+  const want = 48 + G.jokers;
+  assert(all.length === want && new Set(all).size === want && all.every(id => id >= 0 && id < want), tag + ': 패 수 ' + all.length + '/' + want + ' (' + G.stage + ')');
+  assert(G.floor.filter(M.isJoker).every(j => G.stuck[j] >= 1 && G.floor.some(id => !M.isJoker(id) && M.CARDS[id].m === G.stuck[j])), tag + ': 바닥의 조커는 뻑 더미에 붙어 있어야 한다');
+  assert(Object.keys(G.stuck).every(j => G.floor.includes(+j)), tag + ': stuck 에 바닥에 없는 조커');
+  if (!G.over && G.stage === 'play') assert(G.deck.length >= 1, tag + ': 뒤집을 패가 없다');
   assert(G.turn >= 0 && G.turn < G.n && G.hands.length === G.n && G.caps.length === G.n, tag + ': 차례·자리');
   assert(G.total.reduce((a, b) => a + b, 0) === 0, tag + ': 누적 합 ' + G.total);
   assert(G.coins.length === G.n && G.coins.every(c => Number.isInteger(c) && c >= 0), tag + ': 코인 ' + G.coins);
@@ -20,11 +24,12 @@ function check(G, tag) {
   assert(H.hands.length === 2 && H.hands.every(h => h.length === 10) && H.floor.length === 8 && H.deck.length === 20 && H.turn === 1, '둘: 10장씩, 바닥 8장, 더미 20장');
 }
 const rows = {};
-for (const n of [2, 3]) {
-const stat = { 파산: 0, 판: 0, 나가리: 0, 고: 0, 고박: 0, 피박: 0, 광박: 0, 흔들기폭탄: 0, 최고점: 0, 승: Array(n).fill(0), 평균점: 0 };
+for (const jokers of [0, 2]) for (const n of [2, 3]) {
+const stat = { 조커먹음: 0, 조커뻑: 0, 파산: 0, 판: 0, 나가리: 0, 고: 0, 고박: 0, 피박: 0, 광박: 0, 흔들기폭탄: 0, 최고점: 0, 승: Array(n).fill(0), 평균점: 0 };
 let total = Array(n).fill(0), first = 0, carry = 0, sum = 0, bank = null;
-for (let g = 0; g < 5000; g++) {
-  const G = M.deal(1 + g * 13, first, carry, total, n, bank);
+for (let g = 0; g < 4000; g++) {
+  const G = M.deal(1 + g * 13, first, carry, total, n, Object.assign({ jokers }, bank));
+  assert(G.deck.length + G.floor.length + G.hands.reduce((a, h) => a + h.length, 0) + G.caps.reduce((a, c) => a + c.length, 0) === 48 + jokers && !G.floor.some(M.isJoker), '시작: 바닥에 조커가 남음');
   check(G, n + '인 판 ' + g + ' 시작');
   const level = ['easy', 'normal', 'hard'][g % 3];
   let steps = 0;
@@ -36,11 +41,14 @@ for (let g = 0; g < 5000; g++) {
     else if (G.stage === 'pick') ok = M.pick(G, M.aiPick(G));
     else if (G.stage === 'go') { const go = M.aiGo(G, level); if (go) stat.고++; ok = M.decideGo(G, go); }
     assert(ok, n + '인 판 ' + g + ': 수가 거절됨 (' + G.stage + ')');
+    if (Object.keys(G.stuck).length) G.sawStuck = true;
     check(G, n + '인 판 ' + g + ' 수 ' + steps);
     if (!G.over && G.stage === 'play' && G.turn !== before) assert(G.turn === (before + 1) % n, '판 ' + g + ': 차례 순서');
     steps++;
   }
   assert(G.over, n + '인 판 ' + g + ': 안 끝남');
+  stat.조커먹음 += G.caps.reduce((a, c) => a + c.filter(M.isJoker).length, 0);
+  stat.조커뻑 += G.log.filter(e => /뻑/.test(e.s) && !/뻑 먹기/.test(e.s)).length && G.floor.concat(...G.caps).filter(M.isJoker).length ? (Object.keys(G.stuck).length || G.sawStuck ? 1 : 0) : 0;
   stat.판++;
   if (G.winner < 0) { stat.나가리++; carry = G.carry + 1; assert(G.deck.length === 0, '나가리인데 더미가 남음'); }
   else {
@@ -61,7 +69,7 @@ for (let g = 0; g < 5000; g++) {
 }
 stat.평균점 = Math.round(sum / (stat.판 - stat.나가리) * 10) / 10;
 stat.승 = stat.승.join('/');
-rows[n + '인'] = stat;
+rows[n + '인' + (jokers ? ' 조커' : '')] = stat;
 }
 console.table(rows);
 console.log('고스톱 엔진 검사 통과');

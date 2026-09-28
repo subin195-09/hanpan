@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>윷놀이 한 판</title>
-<meta name="description" content="설치 없이 브라우저에서 바로 하는 윷놀이. 힘 조절해서 던지고, 너무 세면 낙. 업기·잡기·빽도·지름길까지. AI, 한 화면 2인, 초대 링크 온라인 2인.">
+<meta name="description" content="설치 없이 브라우저에서 바로 하는 윷놀이. 힘 조절해서 던지고, 너무 세면 낙. 업기·잡기·빽도·지름길까지. 최대 네 팀이 AI, 한 화면, 초대 링크 온라인으로.">
 <meta property="og:title" content="윷놀이 한 판">
-<meta property="og:description" content="설치 없이 브라우저에서 바로 하는 윷놀이. 업기·잡기·빽도·지름길까지. AI, 한 화면 2인, 초대 링크 온라인 2인.">
+<meta property="og:description" content="설치 없이 브라우저에서 바로 하는 윷놀이. 업기·잡기·빽도·지름길까지. 최대 네 팀이 AI, 한 화면, 온라인으로.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="thumb.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="../shared/site.css">
+<link rel="stylesheet" href="../shared/site.css?v=2">
 <style>
   html { color-scheme: light dark; }
   [hidden] { display: none !important; }
@@ -28,6 +28,8 @@
     --mat-ink: #4B3A1C;
     --red: #C8372D;
     --blue: #2A5DAA;
+    --yellow: #D98A00;
+    --green: #2F8F5B;
     --stick-flat: #F0DFB4;
     --stick-round: #7A4E24;
     --stick-mark: #3B2A12;
@@ -45,6 +47,8 @@
       --mat-edge: #8E7740;
       --red: #D9483D;
       --blue: #3D73C4;
+      --yellow: #E8A21C;
+      --green: #3FA36C;
     }
   }
   :root[data-theme="dark"] {
@@ -59,6 +63,8 @@
     --mat-edge: #8E7740;
     --red: #D9483D;
     --blue: #3D73C4;
+    --yellow: #E8A21C;
+    --green: #3FA36C;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -106,8 +112,22 @@
   }
   .tray.right { justify-items: end; text-align: right; }
   .tray.active { border-bottom-color: var(--team); }
-  .tray[data-team="0"] { --team: var(--red); }
-  .tray[data-team="1"] { --team: var(--blue); }
+  [data-team="0"] { --team: var(--red); }
+  [data-team="1"] { --team: var(--blue); }
+  [data-team="2"] { --team: var(--yellow); }
+  [data-team="3"] { --team: var(--green); }
+  .tray-name .dot { width: 0.7em; height: 0.7em; border-radius: 50%; background: var(--team); flex: none; }
+
+  /* 온라인 대기실 */
+  .lobby-card { display: grid; gap: 12px; justify-items: start; padding: 16px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+  .lobby-card h3 { margin: 0; font: 400 1.4rem/1.2 "Black Han Sans", "Gothic A1", sans-serif; }
+  .lobby-card p { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
+  .lobby-card .code { font: 700 1.5rem/1.1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: 0.18em; color: var(--ink); }
+  .lobby-card .who { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+  .lobby-card .who li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px 4px 9px; border: 1px solid var(--line); border-radius: 999px; font-size: 0.8125rem; font-weight: 700; }
+  .lobby-card .who li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--team); }
+  .lobby-card .who li.empty { font-weight: 400; color: var(--ink-soft); border-style: dashed; }
+  .lobby-card .who li.empty::before { background: transparent; border: 1px solid var(--line); }
   .tray-name { font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
   .tray-name small { font-weight: 400; color: var(--ink-soft); font-size: 0.8125rem; }
   .tray-row { display: flex; align-items: center; gap: 6px; min-height: 28px; flex-wrap: wrap; }
@@ -175,8 +195,6 @@
     transition: left 0.16s ease, top 0.16s ease, opacity 0.2s;
     cursor: default;
   }
-  .piece[data-team="0"] { --team: var(--red); }
-  .piece[data-team="1"] { --team: var(--blue); }
   .piece.leaving { opacity: 0; }
   .piece .cnt {
     position: absolute;
@@ -286,6 +304,10 @@
     100% { transform: translateY(-190px) rotateX(900deg); opacity: 0; }
   }
   .throw-side { display: grid; gap: 8px; justify-items: start; }
+  @media (max-width: 520px) {
+    .throw { grid-template-columns: auto auto; justify-content: start; }
+    .throw-side { grid-column: 1 / -1; }
+  }
   .shout {
     margin: 0;
     min-height: 1.15em;
@@ -416,8 +438,6 @@
   }
   .log li { display: flex; align-items: baseline; gap: 8px; }
   .log .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; background: var(--team); }
-  .log li[data-team="0"] { --team: var(--red); }
-  .log li[data-team="1"] { --team: var(--blue); }
   .log-empty { margin: 0; font-size: 0.875rem; color: var(--ink-soft); }
 
   details { font-size: 0.875rem; }
@@ -443,18 +463,11 @@
 
   <main class="table">
     <div class="play">
-      <div class="trays">
-        <div class="tray" id="tray-0" data-team="0">
-          <span class="tray-name"><span id="name-0">홍</span><small id="done-0">완주 0/4</small></span>
-          <div class="tray-row" id="row-0"></div>
-        </div>
-        <div class="tray right" id="tray-1" data-team="1">
-          <span class="tray-name"><small id="done-1">완주 0/4</small><span id="name-1">청</span></span>
-          <div class="tray-row" id="row-1"></div>
-        </div>
-      </div>
+      <div class="lobby-card" id="wait" hidden></div>
+      <div class="trays" id="trays"></div>
 
       <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div class="actions" id="again" hidden><button type="button" class="btn primary" id="btn-again">한 판 더</button></div>
 
       <div class="mat" id="mat">
         <svg viewBox="-3 -3 106 106" aria-hidden="true" id="mat-svg"></svg>
@@ -489,8 +502,16 @@
           <legend>상대</legend>
           <div class="seg-row">
             <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
-            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면 2인</label>
-            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 2인</label>
+            <input type="radio" name="mode" id="mode-2p" value="2p"><label for="mode-2p">한 화면</label>
+            <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-count">
+          <legend id="count-legend">팀 수</legend>
+          <div class="seg-row">
+            <input type="radio" name="count" id="count-2" value="2"><label for="count-2">2팀</label>
+            <input type="radio" name="count" id="count-3" value="3"><label for="count-3">3팀</label>
+            <input type="radio" name="count" id="count-4" value="4"><label for="count-4">4팀</label>
           </div>
         </fieldset>
         <fieldset id="fs-online" hidden></fieldset>
@@ -518,12 +539,14 @@
           <summary>규칙 보기</summary>
           <ul>
             <li>윷가락 네 개를 던져 배(평평한 면)가 나온 수만큼 갑니다. 도 1칸 · 개 2칸 · 걸 3칸 · 윷 4칸 · 모 5칸(네 개 모두 등).</li>
-            <li>윷이나 모가 나오면 한 번 더 던집니다. 상대 말을 잡아도 한 번 더 던집니다.</li>
+            <li>두 팀에서 네 팀까지 합니다(홍 → 청 → 황 → 녹 순서). 팀마다 말 네 개, 먼저 모두 내보낸 팀이 이깁니다.</li>
+            <li>윷이나 모가 나오면 한 번 더 던집니다. 다른 팀 말을 잡아도 한 번 더 던집니다.</li>
             <li>던지기 버튼을 누르고 있으면 힘이 빠르게 차올랐다 다시 처음부터 찹니다. 위쪽 어딘가의 <b>확률업</b> 구간에서 놓으면 세 번 던져 가장 좋은 결과를 가집니다(윷·모가 나올 확률이 약 15%에서 40%로). 그 바로 위 <b>낙</b> 구간에서 놓으면 윷이 멍석 밖으로 떨어져 그 던지기는 무효가 되고 차례가 넘어갑니다. 두 구간의 위치는 표시되지 않습니다. 너무 약하면 윷이 손에서 떨어져 다시 던집니다.</li>
             <li>'빽' 표시 윷가락 하나만 배가 나오면 빽도입니다. 판 위의 말 하나를 한 칸 뒤로 물립니다. 판 위에 말이 없으면 그냥 넘어갑니다.</li>
             <li>모 · 뒷모 · 방(가운데)에 정확히 멈춘 말은 다음에 지름길로 갑니다.</li>
-            <li>내 말이 있는 칸에 서면 업혀서 함께 움직이고, 상대 말이 있는 칸에 서면 잡아서 대기석으로 돌려보냅니다.</li>
+            <li>내 말이 있는 칸에 서면 업혀서 함께 움직이고, 다른 팀 말이 있는 칸에 서면 잡아서 대기석으로 돌려보냅니다.</li>
             <li>한 바퀴 돌아 출발점(참먹이)을 지나치면 완주입니다. 출발점에 딱 멈춘 말은 다음 아무 수로나 나갑니다.</li>
+            <li>온라인은 최대 4명. 방장이 "시작"을 누르면 그때 모인 사람끼리 시작합니다. 빈자리는 AI로 채울 수 있고, 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 둡니다.</li>
           </ul>
         </details>
       </section>
@@ -534,12 +557,12 @@
 
 <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="../shared/config.js"></script>
-<script src="../shared/online.js"></script>
+<script src="../shared/online.js?v=2"></script>
 <script src="../shared/site.js"></script>
 <script>
 (() => {
   const OUT = 99, WAIT = -1;
-  const TEAM = ['홍', '청'];
+  const TEAM = ['홍', '청', '황', '녹'], MAX_TEAMS = 4;
   const VAL_NAME = { '-1': '빽도', 0: '낙', 1: '도', 2: '개', 3: '걸', 4: '윷', 5: '모' };
   // 힘 조절: 버튼을 누르는 동안 힘이 0→1 로 차오르고, 놓은 순간의 값이 힘.
   // 보통 구간(0~BONUS)은 T1 동안 천천히, 확률업 구간(BONUS~NAK)도 비슷한 속도로 올라가다가
@@ -640,45 +663,62 @@
   }
 
   // ---------- 상태 ----------
-  const S = { mode: 'ai', level: 'normal' };
+  const S = { mode: 'ai', level: 'normal', count: 2 };
   let G = null;
-  function freshGame(seq) {
+  // 자리에 앉은 팀: { key, name, kind: 'me'(이 화면의 사람)|'ai'|'host'|'guest'|'none' }
+  function localPlayers(mode, n) {
+    return Array.from({ length: n }, (_, i) => ({ key: 'l' + i, name: '', kind: mode === 'ai' && i ? 'ai' : 'me' }));
+  }
+  const nobody = () => [0, 1].map(() => ({ key: '', name: '', kind: 'none' }));   // 방에 들어가기 전·대기실의 빈 판
+  function freshGame(seq, players) {
+    const pl = players || localPlayers(S.mode, S.count);
     return {
-      pieces: [0, 1].map(() => [0, 1, 2, 3].map(() => ({ pos: WAIT, came: null }))),
+      n: pl.length, players: pl,
+      pieces: pl.map(() => [0, 1, 2, 3].map(() => ({ pos: WAIT, came: null }))),
       turn: 0, throwsLeft: 1, results: [], sticks: null, lastValue: null,
       over: false, winner: -1, note: '', log: [], seq: seq || 0, ev: null, bonus: false
     };
   }
-  // 온라인 2인: 방·연결·동기화는 shared/online.js 가 맡는다. 방장 = 홍, 참가자 = 청
-  const O = Hanpan.createOnline({
-    id: 'yut',
-    seats: { host: 0, guest: 1, none: -1 },
-    text: { host: '방장 · 홍(선공)', guest: '참가자 · 청(후공)', note: '방장이 홍(선공), 참가자가 청입니다.' },
+  let busy = false, sel = 0, seen = 0, aiTimer = 0, pending = false, pendingTimer = 0;
+  const inbox = [];               // 참가자: 방장이 보낸 판 (연출이 끝나는 대로 하나씩)
+  const asks = [];                // 방장: 참가자가 보낸 수 (연출이 끝나는 대로 하나씩)
+  const offAt = {};               // 방장: 끊긴 사람의 key → 끊긴 시각 (잠깐 기다렸다가 AI 가 대신 둔다)
+  // 온라인: 방·연결은 shared/online.js 의 createParty 가 맡는다. 방장의 브라우저가 윷을 던지고 판을 돌린다
+  const P = Hanpan.createParty({
+    id: 'yut', max: MAX_TEAMS, min: 2,
+    note: '들어온 순서대로 홍·청·황·녹 팀이 됩니다. 윷은 방장 쪽에서 던져 결과를 보냅니다.',
     isOnline: () => S.mode === 'online',
     setOnline: () => { S.mode = 'online'; },
-    onNewRoom: kind => {
-      if (kind === 'guest') { G = freshGame(0); seen = -1; }
-      else { G = freshGame(G ? G.seq + 1 : 0); seen = G.seq; }
-      sel = 0;
-    },
-    onLeave: () => { inbox.length = 0; },
+    onNewRoom: () => { clearTimeout(aiTimer); G = freshGame(G ? G.seq + 1 : 0, nobody()); seen = -1; sel = 0; },
+    onLeave: () => { inbox.length = 0; asks.length = 0; pending = false; },
     getState: () => G,
-    onState: (g, firstSync) => {
+    onState: g => {
       const clean = cleanGame(g);
       if (!clean) return;
-      inbox.push({ g: clean, first: firstSync });
+      pending = false;
+      inbox.push(clean);
       pump();
+    },
+    onAction: (key, a) => { if (asks.length < 8) asks.push({ key, a }); pumpAsks(); },
+    onStart: () => { dealOnline(); },
+    onRoster: () => {
+      const now = Date.now();
+      P.members.forEach(m => { if (m.kind === 'guest' && !m.on) { if (!offAt[m.key]) offAt[m.key] = now; } else delete offAt[m.key]; });
+      scheduleAI();
+    },
+    memberNote: m => {
+      if (P.phase !== 'play') return '';
+      const t = G.players.findIndex(p => p.key === m.key);
+      return t >= 0 ? TEAM[t] : '다음 판부터';
     },
     render: () => render(),
     save: () => save()
   });
-  let busy = false, sel = 0, seen = 0, aiTimer = 0;
-  const inbox = [];
 
   function save() {
     try {
-      const d = { mode: S.mode, level: S.level, game: G };
-      if (S.mode === 'online' && O.code && O.role) d.room = { code: O.code, role: O.role };
+      const d = { mode: S.mode, level: S.level, count: S.count, name: P.name, game: G };
+      if (S.mode === 'online' && P.roomInfo()) d.room = P.roomInfo();
       localStorage.setItem(STORE_KEY, JSON.stringify(d));
     } catch (e) {}
   }
@@ -688,9 +728,18 @@
   const okPos = v => v === WAIT || v === OUT || (Number.isInteger(v) && v >= 0 && v <= 28);
   const okVal = v => [-1, 1, 2, 3, 4, 5].includes(v);
   function cleanGame(d) {
-    if (!d || !Array.isArray(d.pieces) || d.pieces.length !== 2) return null;
-    const g = freshGame(Number.isInteger(d.seq) ? d.seq : 0);
-    for (let t = 0; t < 2; t++) {
+    if (!d || !Array.isArray(d.pieces) || d.pieces.length < 2 || d.pieces.length > MAX_TEAMS) return null;
+    const n = d.pieces.length;
+    const seat = v => (Number.isInteger(v) && v >= 0 && v < n ? v : 0);
+    const players = Array.isArray(d.players) && d.players.length === n
+      ? d.players.map(p => ({
+        key: p && typeof p.key === 'string' && /^[a-z]\d{1,6}$/.test(p.key) ? p.key : '',
+        name: String((p && p.name) || '').slice(0, 8),
+        kind: p && ['me', 'ai', 'host', 'guest', 'none'].includes(p.kind) ? p.kind : 'none'
+      }))
+      : localPlayers(S.mode === 'online' ? 'ai' : S.mode, n);           // 예전(2인) 저장본
+    const g = freshGame(Number.isInteger(d.seq) ? d.seq : 0, players);
+    for (let t = 0; t < n; t++) {
       if (!Array.isArray(d.pieces[t]) || d.pieces[t].length !== 4) return null;
       for (let i = 0; i < 4; i++) {
         const pc = d.pieces[t][i];
@@ -698,21 +747,21 @@
         g.pieces[t][i] = { pos: pc.pos, came: Number.isInteger(pc.came) ? pc.came : null };
       }
     }
-    g.turn = d.turn === 1 ? 1 : 0;
+    g.turn = seat(d.turn);
     g.throwsLeft = Number.isInteger(d.throwsLeft) ? Math.max(0, Math.min(9, d.throwsLeft)) : 0;
     g.results = Array.isArray(d.results) ? d.results.filter(okVal).slice(0, 12) : [];
     g.sticks = Array.isArray(d.sticks) && d.sticks.length === 4 ? d.sticks.map(Boolean) : null;
     g.lastValue = okVal(d.lastValue) || d.lastValue === 0 ? d.lastValue : null;
     g.bonus = !!d.bonus;
-    g.over = !!d.over;
-    g.winner = d.winner === 0 || d.winner === 1 ? d.winner : -1;
+    g.winner = Number.isInteger(d.winner) && d.winner >= 0 && d.winner < n ? d.winner : -1;
+    g.over = !!d.over && g.winner >= 0;
     g.note = typeof d.note === 'string' ? d.note.slice(0, 120) : '';
-    g.log = Array.isArray(d.log) ? d.log.slice(-80).map(e => ({ t: e && e.t === 1 ? 1 : 0, s: String((e && e.s) || '').slice(0, 60) })) : [];
+    g.log = Array.isArray(d.log) ? d.log.slice(-80).map(e => ({ t: seat(e && e.t), s: String((e && e.s) || '').slice(0, 60) })) : [];
     const ev = d.ev;
     if (ev && (ev.type === 'throw' || ev.type === 'move' || ev.type === 'new')) {
       g.ev = {
-        type: ev.type, seq: Number.isInteger(ev.seq) ? ev.seq : -1, team: ev.team === 1 ? 1 : 0,
-        ids: Array.isArray(ev.ids) ? ev.ids.filter(n => Number.isInteger(n) && n >= 0 && n < 4) : [],
+        type: ev.type, seq: Number.isInteger(ev.seq) ? ev.seq : -1, team: seat(ev.team),
+        ids: Array.isArray(ev.ids) ? ev.ids.filter(k => Number.isInteger(k) && k >= 0 && k < 4) : [],
         from: okPos(ev.from) ? ev.from : WAIT,
         path: Array.isArray(ev.path) ? ev.path.filter(okPos).slice(0, 6) : [],
         pw: typeof ev.pw === 'number' && ev.pw >= 0 && ev.pw <= 1 ? ev.pw : 0.5
@@ -723,18 +772,25 @@
   }
 
   const phase = () => (G.over ? 'over' : G.throwsLeft > 0 ? 'throw' : 'move');
+  const mySeat = () => (S.mode === 'ai' ? 0 : S.mode === 'online' && P.me ? G.players.findIndex(p => p.key === P.me) : -1);
+  const inPlay = () => S.mode !== 'online' || (P.status === 'live' && P.phase === 'play');
+  const isHost = () => S.mode === 'online' && P.role === 'host';
   function canAct() {
-    if (busy || G.over) return false;
-    if (S.mode === '2p') return true;
-    if (S.mode === 'ai') return G.turn === 0;
-    return O.status === 'live' && G.turn === O.my;
+    if (busy || G.over || pending || !inPlay()) return false;
+    if (S.mode === 'online') return mySeat() === G.turn;
+    return G.players[G.turn].kind === 'me';
   }
-  function roleOf(t) {
-    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI';
-    if (S.mode === 'online' && O.my >= 0) return t === O.my ? '나' : '상대';
-    return '';
+  function who(t) {
+    const p = G.players[t];
+    if (S.mode === 'ai') return p.kind === 'me' ? '당신' : (G.n > 2 ? 'AI ' + t : 'AI');
+    if (S.mode !== 'online' || p.kind === 'none') return '';
+    if (p.key === P.me) return '나';
+    if (p.kind === 'ai') return 'AI';
+    const m = P.members.find(x => x.key === p.key);
+    return (m ? P.nameOf(m) : p.name || (p.kind === 'host' ? '방장' : '손님')) + (m && m.on ? '' : ' · 끊김');
   }
-  const label = t => TEAM[t] + (roleOf(t) ? '(' + roleOf(t) + ')' : '');
+  const label = t => TEAM[t] + (who(t) ? '(' + who(t) + ')' : '');
+  const others = (g, team) => [].concat(...g.pieces.filter((_, t) => t !== team));
 
   // ---------- 진행 ----------
   // 고를 수 있는 출발 칸 목록: WAIT(새 말) 또는 판 위 칸
@@ -755,7 +811,7 @@
       G.note = '빽도가 나왔지만 판 위에 말이 없어 차례가 넘어갑니다.';
       G.results = [];
     }
-    if (!G.results.length) { G.turn = 1 - G.turn; G.throwsLeft = 1; }
+    if (!G.results.length) { G.turn = (G.turn + 1) % G.n; G.throwsLeft = 1; }
   }
   function commit(ev) {
     G.seq++;
@@ -764,8 +820,33 @@
     seen = G.seq;
     sel = 0;
     save();
-    O.send();
+    P.send();
     present(ev);
+  }
+  // 사람의 수: 참가자는 방장에게 보내고, 방장이 반영해서 돌려준다
+  function ask(a) {
+    if (!canAct()) return;
+    if (S.mode === 'online' && P.role === 'guest') {
+      P.act(a);
+      pending = true;
+      clearTimeout(pendingTimer);
+      pendingTimer = setTimeout(() => { if (pending) { pending = false; render(); } }, 3000);
+      lockUI();
+      return;
+    }
+    if (a.type === 'throw') doThrow(a.pw); else doMove(a.ri, a.from);
+  }
+  function pumpAsks() {
+    if (busy) return;
+    while (asks.length && !busy) {
+      const { key, a } = asks.shift();
+      const t = G.players.findIndex(p => p.key === key);
+      const ok = P.phase === 'play' && t >= 0 && !G.over && G.turn === t && a && typeof a === 'object';
+      const seq = G.seq;
+      if (ok && a.type === 'throw' && typeof a.pw === 'number' && a.pw >= WEAK && a.pw <= 1) doThrow(a.pw);
+      else if (ok && a.type === 'move' && Number.isInteger(a.ri) && okPos(a.from)) doMove(a.ri, a.from);
+      if (G.seq === seq) P.send();                               // 받아들이지 않은 수: 어긋난 화면을 다시 맞춰 준다
+    }
   }
   function doThrow(power) {
     if (phase() !== 'throw') return;
@@ -818,7 +899,7 @@
     G.results.splice(resultIdx, 1);
     let captured = 0;
     if (m.pos !== OUT) {
-      for (const pc of G.pieces[1 - team]) {
+      for (const pc of others(G, team)) {
         if (pc.pos === m.pos) { pc.pos = WAIT; pc.came = null; captured++; }
       }
     }
@@ -833,9 +914,23 @@
     commit({ type: 'move', team, ids, from, path: m.path });
   }
   function newGame() {
-    if (S.mode === 'online' && O.status !== 'live') return;
+    if (S.mode === 'online') {
+      if (!isHost() || !inPlay()) return;
+      P.prune();
+      dealOnline();
+      return;
+    }
     clearTimeout(aiTimer);
     G = freshGame(G ? G.seq : 0);
+    commit({ type: 'new', team: 0 });
+  }
+  // 방장: 지금 방에 있는 사람들로 새 판을 시작한다
+  function dealOnline() {
+    const players = P.lineup().map(m => ({ key: m.key, name: m.name, kind: m.kind }));
+    if (players.length < 2) return;
+    clearTimeout(aiTimer);
+    asks.length = 0;
+    G = freshGame(G ? G.seq : 0, players);
     commit({ type: 'new', team: 0 });
   }
 
@@ -843,7 +938,7 @@
   function threat(g, team, target) {
     let risk = 0;
     const seenSpots = new Set();
-    for (const pc of g.pieces[1 - team]) {
+    for (const pc of others(g, team)) {
       if (pc.pos === OUT || seenSpots.has(pc.pos)) continue;
       seenSpots.add(pc.pos);
       for (const v of [-1, 1, 2, 3, 4, 5]) {
@@ -854,7 +949,7 @@
     return risk;
   }
   function chooseAction() {
-    const team = G.turn, mine = G.pieces[team], theirs = G.pieces[1 - team];
+    const team = G.turn, mine = G.pieces[team], theirs = others(G, team);
     const opts = [];
     G.results.forEach((v, ri) => {
       for (const from of optionsFor(G, team, v)) {
@@ -882,14 +977,26 @@
     opts.sort((a, b) => b.score - a.score);
     return opts[0];
   }
+  // 혼자 할 때의 상대. 온라인에선 방장이 AI 팀과 끊긴 사람의 차례를 대신 둔다
+  function autoDelay() {
+    if (busy || G.over) return -1;
+    const p = G.players[G.turn];
+    if (S.mode === 'ai') return p.kind === 'ai' ? 750 : -1;
+    if (!isHost() || !inPlay()) return -1;
+    if (p.kind === 'ai') return 750;
+    if (p.kind === 'guest' && !P.isOn(p.key)) return Math.max(750, 5000 - (Date.now() - (offAt[p.key] || 0)));
+    return -1;
+  }
   function scheduleAI() {
     clearTimeout(aiTimer);
-    if (busy || G.over || S.mode !== 'ai' || G.turn !== 1) return;
+    const delay = autoDelay();
+    if (delay < 0) return;
+    const seq = G.seq;
     aiTimer = setTimeout(() => {
-      if (busy || G.over || S.mode !== 'ai' || G.turn !== 1) return;
+      if (G.seq !== seq || autoDelay() < 0) return;
       if (phase() === 'throw') doThrow(aiPower());
       else { const a = chooseAction(); if (a) doMove(a.ri, a.from); }
-    }, 750);
+    }, delay);
   }
 
   // ---------- 연출 ----------
@@ -903,7 +1010,7 @@
   function present(ev) {
     busy = true;
     lockUI();
-    const done = () => { busy = false; render(); pump(); scheduleAI(); };
+    const done = () => { busy = false; render(); pump(); pumpAsks(); scheduleAI(); };
     if (ev.type === 'throw') {
       const sticksEl = $('sticks'), nak = isNak(ev.pw);
       setGauge(ev.pw, true);
@@ -940,11 +1047,11 @@
   }
   function pump() {
     if (busy || !inbox.length) return;
-    const item = inbox.shift(), g = item.g;
+    const g = inbox.shift(), next = g.seq === seen + 1;
     G = g;
     save();
-    // 접속 직후 받은 판은 연출 없이 그대로 보여 준다
-    if (!item.first && g.ev && g.ev.seq === g.seq && g.seq > seen) { seen = g.seq; sel = 0; present(g.ev); }
+    // 바로 다음 수일 때만 연출한다. 접속 직후나 건너뛴 판은 그대로 보여 준다
+    if (next && g.ev && g.ev.seq === g.seq) { seen = g.seq; sel = 0; present(g.ev); }
     else { seen = g.seq; render(); pump(); }
   }
 
@@ -970,24 +1077,29 @@
     $('btn-throw').classList.remove('holding');
     if (cancel || !canAct() || phase() !== 'throw') { setGauge(p, false); return; }
     if (p < WEAK) { setGauge(p, false); $('note').textContent = '너무 약해서 윷이 손에서 떨어졌습니다. 조금 더 누르고 있다 놓으세요.'; return; }
-    doThrow(p);
+    ask({ type: 'throw', pw: Math.round(p * 100) / 100 });
   }
 
   // ---------- 모드 전환 ----------
   function setMode(mode) {
-    if (S.mode === 'online') O.leave();
+    if (S.mode === 'online') P.leave();
     clearTimeout(aiTimer);
     S.mode = mode;
-    G = freshGame(G ? G.seq + 1 : 0);
+    G = freshGame(G ? G.seq + 1 : 0, mode === 'online' ? nobody() : null);
     seen = G.seq;
     sel = 0;
     render();
     save();
     scheduleAI();
   }
+  function setCount(n) {
+    S.count = n;
+    if (S.mode === 'online') { save(); return; }
+    setMode(S.mode);
+  }
 
   // ---------- 화면 ----------
-  const pieceEls = [[], []];
+  const pieceEls = Array.from({ length: MAX_TEAMS }, () => []);
   let destEl = null;
   const pct = v => ((v + 3) / 106 * 100) + '%';
   function place(el, st) { el.style.left = pct(XY[st][0]); el.style.top = pct(XY[st][1]); }
@@ -1013,13 +1125,13 @@
     add('text', { x: 50, y: 42.4 }, '방');
 
     const layer = $('layer');
-    for (let t = 0; t < 2; t++) for (let i = 0; i < 4; i++) {
+    for (let t = 0; t < MAX_TEAMS; t++) for (let i = 0; i < 4; i++) {
       const el = document.createElement('button');
       el.type = 'button';
       el.className = 'piece';
       el.dataset.team = t;
       el.hidden = true;
-      el.addEventListener('click', () => { if (el.classList.contains('movable')) doMove(sel, G.pieces[t][i].pos); });
+      el.addEventListener('click', () => { if (el.classList.contains('movable')) ask({ type: 'move', ri: sel, from: G.pieces[t][i].pos }); });
       const show = () => { if (el.classList.contains('movable')) showDest(G.pieces[t][i].pos); };
       el.addEventListener('pointerenter', show);
       el.addEventListener('focus', show);
@@ -1043,7 +1155,7 @@
     const out = m.pos === OUT;
     place(destEl, out ? 0 : m.pos);
     const tag = destEl.firstChild;
-    const cap = !out && G.pieces[1 - G.turn].some(pc => pc.pos === m.pos);
+    const cap = !out && others(G, G.turn).some(pc => pc.pos === m.pos);
     tag.textContent = out ? '완주' : cap ? '잡기' : '';
     tag.hidden = !tag.textContent;
     destEl.hidden = false;
@@ -1129,12 +1241,12 @@
       });
     }
     $('note').textContent = G.note || (act && ph === 'move' ? '빛나는 말을 누르면 움직입니다. 말 위에 올리면 도착 칸이 보입니다.' : '');
-    $('btn-new').disabled = online && O.status !== 'live';
+    $('btn-new').disabled = online && !(isHost() && inPlay());
   }
 
   function render() {
     hideDest();
-    const online = S.mode === 'online';
+    const online = S.mode === 'online', playing = inPlay();
     const act = canAct(), ph = phase();
     if (sel >= G.results.length) sel = 0;
     // 고른 수로 움직일 말이 없으면(판 위에 말 없는 빽도) 쓸 수 있는 수로 바꿔 준다
@@ -1145,7 +1257,8 @@
     const movableFrom = act && ph === 'move' ? new Set(optionsFor(G, G.turn, G.results[sel])) : new Set();
 
     // 판 위의 말
-    for (let t = 0; t < 2; t++) {
+    for (let t = 0; t < MAX_TEAMS; t++) {
+      if (t >= G.n) { pieceEls[t].forEach(el => { el.hidden = true; }); continue; }
       const groups = {};
       G.pieces[t].forEach((pc, i) => {
         const el = pieceEls[t][i];
@@ -1174,12 +1287,24 @@
       }
     }
 
-    // 대기석
-    for (let t = 0; t < 2; t++) {
-      const row = $('row-' + t);
-      row.textContent = '';
+    // 대기석: 두 줄로, 왼쪽 팀과 오른쪽 팀
+    const trays = $('trays');
+    trays.textContent = '';
+    for (let t = 0; t < G.n; t++) {
+      const right = t % 2 === 1;
+      const tray = document.createElement('div');
+      tray.className = 'tray' + (right ? ' right' : '') + (!G.over && playing && G.turn === t ? ' active' : '');
+      tray.dataset.team = t;
       const waiting = G.pieces[t].filter(pc => pc.pos === WAIT).length;
       const done = G.pieces[t].filter(pc => pc.pos === OUT).length;
+      const name = document.createElement('span');
+      name.className = 'tray-name';
+      const dot = document.createElement('span'); dot.className = 'dot';
+      const nm = document.createElement('span'); nm.textContent = TEAM[t] + (who(t) ? ' · ' + who(t) : '');
+      const dn = document.createElement('small'); dn.textContent = '완주 ' + done + '/4';
+      if (right) name.append(dn, nm, dot); else name.append(dot, nm, dn);
+      const row = document.createElement('div');
+      row.className = 'tray-row';
       const lab = document.createElement('span');
       lab.className = 'tray-label';
       lab.textContent = waiting ? '대기' : '대기 없음';
@@ -1192,7 +1317,7 @@
         b.tabIndex = canEnter && i === 0 ? 0 : -1;
         b.setAttribute('aria-label', TEAM[t] + ' 대기 말' + (canEnter ? ', 누르면 출발' : ''));
         if (canEnter) {
-          b.addEventListener('click', () => doMove(sel, WAIT));
+          b.addEventListener('click', () => ask({ type: 'move', ri: sel, from: WAIT }));
           b.addEventListener('pointerenter', () => showDest(WAIT));
           b.addEventListener('focus', () => showDest(WAIT));
           b.addEventListener('pointerleave', hideDest);
@@ -1205,26 +1330,60 @@
         d.className = 'token done';
         tokens.push(d);
       }
-      if (t === 0) row.append(lab, ...tokens); else row.append(...tokens, lab);
-      $('done-' + t).textContent = '완주 ' + done + '/4';
-      $('name-' + t).textContent = TEAM[t] + (roleOf(t) ? ' · ' + roleOf(t) : '');
-      $('tray-' + t).classList.toggle('active', !G.over && G.turn === t);
+      if (right) row.append(...tokens, lab); else row.append(lab, ...tokens);
+      tray.append(name, row);
+      trays.appendChild(tray);
     }
 
     // 상태 문구
     let text;
-    const connText = online ? O.statusText() : null;
+    const connText = online ? P.statusText() : null;
+    const lobby = online && !connText && P.phase === 'lobby';
+    const me = mySeat();
     if (connText) text = connText;
+    else if (lobby) text = '대기실 — ' + (isHost() ? '친구를 초대하고, 모이면 시작을 누르세요.' : '방장이 시작하길 기다리는 중…');
     else if (G.over) {
-      const me = S.mode === 'ai' ? 0 : online ? O.my : -1;
-      text = me >= 0 ? (G.winner === me ? '이겼습니다! 말 네 개 모두 완주' : '졌습니다. ' + TEAM[G.winner] + ' 말이 모두 완주') : TEAM[G.winner] + ' 승리 — 말 네 개 모두 완주';
+      text = me >= 0 ? (G.winner === me ? '이겼습니다! 말 네 개 모두 완주' : '졌습니다. ' + label(G.winner) + ' 말이 모두 완주') : label(G.winner) + ' 승리 — 말 네 개 모두 완주';
     } else if (ph === 'throw') {
       text = act ? label(G.turn) + ' 차례 — 버튼을 누르고 있다 놓아 윷을 던지세요.' : label(G.turn) + ' 차례 — 윷을 던지는 중…';
     } else {
       text = act ? label(G.turn) + ' 차례 — 옮길 말을 고르세요 (' + VAL_NAME[G.results[sel]] + ').' : label(G.turn) + ' 차례 — 말을 고르는 중…';
     }
+    if (online && playing && me < 0 && !G.over) text = '구경 중 (다음 판부터 함께합니다) · ' + text;
     $('status').textContent = text;
-    $('status').classList.toggle('final', G.over && (!online || O.status === 'live'));
+    $('status').classList.toggle('final', G.over && playing && !lobby);
+
+    // 끝난 뒤: 한 판 더 (온라인은 방장만)
+    const count = online ? P.lineup().length : S.count;
+    $('again').hidden = !(G.over && playing && !lobby);
+    $('btn-again').disabled = busy || (online && !(isHost() && count >= 2));
+    $('btn-again').textContent = online && !isHost() ? '방장이 새 판을 시작하길 기다리는 중…' : '한 판 더 (' + count + '팀)';
+
+    // 대기실
+    const wt = $('wait');
+    wt.textContent = ''; wt.hidden = !lobby;
+    if (lobby) {
+      const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; };
+      const bt = (cls, txt, fn, off) => { const b = mk('button', cls, txt); b.type = 'button'; b.disabled = !!off; b.addEventListener('click', fn); return b; };
+      const list = mk('ul', 'who');
+      P.members.forEach((m, k) => { const li = mk('li', '', TEAM[k] + ' · ' + P.nameOf(m) + (m.key === P.me ? ' (나)' : '')); li.dataset.team = k; list.appendChild(li); });
+      for (let k = P.members.length; k < P.max; k++) list.appendChild(mk('li', 'empty', '빈자리'));
+      wt.append(mk('h3', '', '대기실 · ' + P.members.length + '/' + P.max + '명'), mk('p', 'code', P.code), list);
+      if (isHost()) {
+        const cnt = P.lineup().length;
+        const row = mk('div', 'actions');
+        row.append(
+          bt('btn primary', '시작 (' + cnt + '팀)', P.start, cnt < P.min),
+          bt('btn', location.protocol === 'file:' ? '방 코드 복사' : '초대 링크 복사', P.copyInvite),
+          bt('btn', 'AI 추가', P.addAI, P.members.length >= P.max),
+          bt('btn', 'AI 빼기', P.removeAI, !P.members.some(m => m.kind === 'ai'))
+        );
+        wt.append(mk('p', '', cnt < P.min ? '친구가 들어오거나 AI를 추가하면 시작할 수 있습니다.' : '다 모였으면 시작을 누르세요. 최대 ' + P.max + '명까지 들어올 수 있습니다.'), row);
+      } else {
+        wt.appendChild(mk('p', '', '방장이 시작하길 기다리는 중…'));
+      }
+      if (P.flash) wt.appendChild(mk('p', '', P.flash));
+    }
 
     renderSticks(false);
     renderControls();
@@ -1251,8 +1410,11 @@
     $('mode-2p').checked = S.mode === '2p';
     $('mode-online').checked = online;
     $('level-' + S.level).checked = true;
-    $('fs-level').hidden = S.mode !== 'ai';
-    O.renderPanel(online);
+    $('count-' + S.count).checked = true;
+    $('fs-level').hidden = !(S.mode === 'ai' || isHost());
+    $('fs-count').hidden = online;
+    $('count-legend').textContent = S.mode === 'ai' ? '팀 수 (나 + AI)' : '팀 수';
+    P.renderPanel(online);
   }
 
   function bindControls() {
@@ -1269,23 +1431,29 @@
     window.addEventListener('pointerup', () => releaseCharge(false));
     window.addEventListener('pointercancel', () => releaseCharge(true));
     window.addEventListener('blur', () => releaseCharge(true));
+    document.querySelectorAll('input[name="count"]').forEach(r =>
+      r.addEventListener('change', () => setCount(Number(r.value))));
     $('btn-new').addEventListener('click', () => { if (!busy) newGame(); });
+    $('btn-again').addEventListener('click', () => { if (!busy) newGame(); });
   }
 
   function start() {
     const saved = loadSaved();
     if (saved && typeof saved === 'object') {
       if (['ai', '2p', 'online'].includes(saved.mode)) S.mode = saved.mode;
+      if ([2, 3, 4].includes(saved.count)) S.count = saved.count;
       if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
       G = cleanGame(saved.game);
+      // 혼자·한 화면 판에는 이 화면의 사람과 AI 만 앉는다 (온라인에서 하던 판은 이어 가지 않는다)
+      if (G && S.mode !== 'online' && !G.players.every((p, i) => p.kind === (S.mode === 'ai' && i ? 'ai' : 'me'))) G = null;
     }
-    if (!G) G = freshGame(0);
+    if (!G) G = freshGame(0, S.mode === 'online' ? nobody() : null);
     seen = G.seq;
     buildMat();
     bindControls();
-    O.mountPanel($('fs-online'));
-    if (!O.boot(saved && saved.room)) {
-      if (S.mode === 'online') G = freshGame(G.seq + 1);
+    P.mountPanel($('fs-online'));
+    if (!P.boot(saved && saved.room, saved && saved.name)) {
+      if (S.mode === 'online') G = freshGame(G.seq + 1, nobody());
       seen = G.seq;
       render();
       scheduleAI();

@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>고스톱 한 판</title>
-<meta name="description" content="설치 없이 브라우저에서 바로 치는 3인 고스톱. 고·스톱, 흔들기·폭탄, 쪽·따닥·뻑, 피박·광박·고박까지. AI 둘과 치거나 초대 링크로 친구들과.">
+<meta name="description" content="설치 없이 브라우저에서 바로 치는 고스톱·맞고. 둘이 치면 맞고, 셋이 치면 고스톱. 고·스톱, 흔들기·폭탄, 쪽·따닥·뻑, 피박·광박·고박까지. AI와 치거나 초대 링크로 친구들과.">
 <meta property="og:title" content="고스톱 한 판">
-<meta property="og:description" content="설치 없이 브라우저에서 바로 치는 3인 고스톱. AI 둘과 치거나 초대 링크로 친구들과.">
+<meta property="og:description" content="둘이 치면 맞고, 셋이 치면 고스톱. AI와 치거나 초대 링크로 친구들과.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="thumb.svg">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&family=Nanum+Myeongjo:wght@700;800&display=swap">
@@ -95,7 +95,7 @@
   [data-team="1"] { --team: var(--blue); }
   [data-team="2"] { --team: var(--yellow); }
   /* 상대 둘은 위에 나란히, 작은 패로 */
-  .opps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+  .opps { display: grid; grid-template-columns: repeat(var(--opps, 2), minmax(0, 1fr)); gap: 10px; align-items: start; }
   .seat.opp { padding: 8px 10px; }
   .seat.opp .hand { gap: 0; min-height: 0; }
   .seat.opp .hand .card { margin-left: calc(var(--cw) * -0.34); }
@@ -219,7 +219,7 @@
   <header class="masthead">
     <a class="home" href="../index.html">← 한 판 놀이방</a>
     <h1>고스톱 한 판</h1>
-    <p>셋이 치는 고스톱. 3점을 먼저 내고 고를 부를지, 스톱할지. 돈 없이 점수만 주고받습니다.</p>
+    <p>둘이 치면 맞고, 셋이 치면 고스톱. 3점을 먼저 내고 고를 부를지, 스톱할지. 돈 없이 점수만 주고받습니다.</p>
   </header>
 
   <main class="table">
@@ -234,6 +234,7 @@
       <div class="result" id="result" hidden></div>
 
       <div id="mine"></div>
+      <div id="hold" hidden></div>
     </div>
 
     <aside class="panel">
@@ -244,6 +245,13 @@
           <div class="seg-row">
             <input type="radio" name="mode" id="mode-ai" value="ai"><label for="mode-ai">AI</label>
             <input type="radio" name="mode" id="mode-online" value="online"><label for="mode-online">온라인 (최대 3명)</label>
+          </div>
+        </fieldset>
+        <fieldset id="fs-count">
+          <legend id="count-legend">인원</legend>
+          <div class="seg-row">
+            <input type="radio" name="count" id="count-2" value="2"><label for="count-2">2명 (맞고)</label>
+            <input type="radio" name="count" id="count-3" value="3"><label for="count-3">3명 (고스톱)</label>
           </div>
         </fieldset>
         <fieldset id="fs-online" hidden></fieldset>
@@ -258,7 +266,7 @@
         <div class="actions">
           <button type="button" class="btn" id="btn-new">처음부터 새로</button>
         </div>
-        <p class="fine">손패가 비밀이라 한 화면에서 같이 치기는 없습니다. 난 사람이 다음 판의 선입니다. 둘이 치려면 <a href="../matgo/index.html">맞고</a>로 가세요.</p>
+        <p class="fine">손패가 비밀이라 한 화면에서 같이 치기는 없습니다. 난 사람이 다음 판의 선입니다.</p>
       </section>
 
       <section>
@@ -271,14 +279,14 @@
         <details>
           <summary>규칙 보기</summary>
           <ul>
-            <li>셋이 칩니다. 각자 7장, 바닥 6장, 더미 21장. 선부터 오른쪽으로 돌아가며 손패 한 장을 내고 더미 한 장을 뒤집어 같은 달끼리 먹습니다.</li>
+            <li>둘이 치면 맞고(각자 10장, 바닥 8장), 셋이 치면 고스톱(각자 7장, 바닥 6장). 선부터 돌아가며 손패 한 장을 내고 더미 한 장을 뒤집어 같은 달끼리 먹습니다.</li>
             <li>광 3장 3점(비광 포함 2점) · 4장 4점 · 5장 15점. 열끗·띠는 5장부터 장당 1점, 피는 10장부터 장당 1점(쌍피 2장). 고도리 5점, 홍단·청단·초단 3점. 9월 국진은 유리한 쪽으로 자동 계산.</li>
             <li>3점이 되면 고 또는 스톱. 고 1회 +1점, 2회 +2점, 3고부터 2배씩. 고를 부른 뒤엔 점수가 더 올라야 다시 고·스톱할 수 있습니다.</li>
-            <li>쪽(낸 패에 뒤집은 패가 붙음) · 따닥 · 뻑 먹기 · 싹쓸이는 다른 두 사람에게서 피를 한 장씩 가져옵니다. 같은 달 3장을 들고 흔들면 2배, 바닥의 한 장에 3장을 한꺼번에 내는 폭탄은 2배에 피 한 장씩.</li>
-            <li>난 사람은 진 두 사람에게서 각각 점수를 받습니다. 진 사람 피가 6장 미만이면 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박 — 그 사람만 2배.</li>
-            <li>고박: 고를 부른 사람이 지면 다른 진 사람 몫까지 혼자 냅니다(진 두 사람이 모두 고를 불렀으면 각자 냅니다).</li>
+            <li>쪽(낸 패에 뒤집은 패가 붙음) · 따닥 · 뻑 먹기 · 싹쓸이는 다른 사람 모두에게서 피를 한 장씩 가져옵니다. 같은 달 3장을 들고 흔들면 2배, 바닥의 한 장에 3장을 한꺼번에 내는 폭탄은 2배에 피 한 장씩.</li>
+            <li>난 사람은 진 사람마다 점수를 받습니다. 진 사람 피가 적으면(둘이 칠 땐 7장 미만, 셋이 칠 땐 6장 미만) 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박 — 그 사람만 2배.</li>
+            <li>고박: 고를 부른 사람이 지면, 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 냅니다(진 두 사람이 모두 고를 불렀으면 각자 냅니다).</li>
             <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배. 누적 점수는 주고받은 만큼 오르내립니다.</li>
-            <li>온라인은 방장이 "시작"을 누르면 시작합니다. 모자란 자리는 AI가 앉고, 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 칩니다.</li>
+            <li>온라인은 최대 3명. 방장이 인원(2명·3명)을 고르고 "시작"을 누르면 시작합니다. 모자란 자리는 AI가 앉고, 사람이 셋 모이면 늘 셋이 칩니다. 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 칩니다.</li>
           </ul>
         </details>
       </section>
@@ -294,10 +302,10 @@
 <script src="../shared/config.js"></script>
 <script src="../shared/online.js?v=2"></script>
 <script src="../shared/site.js"></script>
-<script src="engine.js?v=1"></script>
+<script src="engine.js?v=2"></script>
 <script>
 (() => {
-  const M = window.GoStop, C = id => M.CARDS[id], N = M.N;
+  const M = window.GoStop, C = id => M.CARDS[id], MAXN = M.MAX_PLAYERS;
   const TEAM = ['홍', '청', '황'];
   const STORE_KEY = 'gostop-standalone-v1';
   const $ = id => document.getElementById(id);
@@ -308,26 +316,26 @@
   let slotOf = {}, slotSeed = 0;
 
   // ---------- 상태 ----------
-  const S = { mode: 'ai', level: 'normal' };
+  const S = { mode: 'ai', level: 'normal', count: 3 };   // count: 몇 명이 칠지 (2 = 맞고, 3 = 고스톱)
   let G = null, seen = 0, aiTimer = 0, pending = false, pendingTimer = 0;
   let busy = false, lastSig = '';
   const inbox = [];               // 참가자: 방장이 보낸 판 (연출이 끝나는 대로 하나씩)
   const asks = [];                // 방장: 참가자가 보낸 수
   const offAt = {};               // 방장: 끊긴 사람의 key → 끊긴 시각 (잠깐 기다렸다가 AI 가 대신 친다)
   // 자리에 앉은 사람들: { key, name, kind: 'me'|'ai'|'host'|'guest'|'none' }
-  const aiPlayers = () => Array.from({ length: N }, (_, i) => ({ key: i ? 'ai' + i : 'me', name: '', kind: i ? 'ai' : 'me' }));
-  const nobody = () => Array.from({ length: N }, () => ({ key: '', name: '', kind: 'none' }));   // 방에 들어가기 전·대기실의 빈 판
+  const aiPlayers = () => Array.from({ length: S.count }, (_, i) => ({ key: i ? 'ai' + i : 'me', name: '', kind: i ? 'ai' : 'me' }));
+  const nobody = () => Array.from({ length: S.count }, () => ({ key: '', name: '', kind: 'none' }));   // 방에 들어가기 전·대기실의 빈 판
   function freshGame(seq, players, firstKey, carry, total) {
     const first = Math.max(0, players.findIndex(p => p.key && p.key === firstKey));
-    const g = M.deal(newSeed(), first, carry || 0, total || [0, 0, 0]);
+    const g = M.deal(newSeed(), first, carry || 0, total && total.length === players.length ? total : null, players.length);
     g.players = players;
     g.seq = seq || 0;
     return g;
   }
   // 온라인: 방·연결은 shared/online.js 의 createParty 가 맡는다. 방장의 브라우저가 패를 섞고 판을 돌린다
   const P = Hanpan.createParty({
-    id: 'gostop', max: N, min: 1,
-    note: '들어온 순서대로 홍·청·황 자리에 앉고, 빈자리는 AI 가 채웁니다. 패는 방장 쪽에서 섞어 보냅니다.',
+    id: 'gostop', max: MAXN, min: 1,
+    note: '들어온 순서대로 홍·청·황 자리에 앉고, 모자란 자리는 AI 가 채웁니다. 패는 방장 쪽에서 섞어 보냅니다.',
     isOnline: () => S.mode === 'online',
     setOnline: () => { S.mode = 'online'; },
     onNewRoom: () => { clearTimeout(aiTimer); G = freshGame(G ? G.seq + 1 : 0, nobody()); seen = -1; lastSig = sigOf(G); },
@@ -357,7 +365,7 @@
   });
   function save() {
     try {
-      const d = { mode: S.mode, level: S.level, name: P.name, game: G };
+      const d = { mode: S.mode, level: S.level, count: S.count, name: P.name, game: G };
       if (S.mode === 'online' && P.roomInfo()) d.room = P.roomInfo();
       localStorage.setItem(STORE_KEY, JSON.stringify(d));
     } catch (e) {}
@@ -368,9 +376,11 @@
   const int = (v, lo, hi) => (Number.isInteger(v) && v >= lo && v <= hi ? v : null);
   function cleanGame(d) {
     if (!d || typeof d !== 'object') return null;
+    const N = Array.isArray(d.hands) ? d.hands.length : 0;
+    if (N !== 2 && N !== 3) return null;
     const seed = int(d.seed, 1, 2147483647), first = int(d.first, 0, N - 1), turn = int(d.turn, 0, N - 1);
     if (seed === null || first === null || turn === null) return null;
-    const hands = Array.isArray(d.hands) && d.hands.length === N ? d.hands.map(idList) : null;
+    const hands = d.hands.map(idList);
     const caps = Array.isArray(d.caps) && d.caps.length === N ? d.caps.map(idList) : null;
     const floor = idList(d.floor), deck = idList(d.deck);
     if (!hands || !caps || hands.some(h => !h) || caps.some(c => !c) || !floor || !deck) return null;
@@ -402,7 +412,7 @@
         name: String((p && p.name) || '').slice(0, 8),
         kind: p && ['me', 'ai', 'host', 'guest', 'none'].includes(p.kind) ? p.kind : 'none'
       }))
-      : nobody();
+      : Array.from({ length: N }, () => ({ key: '', name: '', kind: 'none' }));
     return {
       seed, n: N, first, turn, carry: int(d.carry, 0, 10) || 0, total: three(d.total, -1e7, 1e7),
       hands, floor, deck, caps, go: three(d.go, 0, 20), goAt: three(d.goAt, 0, 200), mult: three(d.mult, 0, 10),
@@ -430,7 +440,7 @@
   }
   function who(t) {
     const p = G.players[t];
-    if (S.mode === 'ai') return t === 0 ? '당신' : 'AI ' + t;
+    if (S.mode === 'ai') return t === 0 ? '당신' : (G.n > 2 ? 'AI ' + t : 'AI');
     if (p.kind === 'none') return '';
     if (p.key === P.me) return '나';
     if (p.kind === 'ai') return 'AI';
@@ -478,6 +488,7 @@
   }
   function pump() {
     while (inbox.length && !busy) {
+      if (inbox.length > 2) { inbox.splice(0, inbox.length - 1); seen = -2; }   // 많이 밀렸으면 연출 없이 최신 판으로 따라잡는다
       const g = inbox.shift(), next = g.seq === seen + 1;
       const prev = snapshot();
       G = g;
@@ -491,23 +502,29 @@
   function dealOnline(reset) {
     if (!isHost() || P.status !== 'live') return;
     P.prune();
-    while (P.lineup().length < N && P.members.length < N) P.addAI();
+    // 사람이 셋이면 늘 셋이 치고, 모자라면 방장이 고른 인원까지 AI 가 앉는다
+    const people = P.members.filter(m => m.kind !== 'ai').length, want = Math.max(2, Math.min(MAXN, Math.max(S.count, people)));
+    const ais = () => P.members.filter(m => m.kind === 'ai').length;
+    for (let k = 0; k < MAXN && ais() > want - people; k++) P.removeAI();
+    for (let k = 0; k < MAXN && ais() < want - people; k++) P.addAI();
     const seats = P.lineup();
-    if (seats.length !== N) return;
+    if (seats.length !== want) return;
     clearTimeout(aiTimer);
     asks.length = 0;
     const old = G, keep = !reset && old && old.over;
     const players = seats.map(m => ({ key: m.key, name: m.name, kind: m.kind }));
     const total = players.map(p => { const i = keep ? old.players.findIndex(q => q.key === p.key) : -1; return i >= 0 ? old.total[i] : 0; });
+    const sameTable = keep && old.n === players.length;
     const firstKey = keep ? old.players[old.winner >= 0 ? old.winner : old.first].key : '';
-    G = freshGame(old ? old.seq : 0, players, firstKey, keep && old.winner < 0 ? old.carry + 1 : 0, total);
+    G = freshGame(old ? old.seq : 0, players, firstKey, sameTable && old.winner < 0 ? old.carry + 1 : 0, total);
     commit();
   }
   function nextRound() {
     if (!G.over || busy) return;
     if (S.mode === 'online') { dealOnline(false); return; }
     const w = G.winner;
-    G = freshGame(G.seq, aiPlayers(), G.players[w >= 0 ? w : G.first].key, w >= 0 ? 0 : G.carry + 1, G.total);
+    const same = G.n === S.count;                                // 인원을 바꿨으면 누적 점수는 새로 센다
+    G = freshGame(G.seq, aiPlayers(), same ? G.players[w >= 0 ? w : G.first].key : '', same && w < 0 ? G.carry + 1 : 0, same ? G.total : null);
     commit();
   }
   function newMatch() {
@@ -516,6 +533,12 @@
     if (S.mode === 'online') { if (inPlay()) dealOnline(true); return; }
     G = freshGame(G ? G.seq : 0, aiPlayers());
     commit();
+  }
+  function setCount(n) {
+    S.count = n;
+    if (S.mode === 'ai') { if (!busy) newMatch(); else save(); return; }
+    save();
+    render();                                                    // 온라인: 다음에 돌리는 판부터 적용
   }
   function setMode(mode) {
     if (S.mode === 'online') P.leave();
@@ -565,7 +588,7 @@
     el.setAttribute('aria-label', M.cardName(id));
     el.dataset.id = id;
     const img = document.createElement('img');
-    img.src = '../matgo/cards/' + String(id).padStart(2, '0') + '.svg';   // 위키미디어 공용 SVG Hwatu 세트 (CC BY-SA 4.0). 맞고와 같이 쓴다
+    img.src = 'cards/' + String(id).padStart(2, '0') + '.svg';   // 위키미디어 공용 SVG Hwatu 세트 (CC BY-SA 4.0)
     img.alt = '';
     img.draggable = false;
     el.appendChild(img);
@@ -597,9 +620,9 @@
       container.appendChild(g);
     }
   }
-  // 자리 셋을 한 번 만들어 두고, 보는 사람에 따라 위(상대 둘)·아래(나)로 옮겨 놓는다
+  // 자리 셋을 한 번 만들어 두고, 보는 사람에 따라 위(상대)·아래(나)로 옮겨 놓는다. 둘이 칠 땐 셋째 자리를 숨긴다
   function buildSeats() {
-    for (let t = 0; t < N; t++) {
+    for (let t = 0; t < MAXN; t++) {
       const seat = mk('div', 'seat'); seat.id = 'seat-' + t; seat.dataset.team = t;
       const head = mk('div', 'seat-head');
       const name = mk('span', 'seat-name'); name.id = 'name-' + t;
@@ -615,14 +638,17 @@
 
   // ---------- 화면 ----------
   function render() {
-    const online = S.mode === 'online', me = mySeat(), vs = me >= 0 ? me : 0, can = canAct(), playing = inPlay();
+    const online = S.mode === 'online', me = mySeat(), vs = me >= 0 ? me : 0, can = canAct(), playing = inPlay(), N = G.n;
     const real = G.players[0].kind !== 'none';
     const newIds = new Set(G.last ? G.last.take : []);
     const pickOpts = G.stage === 'pick' && G.pend && G.pend.pick ? new Set(G.pend.pick.opts) : new Set();
     // 다음 차례가 오른쪽에 오도록: 위 왼쪽 = 내 앞 차례, 위 오른쪽 = 내 다음 차례
-    const place = [[(vs + 2) % N, 'opps'], [(vs + 1) % N, 'opps'], [vs, 'mine']];
+    const place = N === 2 ? [[1 - vs, 'opps'], [vs, 'mine']] : [[(vs + 2) % N, 'opps'], [(vs + 1) % N, 'opps'], [vs, 'mine']];
+    for (let t = N; t < MAXN; t++) { $('seat-' + t).hidden = true; $('hold').appendChild($('seat-' + t)); }
+    $('opps').style.setProperty('--opps', N - 1);
     place.forEach(([t, where], k) => {
       const seat = $('seat-' + t), box = $(where);
+      seat.hidden = false;
       if (seat.parentNode !== box || box.children[where === 'opps' ? k : 0] !== seat) box.appendChild(seat);
       seat.classList.toggle('opp', where === 'opps');
     });
@@ -737,14 +763,15 @@
         R.mults.forEach(([n, k]) => ul.appendChild(mk('li', '', n + ' ×' + k)));
         rs.appendChild(ul);
         const each = R.base + G.go[G.winner];
-        rs.appendChild(mk('p', 'sum', '한 사람당 기본 ' + R.base + '점' + (G.go[G.winner] ? ' + ' + G.go[G.winner] + '고' : '') + (R.mults.length ? ' × ' + R.mults.map(x => x[1]).join(' × ') : '') + (R.mults.length || G.go[G.winner] ? ' = ' + R.mults.reduce((a, x) => a * x[1], each) + '점' : '') + (R.gukjinAsPi ? ' (국진은 쌍피로)' : '')));
+        rs.appendChild(mk('p', 'sum', (N > 2 ? '한 사람당 기본 ' : '기본 ') + R.base + '점' + (G.go[G.winner] ? ' + ' + G.go[G.winner] + '고' : '') + (R.mults.length ? ' × ' + R.mults.map(x => x[1]).join(' × ') : '') + (R.mults.length || G.go[G.winner] ? ' = ' + R.mults.reduce((a, x) => a * x[1], each) + '점' : '') + (R.gukjinAsPi ? ' (국진은 쌍피로)' : '')));
         const pays = mk('ul', 'pays');
         R.pays.forEach(p => pays.appendChild(mk('li', '', label(p.t) + ' ' + (p.owe ? '−' + p.owe + '점' : '0점') + (p.tags.length ? ' · ' + p.tags.join('·') : ''))));
         rs.appendChild(pays);
       } else rs.appendChild(mk('p', '', R.text));
       const w = G.winner >= 0 ? G.winner : G.first;
       const canDeal = !online || (isHost() && P.status === 'live');
-      rs.appendChild(button('btn primary', '다음 판 (선: ' + TEAM[w] + ')', nextRound, !canDeal || busy));
+      const nextN = online ? Math.max(2, S.count, P.members.filter(m => m.kind !== 'ai' && m.on).length) : S.count;
+      rs.appendChild(button('btn primary', '다음 판 (' + Math.min(MAXN, nextN) + '명' + (nextN === N ? ' · 선: ' + TEAM[w] : '') + ')', nextRound, !canDeal || busy));
       if (online && !isHost()) rs.appendChild(mk('p', 'fine', '방장이 다음 판을 돌리길 기다리는 중…'));
     }
     // 대기실
@@ -753,16 +780,16 @@
     if (lobby) {
       const list = mk('ul', 'who');
       P.members.forEach((m, k) => { const li = mk('li', '', TEAM[k] + ' · ' + P.nameOf(m) + (m.key === P.me ? ' (나)' : '')); li.dataset.team = k; list.appendChild(li); });
-      for (let k = P.members.length; k < N; k++) list.appendChild(mk('li', 'empty', isHost() || true ? 'AI가 채울 자리' : '빈자리'));
-      wt.append(mk('h3', '', '대기실 · ' + P.members.length + '/' + N + '명'), mk('p', 'code', P.code), list);
+      const people = P.members.filter(m => m.kind !== 'ai').length, want = Math.max(2, S.count, people);
+      for (let k = P.members.length; k < MAXN; k++) list.appendChild(mk('li', 'empty', k < want ? 'AI가 앉을 자리' : '빈자리'));
+      wt.append(mk('h3', '', '대기실 · ' + P.members.length + '/' + MAXN + '명'), mk('p', 'code', P.code), list);
       if (isHost()) {
-        const people = P.members.filter(m => m.kind !== 'ai').length;
         const row = mk('div', 'actions');
         row.append(
-          button('btn primary', people < N ? '시작 (빈자리는 AI)' : '시작 (3명)', P.start),
+          button('btn primary', '시작 (' + want + '명' + (want === 2 ? ' · 맞고' : '') + (want > people ? ' · AI ' + (want - people) : '') + ')', P.start),
           button('btn', location.protocol === 'file:' ? '방 코드 복사' : '초대 링크 복사', P.copyInvite)
         );
-        wt.append(mk('p', '', '고스톱은 셋이 칩니다. 친구가 다 들어오면 시작을 누르세요. 모자란 자리는 AI가 앉습니다.'), row);
+        wt.append(mk('p', '', '설정의 "인원"에서 2명(맞고)·3명(고스톱)을 고르세요. 모자란 자리는 AI가 앉고, 사람이 셋 모이면 셋이 칩니다.'), row);
       } else {
         wt.appendChild(mk('p', '', '방장이 시작하길 기다리는 중…'));
       }
@@ -785,6 +812,9 @@
     $('mode-ai').checked = S.mode === 'ai';
     $('mode-online').checked = online;
     $('level-' + S.level).checked = true;
+    $('count-' + S.count).checked = true;
+    $('fs-count').hidden = online && !isHost();
+    $('count-legend').textContent = online ? '인원 (모자라면 AI)' : '인원 (나 + AI)';
     $('fs-level').hidden = online && !isHost();
     P.renderPanel(online);
     $('btn-new').disabled = online && !(isHost() && playing);
@@ -801,7 +831,7 @@
     document.querySelectorAll('.card[data-id]').forEach(el => map.set(+el.dataset.id, { r: el.getBoundingClientRect(), w: where(el) }));
     const deck = $('deck-card');
     map.set('deck', (deck || $('floor')).getBoundingClientRect());
-    for (let t = 0; t < N; t++) { const h = $('hand-' + t).querySelector('.card') || $('hand-' + t); map.set('hand' + t, h.getBoundingClientRect()); }
+    for (let t = 0; t < MAXN; t++) { const h = $('hand-' + t).querySelector('.card') || $('hand-' + t); map.set('hand' + t, h.getBoundingClientRect()); }
     map.set('floor', $('floor').getBoundingClientRect());
     return map;
   }
@@ -886,6 +916,7 @@
   function bindControls() {
     document.querySelectorAll('input[name="mode"]').forEach(r => r.addEventListener('change', () => setMode(r.value)));
     document.querySelectorAll('input[name="level"]').forEach(r => r.addEventListener('change', () => { S.level = r.value; save(); }));
+    document.querySelectorAll('input[name="count"]').forEach(r => r.addEventListener('change', () => setCount(Number(r.value))));
     $('btn-new').addEventListener('click', newMatch);
   }
   function start() {
@@ -893,7 +924,9 @@
     if (saved && typeof saved === 'object') {
       if (['ai', 'online'].includes(saved.mode)) S.mode = saved.mode;
       if (['easy', 'normal', 'hard'].includes(saved.level)) S.level = saved.level;
+      if ([2, 3].includes(saved.count)) S.count = saved.count;
       G = cleanGame(saved.game);
+      if (G && S.mode === 'ai') S.count = G.n;
       if (G && S.mode === 'ai' && !G.players.every((p, i) => p.kind === (i ? 'ai' : 'me'))) G = null;   // 온라인에서 하던 판은 혼자 이어 가지 않는다
     }
     if (!G) G = freshGame(0, S.mode === 'ai' ? aiPlayers() : nobody());

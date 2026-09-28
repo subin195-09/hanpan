@@ -14,12 +14,12 @@ shared/
   online.js       온라인 공용 모듈 (PeerJS WebRTC). createOnline = 2인 방, createParty = 여럿이 하는 방(대기실·방장 시작·AI 자리·재접속)
   site.js         공통 바닥글, 광고 자리 채우기, 통계
   site.css        공통 스타일 (돌아가기 링크, 바닥글, 광고 자리)
-reversi/ omok/ yut/ alkkagi/ matgo/ gostop/ onecard/ mines/   (spot/ 은 목록에서 뺀 틀린그림찾기 — games.js에 다시 넣으면 살아난다)
+reversi/ omok/ yut/ alkkagi/ gostop/ onecard/ mines/   (spot/ 은 목록에서 뺀 틀린그림찾기 — games.js에 다시 넣으면 살아난다)
   index.html      게임 한 개 = HTML 파일 한 개 (디자인·규칙·AI 모두 이 안에)
   thumb.svg       놀이방 목록에 보이는 판 그림 (정사각형)
 ```
 
-게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(2~4팀, 힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 고스톱(3인. `gostop/engine.js`는 맞고 엔진을 세 사람용으로 옮긴 것, 화투 그림은 `matgo/cards/`를 같이 씀. 엔진을 고치면 `node tools/test-gostop.js`로 검사) · 원카드(`onecard/engine.js` 순수 엔진, 2~4명, AI·온라인만. 엔진을 고치면 `node tools/test-onecard.js`로 검사. 카드 그림은 `onecard/cards/`의 Byron Knoll 세트, 퍼블릭 도메인) · 지뢰찾기(혼자, 랭킹 보드).
+게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(2~4팀, 힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 고스톱(둘이 치면 맞고, 셋이 치면 고스톱. `gostop/engine.js` 순수 엔진은 화면과 node 검사 `node tools/test-gostop.js`가 같이 씀, AI·온라인만. 화투 그림은 `gostop/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지. `matgo/`는 옛 주소를 고스톱으로 넘겨 주는 쪽지만 남아 있다) · 원카드(`onecard/engine.js` 순수 엔진, 2~4명, AI·온라인만. 엔진을 고치면 `node tools/test-onecard.js`로 검사. 카드 그림은 `onecard/cards/`의 Byron Knoll 세트, 퍼블릭 도메인) · 지뢰찾기(혼자, 랭킹 보드).
 
 ## 게임 추가하는 법
 

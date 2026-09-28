@@ -1047,6 +1047,7 @@
   }
   function pump() {
     if (busy || !inbox.length) return;
+    if (inbox.length > 2) { inbox.splice(0, inbox.length - 1); seen = -2; }   // 많이 밀렸으면 연출 없이 최신 판으로 따라잡는다
     const g = inbox.shift(), next = g.seq === seen + 1;
     G = g;
     save();

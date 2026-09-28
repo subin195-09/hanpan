@@ -1,8 +1,10 @@
-/* 고스톱(3인) 규칙 엔진 — 화면과 무관한 순수 상태 함수. index.html 과 node 테스트(tools/test-gostop.js)가 같이 쓴다.
- * matgo/engine.js 를 세 사람용으로 옮긴 것: 각자 7장, 바닥 6장, 더미 21장. 차례는 0 → 1 → 2.
+/* 고스톱 규칙 엔진 (둘이 치면 맞고, 셋이 치면 고스톱) — 화면과 무관한 순수 상태 함수.
+ * index.html 과 node 테스트(tools/test-gostop.js)가 같이 쓴다. 상태 G 는 JSON 으로 그대로 주고받는다.
+ * 둘: 각자 10장, 바닥 8장. 셋: 각자 7장, 바닥 6장. 차례는 자리 번호 순.
  * 흐름: play(카드) → [pick] → flip → [pick] → finish → [go/stop] → 다음 차례. 손패가 없으면 뒤집기만 한다.
- * 셈: 난 사람이 진 두 사람에게서 각각 점수를 받는다(누적은 주고받기라 합이 0). 피박·광박·멍박은 진 사람마다 따로 따지고,
- *   고를 부른 사람이 지면 고박(독박) — 다른 진 사람 몫까지 혼자 낸다. 쪽·따닥·뻑 먹기·싹쓸이·폭탄은 두 사람 모두에게서 피를 한 장씩 가져온다. */
+ * 셈: 난 사람이 진 사람마다 점수를 받는다(누적은 주고받기라 합이 0). 피박(둘 7장 미만, 셋 6장 미만)·광박·멍박은 진 사람마다 따로.
+ *   고박: 고를 부르고 지면 — 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 낸다(독박).
+ *   쪽·따닥·뻑 먹기·싹쓸이·폭탄은 다른 사람 모두에게서 피를 한 장씩 가져온다. */
 (function (root) {
   const MONTH = ['', '송학', '매조', '벚꽃', '흑싸리', '난초', '모란', '홍싸리', '공산', '국화', '단풍', '오동', '비'];
   const YEOL_NAME = { 2: '휘파람새', 4: '두견새', 5: '다리', 6: '나비', 7: '멧돼지', 8: '기러기', 9: '국진', 10: '사슴', 12: '제비' };
@@ -24,8 +26,9 @@
   const CARDS = [];
   for (let m = 1; m <= 12; m++) SPEC[m].forEach(([t, sub], k) => CARDS.push({ id: (m - 1) * 4 + k, m, t, sub: sub || '', pv: t === 'p' ? (sub === 'ssang' ? 2 : 1) : 0 }));
   const C = id => CARDS[id];
-  const N = 3, HAND = 7, FLOOR = 6, PIBAK = 6;                     // 피박: 진 사람 피가 6장 미만
-  const zeros = () => Array(N).fill(0);
+  const MAX_PLAYERS = 3;
+  const RULES = { 2: { hand: 10, floor: 8, pibak: 7 }, 3: { hand: 7, floor: 6, pibak: 6 } };   // pibak: 진 사람 피가 이보다 적으면 피박
+  const seatsOf = n => Array.from({ length: n }, (_, i) => i);
 
   function rng(seed) {
     let a = seed >>> 0;
@@ -72,13 +75,15 @@
   }
 
   // ---------- 판 시작 ----------
-  function deal(seed, first, carry, total) {
+  function deal(seed, first, carry, total, n) {
+    const N = n === 2 ? 2 : 3, HAND = RULES[N].hand, FLOOR = RULES[N].floor;
+    const zeros = () => Array(N).fill(0);
     const r = rng(seed);
     let deck;
     for (let tries = 0; tries < 50; tries++) {
       deck = CARDS.map(c => c.id);
       for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
-      const hs = [0, 1, 2].map(i => deck.slice(HAND * i, HAND * (i + 1))), fl = deck.slice(HAND * N, HAND * N + FLOOR);
+      const hs = seatsOf(N).map(i => deck.slice(HAND * i, HAND * (i + 1))), fl = deck.slice(HAND * N, HAND * N + FLOOR);
       // 바닥에 같은 달 3장 이상, 손에 같은 달 4장(총통)은 다시 섞는다
       const bad = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].some(m => countMonth(fl, m) >= 3 || hs.some(h => countMonth(h, m) === 4));
       if (!bad) break;
@@ -86,8 +91,8 @@
     first = Number.isInteger(first) && first >= 0 && first < N ? first : 0;
     return {
       seed, n: N, first, turn: first, carry: carry || 0, total: total && total.length === N ? total.slice() : zeros(),
-      hands: [0, 1, 2].map(i => deck.slice(HAND * i, HAND * (i + 1))), floor: deck.slice(HAND * N, HAND * N + FLOOR), deck: deck.slice(HAND * N + FLOOR).reverse(),   // pop() 이 다음 장
-      caps: [[], [], []], go: zeros(), goAt: zeros(), mult: zeros(),
+      hands: seatsOf(N).map(i => deck.slice(HAND * i, HAND * (i + 1))), floor: deck.slice(HAND * N, HAND * N + FLOOR), deck: deck.slice(HAND * N + FLOOR).reverse(),   // pop() 이 다음 장
+      caps: seatsOf(N).map(() => []), go: zeros(), goAt: zeros(), mult: zeros(),
       stage: 'play', pend: null, over: false, winner: -1, result: null, log: [], last: null
     };
   }
@@ -184,7 +189,7 @@
     return true;
   }
   function finish(G) {
-    const P = G.pend, t = G.turn, o = (t + 1) % N;
+    const P = G.pend, t = G.turn, N = G.n, o = (t + 1) % N;
     if (P.hold) { P.take.push(...P.hold); P.hold = null; }
     G.caps[t].push(...P.take);
     if (G.floor.length === 0 && P.take.length && P.floorAtStart > 0) { P.pi++; P.notes.push('싹쓸이'); }
@@ -216,7 +221,7 @@
     G.goAt[t] = best(G.caps[t]).s;
     G.log.push({ t, s: G.go[t] + '고!' });
     if (G.deck.length === 0) return nagari(G);
-    G.turn = (t + 1) % N; G.stage = 'play';
+    G.turn = (t + 1) % G.n; G.stage = 'play';
     return true;
   }
   function nagari(G) {
@@ -236,7 +241,7 @@
     if (G.carry) mults.push(['나가리 이월', Math.pow(2, G.carry)]);
     let common = base;
     for (const [, k] of mults) common *= k;
-    const pays = [];
+    const pays = [], N = G.n, PIBAK = RULES[N].pibak;
     for (let k = 1; k < N; k++) {
       const l = (w + k) % N, theirs = best(G.caps[l]), tags = [];
       let pts = common;
@@ -245,9 +250,11 @@
       if (mine.yeol >= 7 && theirs.yeol === 0) { pts *= 2; tags.push('멍박'); }
       pays.push({ t: l, pts, owe: pts, tags });
     }
-    // 고박: 고를 부르고 진 사람이 (혼자라면) 다른 사람 몫까지 낸다
+    // 고박: 둘이 칠 땐 2배. 셋이 칠 땐 고를 부르고 진 사람이 (혼자라면) 다른 사람 몫까지 낸다
     const gone = pays.filter(p => G.go[p.t] > 0);
-    if (gone.length === 1) {
+    if (N === 2) {
+      if (gone.length) { gone[0].pts *= 2; gone[0].owe *= 2; gone[0].tags.push('고박'); }
+    } else if (gone.length === 1) {
       const other = pays.find(p => p !== gone[0]);
       gone[0].owe += other.owe; gone[0].tags.push('고박');
       other.owe = 0; other.tags.push('면제');
@@ -335,5 +342,5 @@
     return Math.random() < Math.max(0.05, Math.min(0.9, p));
   }
 
-  root.GoStop = { N, HAND, FLOOR, PIBAK, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
+  root.GoStop = { MAX_PLAYERS, RULES, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
 })(typeof window !== 'undefined' ? window : globalThis);

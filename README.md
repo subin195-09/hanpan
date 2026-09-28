@@ -11,7 +11,7 @@ ads.txt           애드센스 승인 뒤 한 줄 붙여 넣는 자리
 robots.txt sitemap.xml   검색 엔진용. tools/sitemap.js 로 다시 만든다
 shared/
   config.js       사이트 설정 — 광고·통계를 켤 때 이 파일만 고친다
-  online.js       온라인 2인 공용 모듈 (PeerJS WebRTC: 방 만들기/참가/재접속/동기화)
+  online.js       온라인 공용 모듈 (PeerJS WebRTC). createOnline = 2인 방, createParty = 여럿이 하는 방(대기실·방장 시작·AI 자리·재접속)
   site.js         공통 바닥글, 광고 자리 채우기, 통계
   site.css        공통 스타일 (돌아가기 링크, 바닥글, 광고 자리)
 reversi/ omok/ yut/ alkkagi/ matgo/ onecard/ mines/   (spot/ 은 목록에서 뺀 틀린그림찾기 — games.js에 다시 넣으면 살아난다)
@@ -19,7 +19,7 @@ reversi/ omok/ yut/ alkkagi/ matgo/ onecard/ mines/   (spot/ 은 목록에서 �
   thumb.svg       놀이방 목록에 보이는 판 그림 (정사각형)
 ```
 
-게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 원카드(`onecard/engine.js` 순수 엔진, AI·온라인만. 카드 그림은 `onecard/cards/`의 Byron Knoll 세트, 퍼블릭 도메인) · 지뢰찾기(혼자, 랭킹 보드).
+게임 목록: 오델로(리버시, 폴더는 reversi) · 오목 · 윷놀이(힘 조절 던지기, 너무 세면 낙) · 장기 알까기(말마다 크기·무게가 다른 물리) · 맞고(규칙 엔진 `matgo/engine.js`는 node 테스트와 화면이 같이 씀, AI·온라인만. 카드 그림은 `matgo/cards/`의 위키미디어 SVG Hwatu 세트, CC BY-SA 4.0 — 출처 표기 유지) · 원카드(`onecard/engine.js` 순수 엔진, 2~4명, AI·온라인만. 엔진을 고치면 `node tools/test-onecard.js`로 검사. 카드 그림은 `onecard/cards/`의 Byron Knoll 세트, 퍼블릭 도메인) · 지뢰찾기(혼자, 랭킹 보드).
 
 ## 게임 추가하는 법
 
@@ -37,6 +37,12 @@ reversi/ omok/ yut/ alkkagi/ matgo/ onecard/ mines/   (spot/ 은 목록에서 �
    - 시작할 때 `if (!O.boot(saved && saved.room)) { 평소처럼 시작 }`
    - 내 수를 둔 뒤 `O.send()`, 상대 상태는 `onState`에서 **검증 후** 반영
    - `O.status === 'live' && 차례 === O.my`일 때만 입력 허용
+
+5. 셋 이상이 하는 게임은 `Hanpan.createParty({...})`를 쓴다 (예: `onecard/`). 사용법은 `shared/online.js`의 createParty 주석 참고. 요점:
+   - 방장의 브라우저가 판을 쥔다. 참가자는 `P.act(수)`로 자기 수만 보내고, 방장이 `onAction`에서 **차례·규칙을 검증해** 반영한 뒤 `P.send()`로 판을 돌린다
+   - 방장이 "시작"을 누르면 `onStart`가 불린다. `P.lineup()`(연결된 사람 + AI)으로 판을 돌린다
+   - 판의 자리마다 `key`를 적어 두고 `P.me`와 비교해 내 자리를 찾는다
+   - AI 자리와 끊긴 사람(`!P.isOn(key)`)의 차례는 방장 쪽에서 AI가 둔다
 
 ## 광고·통계 켜는 법
 

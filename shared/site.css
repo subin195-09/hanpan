@@ -25,3 +25,10 @@
 /* 광고 자리: config.js 에 슬롯 번호가 들어오기 전에는 hidden 으로 공간을 차지하지 않는다 */
 .ad-slot { display: grid; gap: 4px; min-width: 0; overflow: hidden; }
 .ad-label { font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--ink-soft); }
+
+/* 여럿이 하는 방 (shared/online.js createParty) 의 이름 칸과 명단 */
+.join input.party-name { letter-spacing: 0; text-transform: none; font: 500 0.875rem/1.2 inherit; font-family: inherit; }
+.party-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 0.875rem; }
+.party-list li { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.party-list li b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.party-list li span { font-size: 0.75rem; color: var(--ink-soft); white-space: nowrap; }

@@ -1,12 +1,17 @@
 /* 원카드 규칙 엔진 — 화면과 무관한 순수 상태 함수. index.html 과 node 테스트가 같이 쓴다.
  * 카드 id: 0~51 = 무늬(0♠ 1♥ 2♦ 3♣)*13 + 순위(0=A … 12=K), 52 = 컬러 조커(+5), 53 = 흑 조커(+7)
- * 규칙(2인): 같은 무늬·같은 숫자를 낸다. 2 = +2, A = +3, 조커 = +5/+7. 공격은 공격 카드로 되받아 누적.
- *   공격은 같거나 더 센 공격 카드로만 막는다. J·K = 한 번 더, 7 = 무늬 바꾸기, 조커는 아무 때나(공격 중엔 공격으로) 낼 수 있다.
- *   한 장 남기면 '원카드' 선언을 해야 하고, 안 하고 차례를 넘기면 벌칙 1장. 손패 20장 초과면 파산. */
+ * 규칙(2~4인): 같은 무늬·같은 숫자를 낸다. 2 = +2, A = +3, 조커 = +5/+7. 공격은 다음 사람에게 가고, 공격 카드로 되받으면 누적되어 그다음 사람에게 넘어간다.
+ *   공격은 같거나 더 센 공격 카드로만 막는다. 7 = 무늬 바꾸기, 조커는 아무 때나(공격 중엔 공격으로) 낼 수 있다.
+ *   J = 다음 사람 건너뛰기, Q = 방향 바꾸기, K = 한 번 더. 둘만 남았을 땐 J 도 한 번 더가 되고 Q 는 평범한 카드다.
+ *   한 장 남기면 '원카드' 선언을 해야 하고, 안 하고 차례를 넘기면 벌칙 1장.
+ *   손패가 기준(2인 20장, 3인 17장, 4인 15장)을 넘으면 파산: 탈락하고 손패는 더미로 돌아간다. 혼자 남으면 그 사람이 이긴다.
+ *   더미도 바닥도 다 떨어져 한 바퀴 내내 아무도 못 내고 못 먹으면 손패가 가장 적은 사람이 이긴다. */
 (function (root) {
   const SUITS = ['♠', '♥', '♦', '♣'], SUIT_NAME = ['스페이드', '하트', '다이아', '클로버'];
   const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-  const JOKER_C = 52, JOKER_B = 53, MAX_HAND = 20, START_HAND = 7;
+  const JOKER_C = 52, JOKER_B = 53, MAX_HAND = 20, START_HAND = 7, MAX_PLAYERS = 4;
+  const LIMITS = { 2: 20, 3: 17, 4: 15 };                        // 파산 기준: 사람이 많을수록 카드가 모자라므로 낮춘다
+  const limitOf = G => G.limit || MAX_HAND;
   const suitOf = id => (id >= 52 ? -1 : Math.floor(id / 13));
   const rankOf = id => (id >= 52 ? -1 : id % 13);
   const isJoker = id => id >= 52;
@@ -23,24 +28,36 @@
       return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
   }
-  function deal(seed, first) {
+  function deal(seed, first, n) {
+    n = Number.isInteger(n) && n >= 2 && n <= MAX_PLAYERS ? n : 2;
+    first = Number.isInteger(first) && first >= 0 && first < n ? first : 0;
     const r = rng(seed);
     let deck;
     for (let tries = 0; tries < 50; tries++) {
       deck = Array.from({ length: 54 }, (_, i) => i);
       for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; }
-      const top = deck[START_HAND * 2];
-      if (!isJoker(top) && attackOf(top) === 0 && rankOf(top) !== 6 && rankOf(top) !== 9 && rankOf(top) !== 12) break;   // 첫 장은 평범한 카드
+      const top = deck[START_HAND * n];
+      if (!isJoker(top) && attackOf(top) === 0 && rankOf(top) !== 6 && rankOf(top) < 10) break;   // 첫 장은 평범한 카드
     }
-    const hands = [deck.slice(0, START_HAND), deck.slice(START_HAND, START_HAND * 2)];
-    const pile = [deck[START_HAND * 2]];
+    const hands = Array.from({ length: n }, (_, i) => deck.slice(START_HAND * i, START_HAND * (i + 1)));
+    const pile = [deck[START_HAND * n]];
     return {
-      seed, first, turn: first, hands, pile, draw: deck.slice(START_HAND * 2 + 1).reverse(),   // pop() 이 다음 장
-      suit: suitOf(pile[0]), attack: 0, declared: [false, false], stage: 'play',   // play | suit(무늬 고르기) | over
+      seed, n, limit: LIMITS[n], idle: 0, first, turn: first, dir: 1, out: Array(n).fill(false),   // dir: 1 = 자리 번호 순, -1 = 거꾸로
+      hands, pile, draw: deck.slice(START_HAND * n + 1).reverse(),   // pop() 이 다음 장
+      suit: suitOf(pile[0]), attack: 0, declared: Array(n).fill(false), stage: 'play',   // play | suit(무늬 고르기) | over
       over: false, winner: -1, why: '', log: [], last: null, drawn: 0
     };
   }
   const top = G => G.pile[G.pile.length - 1];
+  const alive = G => G.out.filter(o => !o).length;
+  // t 다음 차례 (탈락한 자리는 건너뛴다)
+  function nextSeat(G, t, steps) {
+    let s = t;
+    for (let k = 0; k < (steps || 1); k++) {
+      for (let i = 0; i < G.n; i++) { s = (s + G.dir + G.n) % G.n; if (!G.out[s]) break; }
+    }
+    return s;
+  }
   // 더미가 비면 바닥의 맨 위 한 장만 남기고 섞어 더미로 (시드 난수라 두 화면이 같다)
   function refill(G) {
     if (G.draw.length) return true;
@@ -62,18 +79,34 @@
     return suitOf(id) === G.suit || rankOf(id) === rankOf(t);
   }
   function playable(G, team) { return G.hands[team].filter(id => canPlay(G, id)); }
-  function endTurn(G, t) {
+  function endTurn(G, t, skip) {
     // 한 장 남기고 선언을 안 했으면 벌칙 1장
     if (G.hands[t].length === 1 && !G.declared[t]) {
       if (refill(G)) { G.hands[t].push(G.draw.pop()); G.log.push({ t, s: '원카드 선언 안 함 · 벌칙 1장' }); }
     }
     if (G.hands[t].length !== 1) G.declared[t] = false;
-    G.turn = 1 - t;
+    G.turn = nextSeat(G, t, skip ? 2 : 1);
     G.stage = 'play';
   }
+  // 판이 끝났으면 true. 파산으로 탈락만 했으면(판은 계속) G.out[t] 가 선다
   function finishIfOver(G, t) {
     if (G.hands[t].length === 0) { G.over = true; G.winner = t; G.stage = 'over'; G.why = '손패를 다 냈습니다'; G.log.push({ t, s: '마지막 카드 · 승리' }); return true; }
-    if (G.hands[t].length > MAX_HAND) { G.over = true; G.winner = 1 - t; G.stage = 'over'; G.why = '손패가 ' + MAX_HAND + '장을 넘어 파산'; G.log.push({ t, s: '파산 (' + G.hands[t].length + '장)' }); return true; }
+    if (G.hands[t].length > limitOf(G)) {
+      if (alive(G) <= 2) {
+        G.over = true; G.winner = nextSeat(G, t); G.stage = 'over';
+        G.why = G.n === 2 ? '손패가 ' + limitOf(G) + '장을 넘어 파산' : '모두 파산해 혼자 남았습니다';
+        G.out[t] = true;
+        G.log.push({ t, s: '파산 (' + G.hands[t].length + '장)' });
+        return true;
+      }
+      // 탈락: 손패를 섞어 더미 밑으로 돌려보내고 남은 사람끼리 계속
+      const back = G.hands[t].splice(0);
+      G.log.push({ t, s: '파산 탈락 (' + back.length + '장)' });
+      const r = rng((G.seed + G.log.length * 104729) >>> 0);
+      for (let i = back.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [back[i], back[j]] = [back[j], back[i]]; }
+      G.draw = back.concat(G.draw);
+      G.out[t] = true; G.declared[t] = false;
+    }
     return false;
   }
   function play(G, id, newSuit) {
@@ -86,6 +119,7 @@
     const atk = attackOf(id);
     if (atk) { G.attack += atk; parts.push('공격 +' + atk + ' (누적 ' + G.attack + ')'); }
     G.last = { t, id, type: 'play' };
+    G.idle = 0;
     if (finishIfOver(G, t)) { G.log.push({ t, s: parts.join(' · ') }); return true; }
     const r = rankOf(id);
     if (r === 6 && !atk) {                                        // 7: 무늬 고르기
@@ -94,7 +128,10 @@
     }
     if (isJoker(id)) G.suit = -1;                                 // 조커 위엔 아무 무늬
     G.log.push({ t, s: parts.join(' · ') });
-    if (r === 10 || r === 12) { G.declared[t] = G.hands[t].length === 1 ? G.declared[t] : false; G.log.push({ t, s: (r === 10 ? 'J' : 'K') + ' · 한 번 더' }); G.stage = 'play'; return true; }   // 한 번 더
+    const many = alive(G) > 2;
+    if (r === 12 || (r === 10 && !many)) { G.declared[t] = G.hands[t].length === 1 ? G.declared[t] : false; G.log.push({ t, s: (r === 10 ? 'J' : 'K') + ' · 한 번 더' }); G.stage = 'play'; return true; }   // 한 번 더
+    if (r === 10) { G.log.push({ t, s: 'J · 다음 사람 건너뜀' }); endTurn(G, t, true); return true; }
+    if (r === 11 && many) { G.dir = -G.dir; G.log.push({ t, s: 'Q · 방향 바꿈' }); }
     endTurn(G, t);
     return true;
   }
@@ -116,6 +153,13 @@
     G.log.push({ t, s: (G.attack > 0 ? '공격 ' + G.attack + '장 먹음' : '한 장 먹음') + (got < n ? ' (더미 부족, ' + got + '장)' : '') });
     G.attack = 0;
     G.drawn++;
+    G.idle = got ? 0 : (G.idle || 0) + 1;
+    if (G.idle >= alive(G)) {                                     // 한 바퀴 내내 아무도 못 내고 못 먹었다
+      let w = -1;
+      for (let k = 1, s = t; k <= alive(G); k++) { s = nextSeat(G, s); if (w < 0 || G.hands[s].length < G.hands[w].length) w = s; }
+      G.over = true; G.winner = w; G.stage = 'over'; G.why = '카드가 다 떨어져 손패가 가장 적은 쪽 승리';
+      return true;
+    }
     if (finishIfOver(G, t)) return true;
     endTurn(G, t);
     return true;
@@ -131,7 +175,7 @@
 
   // ---------- AI ----------
   function aiMove(G, level) {
-    const t = G.turn, hand = G.hands[t], opp = G.hands[1 - t];
+    const t = G.turn, hand = G.hands[t], opp = G.hands[nextSeat(G, t)], many = alive(G) > 2;   // opp: 내 공격을 받을 다음 사람
     if (G.stage === 'suit') {                                     // 손에 가장 많은 무늬
       const cnt = [0, 0, 0, 0]; hand.forEach(id => { if (!isJoker(id)) cnt[suitOf(id)]++; });
       return { type: 'suit', suit: cnt.indexOf(Math.max(...cnt)) };
@@ -144,7 +188,9 @@
       const a = attackOf(id), r = rankOf(id);
       if (G.attack > 0) s += 10 + a;                              // 공격은 되받는다
       else if (a) s += opp.length <= 2 ? 8 + a : 2 + a * 0.4;     // 상대가 나가기 직전이면 공격
-      if (r === 10 || r === 12) s += hand.length <= 3 ? 6 : 3;    // 한 번 더
+      if (r === 12 || (r === 10 && !many)) s += hand.length <= 3 ? 6 : 3;    // 한 번 더
+      else if (r === 10) s += opp.length <= 2 ? 7 : 2;            // 나가기 직전인 사람을 건너뛴다
+      else if (r === 11 && many) s += opp.length <= 2 ? 5 : 0.5;  // 방향을 돌려 피한다
       if (r === 6) s += 2.5;
       if (isJoker(id)) s -= G.attack > 0 || opp.length <= 2 ? 0 : 6;   // 조커는 아껴 둔다
       if (!isJoker(id)) s += cnt[suitOf(id)] * 0.6;               // 많은 무늬로 이어 간다
@@ -159,5 +205,5 @@
     return out;
   }
 
-  root.OneCard = { SUITS, SUIT_NAME, RANKS, JOKER_C, JOKER_B, MAX_HAND, suitOf, rankOf, isJoker, attackOf, name, deal, canPlay, playable, play, chooseSuit, drawCards, declare, aiMove, top, rng };
+  root.OneCard = { SUITS, SUIT_NAME, RANKS, JOKER_C, JOKER_B, MAX_HAND, MAX_PLAYERS, LIMITS, limitOf, alive, nextSeat, suitOf, rankOf, isJoker, attackOf, name, deal, canPlay, playable, play, chooseSuit, drawCards, declare, aiMove, top, rng };
 })(typeof window !== 'undefined' ? window : globalThis);

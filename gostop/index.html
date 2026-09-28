@@ -97,11 +97,13 @@
   /* 상대 둘은 위에 나란히, 작은 패로 */
   .opps { display: grid; grid-template-columns: repeat(var(--opps, 2), minmax(0, 1fr)); gap: 10px; align-items: start; }
   .seat.opp { padding: 8px 10px; }
-  .seat.opp .hand { gap: 0; min-height: 0; }
+  .seat.opp .hand { gap: 0; min-height: calc(30px * 1.55); }
+  .opps .seat:not(.opp) .caps { min-height: calc(var(--cw) * 0.62 * 1.55 * 2 + 8px); align-content: start; }   /* 둘이 칠 때 상대 자리: 두 줄까지는 바닥판이 안 밀린다 */
   .seat.opp .hand .card { margin-left: calc(var(--cw) * -0.34); }
   .seat.opp .hand .card:first-child { margin-left: 0; }
   .seat.opp .seat-score { font-size: 1.05rem; }
-  .seat.opp { min-width: 0; }
+  .seat.opp { min-width: 0; align-content: start; height: 100%; }
+  .seat.opp .caps { min-height: calc(30px * 1.55 * 2 + 3px); align-content: start; }
   .seat.opp .card.mini { --cw: 30px; }
   .seat.opp .capgroup { flex-wrap: wrap; row-gap: 3px; min-width: 0; padding-left: calc(var(--cw-o) * 0.42); --cw-o: 30px; }
   .seat.opp .capgroup .lab { margin-left: calc(var(--cw-o) * -0.42); margin-right: calc(3px + var(--cw-o) * 0.42); }
@@ -112,6 +114,8 @@
     .seat.opp .caps { gap: 3px 8px; }
     .seat.opp .card.mini { --cw: 22px; }
     .seat.opp .capgroup { --cw-o: 22px; }
+    .seat.opp .caps { min-height: calc(22px * 1.55 * 4 + 9px); }
+    .seat.opp .hand { min-height: calc(22px * 1.55); }
     .seat.opp .seat-head { gap: 2px 8px; }
   }
 
@@ -128,6 +132,8 @@
   .seat-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
   .seat-name { font-weight: 700; color: var(--team); }
   .seat-score { font: 800 1.25rem/1 "Nanum Myeongjo", serif; }
+  .seat-coin { font: 700 0.9375rem/1 "Gothic A1", sans-serif; color: var(--gold); white-space: nowrap; }
+  .seat-coin.low { color: var(--accent); }
   .seat-score small { font: 500 0.75rem/1 "Gothic A1", sans-serif; color: var(--ink-soft); margin-left: 4px; }
   .seat-meta { font-size: 0.8125rem; color: var(--ink-soft); }
   .caps { display: flex; flex-wrap: wrap; gap: 4px 12px; min-height: calc(var(--cw) * 0.62 * 1.55 + 4px); }
@@ -139,6 +145,7 @@
   .caps { position: relative; z-index: 1; }
   .caps:hover { z-index: 30; }
   .hand { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.55 + 6px); }
+  .hand .back { margin-left: -14px; } .hand .back:first-child { margin-left: 0; }
 
   /* 바닥 */
   /* 바닥: 정사각형 담요. 4×4 칸 중 가운데 2×2는 더미, 둘레 12칸에 달별로 깐다 */
@@ -219,7 +226,7 @@
   <header class="masthead">
     <a class="home" href="../index.html">← 한 판 놀이방</a>
     <h1>고스톱 한 판</h1>
-    <p>둘이 치면 맞고, 셋이 치면 고스톱. 3점을 먼저 내고 고를 부를지, 스톱할지. 돈 없이 점수만 주고받습니다.</p>
+    <p>둘이 치면 맞고, 셋이 치면 고스톱. 3점을 먼저 내고 고를 부를지, 스톱할지. 놀이용 코인을 걸고 칩니다.</p>
   </header>
 
   <main class="table">
@@ -264,7 +271,7 @@
           </div>
         </fieldset>
         <div class="actions">
-          <button type="button" class="btn" id="btn-new">처음부터 새로</button>
+          <button type="button" class="btn" id="btn-new">처음부터 새로 (코인 초기화)</button>
         </div>
         <p class="fine">손패가 비밀이라 한 화면에서 같이 치기는 없습니다. 난 사람이 다음 판의 선입니다.</p>
       </section>
@@ -285,7 +292,8 @@
             <li>쪽(낸 패에 뒤집은 패가 붙음) · 따닥 · 뻑 먹기 · 싹쓸이는 다른 사람 모두에게서 피를 한 장씩 가져옵니다. 같은 달 3장을 들고 흔들면 2배, 바닥의 한 장에 3장을 한꺼번에 내는 폭탄은 2배에 피 한 장씩.</li>
             <li>난 사람은 진 사람마다 점수를 받습니다. 진 사람 피가 적으면(둘이 칠 땐 7장 미만, 셋이 칠 땐 6장 미만) 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박 — 그 사람만 2배.</li>
             <li>고박: 고를 부른 사람이 지면, 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 냅니다(진 두 사람이 모두 고를 불렀으면 각자 냅니다).</li>
-            <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배. 누적 점수는 주고받은 만큼 오르내립니다.</li>
+            <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배.</li>
+            <li>코인: 모두 10,000코인으로 시작하고 1점에 100코인입니다. 가진 것보다 많이 잃으면 가진 만큼만 내고 파산하며, 파산하면 다음 판에 10,000코인을 다시 받고 파산 횟수가 남습니다. 코인은 놀이용 점수일 뿐 돈이 아니고, 사거나 바꿀 수 없습니다.</li>
             <li>온라인은 최대 3명. 방장이 인원(2명·3명)을 고르고 "시작"을 누르면 시작합니다. 모자란 자리는 AI가 앉고, 사람이 셋 모이면 늘 셋이 칩니다. 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 칩니다.</li>
           </ul>
         </details>
@@ -302,7 +310,7 @@
 <script src="../shared/config.js"></script>
 <script src="../shared/online.js?v=2"></script>
 <script src="../shared/site.js"></script>
-<script src="engine.js?v=2"></script>
+<script src="engine.js?v=3"></script>
 <script>
 (() => {
   const M = window.GoStop, C = id => M.CARDS[id], MAXN = M.MAX_PLAYERS;
@@ -313,7 +321,7 @@
   // 바닥 칸: [열, 행] — 위 5칸, 오른쪽 가운데, 아래 5칸, 왼쪽 가운데. 가운데는 더미
   const SLOT_POS = [[0, 0], [1, 0], [2, 0], [3, 0], [3, 1], [3, 2], [3, 3], [2, 3], [1, 3], [0, 3], [0, 2], [0, 1]];
   const SLOT_ORDER = [1, 7, 4, 10, 2, 8, 0, 6, 3, 9, 5, 11];   // 보기 좋게 퍼지도록 채우는 순서
-  let slotOf = {}, slotSeed = 0;
+  let slotOf = {}, leftAt = {}, slotSeed = 0;   // slotOf: 달 → 칸, leftAt: 그 달이 바닥을 떠난 수(seq)
 
   // ---------- 상태 ----------
   const S = { mode: 'ai', level: 'normal', count: 3 };   // count: 몇 명이 칠지 (2 = 맞고, 3 = 고스톱)
@@ -325,9 +333,10 @@
   // 자리에 앉은 사람들: { key, name, kind: 'me'|'ai'|'host'|'guest'|'none' }
   const aiPlayers = () => Array.from({ length: S.count }, (_, i) => ({ key: i ? 'ai' + i : 'me', name: '', kind: i ? 'ai' : 'me' }));
   const nobody = () => Array.from({ length: S.count }, () => ({ key: '', name: '', kind: 'none' }));   // 방에 들어가기 전·대기실의 빈 판
-  function freshGame(seq, players, firstKey, carry, total) {
+  const coin = v => Number(v).toLocaleString('ko-KR') + '코인';
+  function freshGame(seq, players, firstKey, carry, total, bank) {
     const first = Math.max(0, players.findIndex(p => p.key && p.key === firstKey));
-    const g = M.deal(newSeed(), first, carry || 0, total && total.length === players.length ? total : null, players.length);
+    const g = M.deal(newSeed(), first, carry || 0, total && total.length === players.length ? total : null, players.length, bank);
     g.players = players;
     g.seq = seq || 0;
     return g;
@@ -415,14 +424,15 @@
       : Array.from({ length: N }, () => ({ key: '', name: '', kind: 'none' }));
     return {
       seed, n: N, first, turn, carry: int(d.carry, 0, 10) || 0, total: three(d.total, -1e7, 1e7),
+      coins: Array.from({ length: N }, (_, i) => { const v = int(d.coins && d.coins[i], 0, 1e9); return v === null ? M.START : v; }), bust: three(d.bust, 0, 1e6),
       hands, floor, deck, caps, go: three(d.go, 0, 20), goAt: three(d.goAt, 0, 200), mult: three(d.mult, 0, 10),
       stage, pend, over, winner: over && winner !== null ? winner : -1,
       result: R ? {
         nagari: !!R.nagari, text: typeof R.text === 'string' ? R.text.slice(0, 120) : '',
-        pts: int(R.pts, 0, 1e7) || 0, base: int(R.base, 0, 500) || 0, gukjinAsPi: !!R.gukjinAsPi,
+        pts: int(R.pts, 0, 1e7) || 0, coin: int(R.coin, 0, 1e9) || 0, base: int(R.base, 0, 500) || 0, gukjinAsPi: !!R.gukjinAsPi,
         lines: Array.isArray(R.lines) ? R.lines.map(s => String(s).slice(0, 30)).slice(0, 12) : [],
         mults: Array.isArray(R.mults) ? R.mults.filter(x => Array.isArray(x)).map(([n, k]) => [String(n).slice(0, 20), int(k, 1, 1024) || 1]).slice(0, 12) : [],
-        pays: Array.isArray(R.pays) ? R.pays.slice(0, N - 1).map(p => ({ t: seat(p && p.t), pts: int(p && p.pts, 0, 1e7) || 0, owe: int(p && p.owe, 0, 1e7) || 0, tags: Array.isArray(p && p.tags) ? p.tags.map(s => String(s).slice(0, 8)).slice(0, 6) : [] })) : []
+        pays: Array.isArray(R.pays) ? R.pays.slice(0, N - 1).map(p => ({ t: seat(p && p.t), pts: int(p && p.pts, 0, 1e7) || 0, owe: int(p && p.owe, 0, 1e7) || 0, coin: int(p && p.coin, 0, 1e9) || 0, tags: Array.isArray(p && p.tags) ? p.tags.map(s => String(s).slice(0, 8)).slice(0, 6) : [] })) : []
       } : null,
       log: Array.isArray(d.log) ? d.log.slice(-60).map(e => ({ t: seat(e && e.t), s: String((e && e.s) || '').slice(0, 80) })) : [],
       last: d.last && typeof d.last === 'object' ? { t: seat(d.last.t), played: okId(d.last.played) ? d.last.played : -1, flipped: okId(d.last.flipped) ? d.last.flipped : -1, take: idList(d.last.take) || [], notes: Array.isArray(d.last.notes) ? d.last.notes.map(String).slice(0, 8) : [] } : null,
@@ -513,10 +523,13 @@
     asks.length = 0;
     const old = G, keep = !reset && old && old.over;
     const players = seats.map(m => ({ key: m.key, name: m.name, kind: m.kind }));
-    const total = players.map(p => { const i = keep ? old.players.findIndex(q => q.key === p.key) : -1; return i >= 0 ? old.total[i] : 0; });
+    const from = p => (keep ? old.players.findIndex(q => q.key === p.key) : -1);
+    const total = players.map(p => (from(p) >= 0 ? old.total[from(p)] : 0));
+    // 코인은 사람(자리표)을 따라간다. 새로 온 사람과 새 AI 는 처음 코인으로 시작
+    const bank = { coins: players.map(p => (from(p) >= 0 ? old.coins[from(p)] : M.START)), bust: players.map(p => (from(p) >= 0 ? old.bust[from(p)] : 0)) };
     const sameTable = keep && old.n === players.length;
     const firstKey = keep ? old.players[old.winner >= 0 ? old.winner : old.first].key : '';
-    G = freshGame(old ? old.seq : 0, players, firstKey, sameTable && old.winner < 0 ? old.carry + 1 : 0, total);
+    G = freshGame(old ? old.seq : 0, players, firstKey, sameTable && old.winner < 0 ? old.carry + 1 : 0, total, bank);
     commit();
   }
   function nextRound() {
@@ -524,7 +537,8 @@
     if (S.mode === 'online') { dealOnline(false); return; }
     const w = G.winner;
     const same = G.n === S.count;                                // 인원을 바꿨으면 누적 점수는 새로 센다
-    G = freshGame(G.seq, aiPlayers(), same ? G.players[w >= 0 ? w : G.first].key : '', same && w < 0 ? G.carry + 1 : 0, same ? G.total : null);
+    const bank = { coins: aiPlayers().map((_, i) => (i < G.n ? G.coins[i] : M.START)), bust: aiPlayers().map((_, i) => (i < G.n ? G.bust[i] : 0)) };
+    G = freshGame(G.seq, aiPlayers(), same ? G.players[w >= 0 ? w : G.first].key : '', same && w < 0 ? G.carry + 1 : 0, same ? G.total : null, bank);
     commit();
   }
   function newMatch() {
@@ -534,9 +548,23 @@
     G = freshGame(G ? G.seq : 0, aiPlayers());
     commit();
   }
+  // 혼자 칠 때 인원을 바꾸면 새 판으로. 내 코인은 그대로 들고 간다
+  let wantTable = false;
+  function newTable() {
+    wantTable = false;
+    if (S.mode !== 'ai' || G.n === S.count) return;
+    clearTimeout(aiTimer);
+    const mine = G.players[0].kind === 'me' ? { coins: [G.coins[0]], bust: [G.bust[0]] } : null;
+    G = freshGame(G.seq, aiPlayers(), '', 0, null, mine);
+    commit();
+  }
   function setCount(n) {
     S.count = n;
-    if (S.mode === 'ai') { if (!busy) newMatch(); else save(); return; }
+    if (S.mode === 'ai') {
+      save();
+      if (busy) wantTable = true; else newTable();               // 연출 중이면 끝난 뒤에 바꾼다
+      return;
+    }
     save();
     render();                                                    // 온라인: 다음에 돌리는 판부터 적용
   }
@@ -627,8 +655,9 @@
       const head = mk('div', 'seat-head');
       const name = mk('span', 'seat-name'); name.id = 'name-' + t;
       const score = mk('span', 'seat-score'); score.id = 'score-' + t;
+      const purse = mk('span', 'seat-coin'); purse.id = 'coin-' + t;
       const meta = mk('span', 'seat-meta'); meta.id = 'meta-' + t;
-      head.append(name, score, meta);
+      head.append(name, score, purse, meta);
       const caps = mk('div', 'caps'); caps.id = 'caps-' + t;
       const hand = mk('div', 'hand'); hand.id = 'hand-' + t;
       seat.append(head, caps, hand);
@@ -650,17 +679,20 @@
       const seat = $('seat-' + t), box = $(where);
       seat.hidden = false;
       if (seat.parentNode !== box || box.children[where === 'opps' ? k : 0] !== seat) box.appendChild(seat);
-      seat.classList.toggle('opp', where === 'opps');
+      seat.classList.toggle('opp', where === 'opps' && N > 2);
     });
     for (let t = 0; t < N; t++) {
-      const pts = M.best(G.caps[t]), opp = t !== vs;
+      const pts = M.best(G.caps[t]), opp = t !== vs && N > 2;   // 셋이 칠 때만 상대 패를 작게
       $('name-' + t).textContent = TEAM[t] + (who(t) ? ' · ' + who(t) : '');
       const sc = $('score-' + t);
       sc.textContent = '';
-      sc.append(String(pts.s), mk('small', '', '점 · 누적 ' + (G.total[t] > 0 ? '+' : '') + G.total[t]));
+      sc.append(String(pts.s), mk('small', '', '점'));
+      $('coin-' + t).textContent = real ? coin(G.coins[t]) : '';
+      $('coin-' + t).classList.toggle('low', G.coins[t] < M.START / 5);
       const meta = [];
       if (G.go[t]) meta.push(G.go[t] + '고');
       if (G.mult[t]) meta.push('흔들기·폭탄 ×' + Math.pow(2, G.mult[t]));
+      if (G.bust[t]) meta.push('파산 ' + G.bust[t] + '번');
       if (G.first === t && !G.over && playing) meta.push('선');
       if (!G.over && playing && real) meta.push('손패 ' + G.hands[t].length + '장');
       $('meta-' + t).textContent = meta.join(' · ');
@@ -681,7 +713,7 @@
     // 바닥: 달별로 모아 둘레 칸에 깐다 (한 번 놓인 달은 판이 끝날 때까지 같은 자리)
     const floor = $('floor');
     floor.textContent = '';
-    if (slotSeed !== G.seed) { slotSeed = G.seed; slotOf = {}; }
+    if (slotSeed !== G.seed) { slotSeed = G.seed; slotOf = {}; leftAt = {}; }
     const deckEl = mk('div', 'deck');
     const deckCard = cardEl(-1); deckCard.id = 'deck-card'; deckEl.appendChild(deckCard);
     const dl = mk('span'); dl.append('더미 ', mk('b', '', G.deck.length), '장');
@@ -693,9 +725,23 @@
     }
     floor.appendChild(deckEl);
     const months = [...new Set(G.floor.map(id => C(id).m))].sort((a, b) => a - b);
-    const taken = new Set(months.map(m => slotOf[m]).filter(v => v !== undefined));
+    // 방금 비워진 칸은 이번 수 동안 비워 둔다 (먹힌 패가 아직 보이는 자리에 새 패를 내려놓지 않도록)
+    for (const k of Object.keys(slotOf)) {
+      const m = +k;
+      if (months.includes(m)) delete leftAt[m];
+      else if (leftAt[m] === undefined || leftAt[m] > G.seq) leftAt[m] = G.seq;
+      else if (G.seq > leftAt[m]) { delete slotOf[m]; delete leftAt[m]; }
+    }
+    const taken = new Set(Object.values(slotOf));
     for (const m of months) {
-      if (slotOf[m] === undefined) { const free = SLOT_ORDER.find(i => !taken.has(i)); slotOf[m] = free === undefined ? 0 : free; taken.add(slotOf[m]); }
+      if (slotOf[m] === undefined) {
+        let free = SLOT_ORDER.find(i => !taken.has(i));
+        if (free === undefined) {                                 // 칸이 모자라면 비워 두던 칸을 쓴다
+          const gone = Object.keys(slotOf).map(Number).find(x => !months.includes(x));
+          if (gone !== undefined) { free = slotOf[gone]; delete slotOf[gone]; delete leftAt[gone]; }
+        }
+        slotOf[m] = free === undefined ? 0 : free; taken.add(slotOf[m]);
+      }
       const [col, row] = SLOT_POS[slotOf[m]];
       const slot = mk('div', 'slot');
       slot.style.left = (col * 25) + '%';
@@ -719,8 +765,8 @@
     else if (lobby) text = '대기실 — ' + (isHost() ? '친구를 초대하고, 모이면 시작을 누르세요.' : '방장이 시작하길 기다리는 중…');
     else if (G.over) {
       if (G.winner < 0) text = G.result.text;
-      else if (me < 0) text = label(G.winner) + ' 승리 — ' + G.result.pts + '점';
-      else text = G.winner === me ? '이겼습니다! +' + G.result.pts + '점' : '졌습니다. ' + label(G.winner) + ' 승리' + (myPay ? ' · ' + (myPay.owe ? '−' + myPay.owe + '점' : '낼 점수 없음') : '');
+      else if (me < 0) text = label(G.winner) + ' 승리 — ' + G.result.pts + '점 · ' + coin(G.result.coin);
+      else text = G.winner === me ? '이겼습니다! +' + coin(G.result.coin) : '졌습니다. ' + label(G.winner) + ' 승리' + (myPay ? ' · ' + (myPay.owe ? '−' + coin(myPay.coin) + (G.coins[me] === 0 ? ' · 파산' : '') : '낼 코인 없음') : '');
     } else if (G.stage === 'play') text = can ? label(G.turn) + ' 차례 — 낼 패를 고르세요.' + (G.hands[G.turn].length ? '' : ' 손패가 없으니 더미만 뒤집습니다.') : label(G.turn) + ' 차례 — 패를 고르는 중…';
     else if (G.stage === 'shake') text = label(G.turn) + ' 차례 — 흔들지 정하는 중…';
     else if (G.stage === 'pick') text = can ? label(G.turn) + ' 차례 — 바닥에서 가져갈 패를 누르세요.' : label(G.turn) + ' 차례 — 가져갈 패를 고르는 중…';
@@ -746,7 +792,9 @@
     } else if (can && G.stage === 'go') {
       pr.hidden = false;
       const sc = M.best(G.caps[G.turn]);
-      pr.append(mk('b', '', sc.s + '점 (' + sc.d.join(', ') + ')'),
+      const trial = JSON.parse(JSON.stringify(G));
+      const gain = M.decideGo(trial, false) && trial.result ? trial.result.coin : 0;   // 복사본에서 미리 세어 본다
+      pr.append(mk('b', '', sc.s + '점 (' + sc.d.join(', ') + ') · 지금 스톱하면 +' + coin(gain)),
         button('btn go', (G.go[G.turn] + 1) + '고!', () => act({ type: 'go', go: true })),
         button('btn primary', '스톱', () => act({ type: 'go', go: false })));
     }
@@ -756,7 +804,7 @@
     rs.hidden = !(G.over && real && !lobby && !connText);
     if (!rs.hidden) {
       const R = G.result;
-      rs.appendChild(mk('h3', '', G.winner < 0 ? '나가리' : label(G.winner) + ' ' + R.pts + '점'));
+      rs.appendChild(mk('h3', '', G.winner < 0 ? '나가리' : label(G.winner) + ' ' + R.pts + '점 · +' + coin(R.coin)));
       if (G.winner >= 0) {
         const ul = mk('ul');
         R.lines.forEach(s => ul.appendChild(mk('li', '', s)));
@@ -765,7 +813,8 @@
         const each = R.base + G.go[G.winner];
         rs.appendChild(mk('p', 'sum', (N > 2 ? '한 사람당 기본 ' : '기본 ') + R.base + '점' + (G.go[G.winner] ? ' + ' + G.go[G.winner] + '고' : '') + (R.mults.length ? ' × ' + R.mults.map(x => x[1]).join(' × ') : '') + (R.mults.length || G.go[G.winner] ? ' = ' + R.mults.reduce((a, x) => a * x[1], each) + '점' : '') + (R.gukjinAsPi ? ' (국진은 쌍피로)' : '')));
         const pays = mk('ul', 'pays');
-        R.pays.forEach(p => pays.appendChild(mk('li', '', label(p.t) + ' ' + (p.owe ? '−' + p.owe + '점' : '0점') + (p.tags.length ? ' · ' + p.tags.join('·') : ''))));
+        R.pays.forEach(p => pays.appendChild(mk('li', '', label(p.t) + ' ' + (p.owe ? '−' + coin(p.coin) + ' (' + p.owe + '점' + (p.coin < p.owe * M.RATE ? ', 가진 만큼만' : '') + ')' : '낼 것 없음') + (p.tags.length ? ' · ' + p.tags.join('·') : ''))));
+        if (R.pays.some(p => p.tags.includes('파산'))) rs.appendChild(mk('p', 'fine', '파산한 사람은 다음 판에 ' + coin(M.START) + '을 다시 받습니다.'));
         rs.appendChild(pays);
       } else rs.appendChild(mk('p', '', R.text));
       const w = G.winner >= 0 ? G.winner : G.first;
@@ -828,7 +877,9 @@
   function snapshot() {
     const map = new Map();
     const where = el => (el.closest('.caps') ? 'caps' + el.closest('.seat').dataset.team : el.closest('#floor') ? 'floor' : el.closest('.hand') ? 'hand' : 'etc');
-    document.querySelectorAll('.card[data-id]').forEach(el => map.set(+el.dataset.id, { r: el.getBoundingClientRect(), w: where(el) }));
+    const boxOf = el => (el.closest('#floor') ? 'floor' : el.closest('.seat') ? 'seat' + el.closest('.seat').dataset.team : '');
+    document.querySelectorAll('.card[data-id]').forEach(el => map.set(+el.dataset.id, { r: el.getBoundingClientRect(), w: where(el), box: boxOf(el) }));
+    for (let t = 0; t < MAXN; t++) map.set('seat' + t, $('seat-' + t).getBoundingClientRect());
     const deck = $('deck-card');
     map.set('deck', (deck || $('floor')).getBoundingClientRect());
     for (let t = 0; t < MAXN; t++) { const h = $('hand-' + t).querySelector('.card') || $('hand-' + t); map.set('hand' + t, h.getBoundingClientRect()); }
@@ -863,71 +914,107 @@
       setTimeout(res, ms + 30);
     });
   }
+  // 연출 순서: 관련된 패를 원래 자리에 세워 둔다 → 낸 패를 짝 옆(짝이 없으면 빈 칸)에 내려놓는다
+  //   → 더미 옆 빈 자리에서 뒤집어 보여 준다 → 뒤집은 패를 짝 옆(없으면 빈 칸)에 내려놓는다 → 먹은 패를 한꺼번에 가져간다
   async function present(prev) {
     const sig = sigOf(G);
     if (sig === lastSig) return;
     lastSig = sig;
     const L = G.last;
     if (!L || reduceMotion() || document.hidden) return;
+    // 화면을 새로 그리면서 상자(바닥·자리)가 밀렸으면 기억해 둔 위치도 그만큼 옮긴다
+    const shift = (r, was, now) => (was && now ? new DOMRect(r.left + now.left - was.left, r.top + now.top - was.top, r.width, r.height) : r);
+    const floorNow = $('floor').getBoundingClientRect();
+    prev.forEach((v, k) => {
+      if (typeof k === 'number') { if (v.box) v.r = shift(v.r, prev.get(v.box), v.box === 'floor' ? floorNow : $('seat-' + v.box.slice(4)).getBoundingClientRect()); }
+      else if (/^hand/.test(k)) prev.set(k, shift(v, prev.get('seat' + k.slice(4)), $('seat-' + k.slice(4)).getBoundingClientRect()));
+    });
+    prev.set('deck', shift(prev.get('deck'), prev.get('floor'), floorNow));
+    prev.set('floor', floorNow);
     const t = L.t, deckR = prev.get('deck'), floorR = prev.get('floor');
     const cw = deckR.width, ch = deckR.height;
-    const spot = i => ({ left: Math.min(floorR.right - cw - 12, floorR.left + floorR.width * 0.5 + i * (cw + 10)), top: floorR.top + 14, width: cw, height: ch });
-    const ids = new Set([L.played, L.flipped, ...L.take].filter(id => id >= 0));
-    // 다른 사람 피를 가져온 것도 날린다
+    const monthOf = id => C(id).m;
+    const wasOn = (id, w) => prev.has(id) && prev.get(id).w === w;
+    const moving = [L.played, L.flipped].filter(id => id >= 0);
+    const months = new Set(moving.map(monthOf));
+    // 다른 사람 피를 가져온 것
     const stolen = [...document.querySelectorAll('#caps-' + t + ' .card[data-id]')].map(el => +el.dataset.id).filter(id => prev.has(id) && /^caps/.test(prev.get(id).w) && prev.get(id).w !== 'caps' + t);
-    stolen.forEach(id => ids.add(id));
-    const hidden = [...document.querySelectorAll('.card[data-id]')].filter(el => ids.has(+el.dataset.id));
-    hidden.forEach(el => { el.style.visibility = 'hidden'; });
+    // 이번 수에 얽힌 패: 낸 패·뒤집은 패·먹은 패·뺏은 피, 그리고 같은 달이라 바닥에서 자리가 바뀔 수 있는 패
+    const ids = new Set([...moving, ...L.take, ...stolen]);
+    prev.forEach((v, id) => { if (typeof id === 'number' && v.w === 'floor' && months.has(monthOf(id))) ids.add(id); });
+    document.querySelectorAll('.card[data-id]').forEach(el => { if (ids.has(+el.dataset.id)) el.style.visibility = 'hidden'; });
     busy = true;
     document.querySelector('.play').classList.add('busy');
     document.querySelectorAll('#result button, #prompt button').forEach(b => { b.disabled = true; });   // 연출이 끝나면 render 가 다시 켠다
-    const ghosts = [];
-    const used = new Set();
-    const floorMate = id => L.take.find(x => x !== id && !used.has(x) && C(x).m === C(id).m && prev.has(x) && prev.get(x).w === 'floor');
-    const endPos = new Map();
+    const ghost = new Map();                                       // 패 → 떠 있는 그림
+    const stand = id => {                                          // 원래 있던 자리에 그대로 세워 둔다
+      if (ghost.has(id) || !prev.has(id)) return;
+      const g = cardEl(id);
+      placeGhost(g, prev.get(id).r);
+      fx.appendChild(g);
+      ghost.set(id, g);
+    };
+    const beside = r => ({ left: r.left + r.width * 0.36, top: r.top + r.height * 0.1, width: r.width, height: r.height });
+    const slotRect = k => {
+      const [col, row] = SLOT_POS[k];
+      return { left: floorR.left + floorR.width * (col * 0.25 + 0.125) - cw / 2, top: floorR.top + floorR.height * (row * 0.25 + 0.125) - ch / 2, width: cw, height: ch };
+    };
+    let spare = 0;
+    const emptySpot = () => {                                      // 아무 패도 없는 칸
+      const used = new Set(Object.values(slotOf));
+      const free = SLOT_ORDER.filter(k => !used.has(k));
+      return slotRect(free.length ? free[Math.min(spare++, free.length - 1)] : SLOT_ORDER[0]);
+    };
+    const landed = new Map();                                      // 달 → 그 달 패가 마지막으로 놓인 자리
+    // 내려놓을 자리: 바닥에 같은 달이 있으면 그 옆, 이번 수에 먼저 내려놓은 같은 달이 있으면 그 옆, 없으면 제 칸(또는 빈 칸)
+    const landing = id => {
+      const m = monthOf(id);
+      if (landed.has(m)) return beside(landed.get(m));
+      const mate = [...ids].find(x => x !== id && monthOf(x) === m && wasOn(x, 'floor'));
+      if (mate !== undefined) return beside(prev.get(mate).r);
+      const el = document.querySelector('#floor .card[data-id="' + id + '"]');
+      return el ? el.getBoundingClientRect() : emptySpot();
+    };
     try {
+      ids.forEach(id => { if (!moving.includes(id) && (wasOn(id, 'floor') || /^caps/.test((prev.get(id) || {}).w || ''))) stand(id); });
       if (L.played >= 0) {
-        const p = prev.get(L.played);
-        const from = p && p.w !== 'caps' + t ? p.r : prev.get('hand' + t);
-        const mate = L.take.includes(L.played) ? floorMate(L.played) : null;
-        if (mate !== undefined && mate !== null) used.add(mate);
-        const to = mate != null ? prev.get(mate).r : (rectOf(L.played) || spot(0));
-        const g = await fly(L.played, from, to, 300, true);
-        ghosts.push(g); endPos.set(L.played, at(g));
+        const from = wasOn(L.played, 'hand') ? prev.get(L.played).r : prev.get('hand' + t);
+        const g = await fly(L.played, from, landing(L.played), 300, true);
+        ghost.set(L.played, g);
+        landed.set(monthOf(L.played), at(g));
+        await pause(180);
       }
       if (L.flipped >= 0) {
         // 더미 옆 빈 자리에서 먼저 뒤집어 보여 주고, 잠깐 뒤 짝을 찾아간다
         const show = { left: Math.max(floorR.left + 8, deckR.left - cw * 1.35), top: deckR.top, width: cw, height: ch };
         const g = await fly(L.flipped, deckR, show, 200, false, true);
-        ghosts.push(g);
+        ghost.set(L.flipped, g);
         g.style.transition = 'transform 140ms ease-out';
         g.style.transform = 'scale(1.3)';
         g.style.zIndex = 2;
         await pause(560);
-        let to;
-        const mate = L.take.includes(L.flipped) ? floorMate(L.flipped) : null;
-        if (mate != null) { used.add(mate); to = prev.get(mate).r; }
-        else if (L.take.includes(L.flipped) && endPos.has(L.played)) to = endPos.get(L.played);
-        else to = rectOf(L.flipped) || spot(1);
-        await glide(g, to, 300);
-        endPos.set(L.flipped, at(g));
-        await pause(120);
+        await glide(g, landing(L.flipped), 300);
+        g.style.zIndex = '';
+        landed.set(monthOf(L.flipped), at(g));
+        await pause(320);
       }
+      // 제자리로: 먹은 패는 가져간 사람 쪽으로, 바닥에 남는 패는 제 칸으로
       const moves = [];
-      for (const id of [...L.take, ...stolen]) {
+      for (const id of ids) {
         const dest = rectOf(id);
         if (!dest) continue;
-        const from = endPos.get(id) || (prev.has(id) ? prev.get(id).r : spot(0));
-        moves.push(fly(id, from, dest, 320, false));
+        if (ghost.has(id)) moves.push(glide(ghost.get(id), dest, 320));
+        else moves.push(fly(id, prev.has(id) ? prev.get(id).r : prev.get('hand' + t), dest, 320, false).then(g => { ghost.set(id, g); }));   // 폭탄으로 같이 낸 패
       }
-      ghosts.push(...await Promise.all(moves));
+      await Promise.all(moves);
     } finally {
-      ghosts.forEach(g => g.remove());
+      ghost.forEach(g => g.remove());
       fx.textContent = '';
       busy = false;
       render();
       pump();
       pumpAsks();
+      if (wantTable) newTable();
       scheduleAI();
     }
   }

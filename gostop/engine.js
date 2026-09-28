@@ -4,7 +4,9 @@
  * 흐름: play(카드) → [pick] → flip → [pick] → finish → [go/stop] → 다음 차례. 손패가 없으면 뒤집기만 한다.
  * 셈: 난 사람이 진 사람마다 점수를 받는다(누적은 주고받기라 합이 0). 피박(둘 7장 미만, 셋 6장 미만)·광박·멍박은 진 사람마다 따로.
  *   고박: 고를 부르고 지면 — 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 낸다(독박).
- *   쪽·따닥·뻑 먹기·싹쓸이·폭탄은 다른 사람 모두에게서 피를 한 장씩 가져온다. */
+ *   쪽·따닥·뻑 먹기·싹쓸이·폭탄은 다른 사람 모두에게서 피를 한 장씩 가져온다.
+ *   코인(놀이용, 진짜 돈 아님): 1점에 RATE 코인, 처음 START 코인. 가진 것보다 많이 잃으면 가진 만큼만 내고 파산하며,
+ *   파산한 사람은 다음 판을 돌릴 때 START 코인을 다시 받는다(bust 에 횟수가 남는다). */
 (function (root) {
   const MONTH = ['', '송학', '매조', '벚꽃', '흑싸리', '난초', '모란', '홍싸리', '공산', '국화', '단풍', '오동', '비'];
   const YEOL_NAME = { 2: '휘파람새', 4: '두견새', 5: '다리', 6: '나비', 7: '멧돼지', 8: '기러기', 9: '국진', 10: '사슴', 12: '제비' };
@@ -26,7 +28,7 @@
   const CARDS = [];
   for (let m = 1; m <= 12; m++) SPEC[m].forEach(([t, sub], k) => CARDS.push({ id: (m - 1) * 4 + k, m, t, sub: sub || '', pv: t === 'p' ? (sub === 'ssang' ? 2 : 1) : 0 }));
   const C = id => CARDS[id];
-  const MAX_PLAYERS = 3;
+  const MAX_PLAYERS = 3, RATE = 100, START = 10000;
   const RULES = { 2: { hand: 10, floor: 8, pibak: 7 }, 3: { hand: 7, floor: 6, pibak: 6 } };   // pibak: 진 사람 피가 이보다 적으면 피박
   const seatsOf = n => Array.from({ length: n }, (_, i) => i);
 
@@ -75,7 +77,8 @@
   }
 
   // ---------- 판 시작 ----------
-  function deal(seed, first, carry, total, n) {
+  // bank: { coins: [자리별 코인], bust: [자리별 파산 횟수] } — 없으면 모두 START 코인으로 시작
+  function deal(seed, first, carry, total, n, bank) {
     const N = n === 2 ? 2 : 3, HAND = RULES[N].hand, FLOOR = RULES[N].floor;
     const zeros = () => Array(N).fill(0);
     const r = rng(seed);
@@ -89,8 +92,11 @@
       if (!bad) break;
     }
     first = Number.isInteger(first) && first >= 0 && first < N ? first : 0;
+    const coins = seatsOf(N).map(i => (bank && Number.isInteger(bank.coins && bank.coins[i]) ? Math.max(0, bank.coins[i]) : START));
+    const bust = seatsOf(N).map(i => (bank && Number.isInteger(bank.bust && bank.bust[i]) ? Math.max(0, bank.bust[i]) : 0));
+    coins.forEach((c, i) => { if (c <= 0) { coins[i] = START; bust[i]++; } });   // 파산한 사람은 다시 받는다
     return {
-      seed, n: N, first, turn: first, carry: carry || 0, total: total && total.length === N ? total.slice() : zeros(),
+      seed, n: N, first, turn: first, coins, bust, carry: carry || 0, total: total && total.length === N ? total.slice() : zeros(),
       hands: seatsOf(N).map(i => deck.slice(HAND * i, HAND * (i + 1))), floor: deck.slice(HAND * N, HAND * N + FLOOR), deck: deck.slice(HAND * N + FLOOR).reverse(),   // pop() 이 다음 장
       caps: seatsOf(N).map(() => []), go: zeros(), goAt: zeros(), mult: zeros(),
       stage: 'play', pend: null, over: false, winner: -1, result: null, log: [], last: null
@@ -259,11 +265,17 @@
       gone[0].owe += other.owe; gone[0].tags.push('고박');
       other.owe = 0; other.tags.push('면제');
     }
-    let sum = 0;
-    for (const p of pays) { G.total[p.t] -= p.owe; sum += p.owe; }
+    let sum = 0, coin = 0;
+    for (const p of pays) {
+      G.total[p.t] -= p.owe; sum += p.owe;
+      p.coin = Math.min(p.owe * RATE, G.coins[p.t]);                   // 가진 만큼만 낸다
+      G.coins[p.t] -= p.coin; coin += p.coin;
+      if (p.owe && G.coins[p.t] === 0) p.tags.push('파산');
+    }
     G.total[w] += sum;
+    G.coins[w] += coin;
     G.over = true; G.winner = w; G.stage = 'over';
-    G.result = { pts: sum, base: mine.s, lines, mults, pays, gukjinAsPi: mine.gukjinAsPi };
+    G.result = { pts: sum, coin, base: mine.s, lines, mults, pays, gukjinAsPi: mine.gukjinAsPi };
     G.log.push({ t: w, s: '스톱 · ' + sum + '점' });
     return true;
   }
@@ -342,5 +354,5 @@
     return Math.random() < Math.max(0.05, Math.min(0.9, p));
   }
 
-  root.GoStop = { MAX_PLAYERS, RULES, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
+  root.GoStop = { MAX_PLAYERS, RULES, RATE, START, CARDS, MONTH, YEOL_NAME, cardName, deal, play, pick, decideGo, best, points, aiPlay, aiPick, aiGo, rng };
 })(typeof window !== 'undefined' ? window : globalThis);

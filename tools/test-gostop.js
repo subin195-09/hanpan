@@ -9,6 +9,9 @@ function check(G, tag) {
   assert(all.length === 48 && new Set(all).size === 48, tag + ': 패 수 ' + all.length + ' (' + G.stage + ')');
   assert(G.turn >= 0 && G.turn < G.n && G.hands.length === G.n && G.caps.length === G.n, tag + ': 차례·자리');
   assert(G.total.reduce((a, b) => a + b, 0) === 0, tag + ': 누적 합 ' + G.total);
+  assert(G.coins.length === G.n && G.coins.every(c => Number.isInteger(c) && c >= 0), tag + ': 코인 ' + G.coins);
+  assert(G.coins.reduce((a, b) => a + b, 0) === M.START * (G.n + G.bust.reduce((a, b) => a + b, 0)), tag + ': 코인 합 ' + G.coins + ' 파산 ' + G.bust);
+  if (!G.over) assert(G.coins.every(c => c > 0), tag + ': 빈손으로 치는 사람 ' + G.coins);
 }
 {
   const G = M.deal(7, 1, 0, null, 3);
@@ -18,10 +21,10 @@ function check(G, tag) {
 }
 const rows = {};
 for (const n of [2, 3]) {
-const stat = { 판: 0, 나가리: 0, 고: 0, 고박: 0, 피박: 0, 광박: 0, 흔들기폭탄: 0, 최고점: 0, 승: Array(n).fill(0), 평균점: 0 };
-let total = Array(n).fill(0), first = 0, carry = 0, sum = 0;
+const stat = { 파산: 0, 판: 0, 나가리: 0, 고: 0, 고박: 0, 피박: 0, 광박: 0, 흔들기폭탄: 0, 최고점: 0, 승: Array(n).fill(0), 평균점: 0 };
+let total = Array(n).fill(0), first = 0, carry = 0, sum = 0, bank = null;
 for (let g = 0; g < 5000; g++) {
-  const G = M.deal(1 + g * 13, first, carry, total, n);
+  const G = M.deal(1 + g * 13, first, carry, total, n, bank);
   check(G, n + '인 판 ' + g + ' 시작');
   const level = ['easy', 'normal', 'hard'][g % 3];
   let steps = 0;
@@ -43,6 +46,7 @@ for (let g = 0; g < 5000; g++) {
   else {
     const R = G.result;
     assert(R.pays.length === n - 1 && R.pays.reduce((a, p) => a + p.owe, 0) === R.pts && R.pts >= 3, '판 ' + g + ': 셈 ' + JSON.stringify(R));
+    assert(R.pays.reduce((a, p) => a + p.coin, 0) === R.coin && R.pays.every(p => p.coin <= p.owe * M.RATE), '판 ' + g + ': 코인 셈 ' + JSON.stringify(R));
     assert(M.best(G.caps[G.winner]).s >= 3, '판 ' + g + ': 3점 미만으로 남');
     if (R.pays.some(p => p.tags.includes('고박'))) { stat.고박++; if (n === 3) assert(R.pays.some(p => p.owe === 0), '셋: 고박이면 한 사람은 면제'); }
     if (R.pays.some(p => p.tags.includes('피박'))) stat.피박++;
@@ -52,8 +56,8 @@ for (let g = 0; g < 5000; g++) {
     stat.승[G.winner]++; sum += R.pts;
     first = G.winner; carry = 0;
   }
-  total = G.total;
-  if (g % 500 === 499) { total = Array(n).fill(0); first = g % n; }
+  total = G.total; bank = { coins: G.coins, bust: G.bust };
+  if (g % 500 === 499) { stat.파산 += G.bust.reduce((a, b) => a + b, 0); total = Array(n).fill(0); first = g % n; bank = null; }
 }
 stat.평균점 = Math.round(sum / (stat.판 - stat.나가리) * 10) / 10;
 stat.승 = stat.승.join('/');

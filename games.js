@@ -36,7 +36,13 @@ window.HANPAN_GAMES = [
     meta: '한 판 5~10분 · 운과 배짱',
     online: true
   },
-
+  {
+    id: 'gostop',
+    title: '고스톱',
+    blurb: '셋이 치는 고스톱. 난 사람이 두 사람에게서 점수를 받고, 고를 불렀다 지면 혼자 다 뒤집어씁니다. 빈자리는 AI가 앉습니다.',
+    meta: '한 판 5~10분 · 운과 배짱 · 3명',
+    online: true
+  },
   {
     id: 'mines',
     title: '지뢰찾기',

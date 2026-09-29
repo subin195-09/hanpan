@@ -92,7 +92,6 @@
   .card .tag.bomb { background: #B4261F; }
   .card .tag.shake { background: #B86A00; }
   .card .tag.joker { background: #7A3FB0; }
-  .card .tag.risk { background: rgba(30, 23, 16, 0.7); font-weight: 500; }
   @media (max-width: 640px) { .card .tag { font-size: 0.5625rem; } }
   .card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
@@ -277,7 +276,7 @@
           </div>
         </fieldset>
         <fieldset id="fs-hints">
-          <legend>도움 표시 (굳은자·폭탄·흔들기·뻑 주의)</legend>
+          <legend>도움 표시 (굳은자·폭탄·흔들기)</legend>
           <div class="seg-row">
             <input type="radio" name="hints" id="hints-1" value="1"><label for="hints-1">켬</label>
             <input type="radio" name="hints" id="hints-0" value="0"><label for="hints-0">끔</label>
@@ -315,7 +314,7 @@
             <li>난 사람은 진 사람마다 점수를 받습니다. 진 사람 피가 적으면(둘이 칠 땐 7장 미만, 셋이 칠 땐 6장 미만) 피박, 광이 없으면 광박, 열끗 7장에 상대 열끗이 없으면 멍박 — 그 사람만 2배.</li>
             <li>고박: 고를 부른 사람이 지면, 둘이 칠 땐 2배, 셋이 칠 땐 다른 진 사람 몫까지 혼자 냅니다(진 두 사람이 모두 고를 불렀으면 각자 냅니다).</li>
             <li>조커(고르면 2장, 복주머니와 엽전): 둘 다 쌍피입니다. 손에서 내면 바로 내 피가 되고 더미에서 한 장을 보충한 뒤 패를 한 장 더 냅니다. 더미에서 뒤집히면 내 피가 되고 한 장 더 뒤집습니다. 처음 바닥에 깔리면 선이 갖습니다. 그 차례에 뻑이 나면 뒤집힌 조커는 뻑 더미에 붙었다가 그 달을 먹는 사람이 가져갑니다.</li>
-            <li>도움 표시: 내 손패에 <b>굳은자</b>(내면 확실히 먹고 남이 가로챌 수 없음), <b>폭탄</b>, <b>흔들기</b>, <b>뻑 주의</b>(같은 달 두 장의 행방을 모름) 딱지가 붙습니다. 내 손패·바닥·이미 먹힌 패만 보고 셉니다.</li>
+            <li>도움 표시: 내 손패에 <b>굳은자</b>(내면 확실히 먹고 남이 가로챌 수 없음), <b>폭탄</b>, <b>흔들기</b> 딱지가 붙습니다. 내 손패·바닥·이미 먹힌 패만 보고 셉니다.</li>
             <li>더미가 다 떨어질 때까지 아무도 나지 못하면 나가리, 다음 판이 2배.</li>
             <li>코인: 모두 10,000코인으로 시작하고 1점에 100코인입니다. 가진 것보다 많이 잃으면 가진 만큼만 내고 파산하며, 파산하면 다음 판에 10,000코인을 다시 받고 파산 횟수가 남습니다. 코인은 놀이용 점수일 뿐 돈이 아니고, 사거나 바꿀 수 없습니다.</li>
             <li>온라인은 최대 3명. 방장이 인원(2명·3명)을 고르고 "시작"을 누르면 시작합니다. 모자란 자리는 AI가 앉고, 사람이 셋 모이면 늘 셋이 칩니다. 도중에 끊긴 사람 자리는 돌아올 때까지 AI가 대신 칩니다.</li>
@@ -684,7 +683,6 @@
     if (inHand >= 3 && onFloor === 1) return ['bomb', '폭탄'];
     if (inHand >= 3 && onFloor === 0) return ['shake', '흔들기'];
     if (onFloor >= 1 && unknown === 0) return ['sure', '굳은자'];
-    if (onFloor === 1 && inHand === 1 && unknown === 2) return ['risk', '뻑 주의'];
     return null;
   }
   function capsInto(container, caps, newIds) {

@@ -64,6 +64,37 @@
     window.gtag('config', id);
   }
 
-  function init() { footer(); ads(); analytics(); }
+  // 좁은 화면에서는 설정 패널이 게임판 아래로 내려가 찾기 어렵다. 화면 위쪽에 바로가기 단추를 띄운다
+  function settingsButton() {
+    const panel = document.querySelector('aside.panel'), play = document.querySelector('.play');
+    if (!panel || !play) return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'to-settings';
+    b.hidden = true;
+    document.body.appendChild(b);
+    let atPanel = false;
+    const smooth = () => (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
+    function update() {
+      const stacked = panel.getBoundingClientRect().top >= play.getBoundingClientRect().bottom - 4;   // 패널이 게임판 아래에 있는가
+      b.hidden = !stacked;
+      if (!stacked) return;
+      atPanel = panel.getBoundingClientRect().top < window.innerHeight * 0.45;
+      b.textContent = atPanel ? '↑ 게임판' : '설정 ↓';
+      b.setAttribute('aria-label', atPanel ? '게임판으로 올라가기' : '놀이 설정으로 내려가기');
+    }
+    b.addEventListener('click', () => {
+      if (atPanel) window.scrollTo({ top: 0, behavior: smooth() });
+      else panel.scrollIntoView({ block: 'start', behavior: smooth() });
+    });
+    let tick = 0;
+    const soon = () => { if (!tick) tick = requestAnimationFrame(() => { tick = 0; update(); }); };
+    window.addEventListener('scroll', soon, { passive: true });
+    window.addEventListener('resize', soon);
+    update();
+    setTimeout(update, 600);                                     // 글꼴·그림이 들어와 높이가 바뀐 뒤 한 번 더
+  }
+
+  function init() { footer(); settingsButton(); ads(); analytics(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

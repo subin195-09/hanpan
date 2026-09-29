@@ -32,3 +32,22 @@
 .party-list li { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
 .party-list li b { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .party-list li span { font-size: 0.75rem; color: var(--ink-soft); white-space: nowrap; }
+
+/* 좁은 화면에서 설정으로 바로 가는 단추 (shared/site.js settingsButton) */
+.to-settings {
+  position: fixed;
+  z-index: 40;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
+  padding: 7px 13px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--on-ink, #FFF);
+  font: 700 0.8125rem/1.2 "Gothic A1", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  scroll-margin-top: 0;
+}
+.to-settings:focus-visible { outline: 3px solid currentColor; outline-offset: 2px; }
+aside.panel { scroll-margin-top: 56px; }

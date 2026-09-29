@@ -87,11 +87,11 @@
   @keyframes beckon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
   .card.new { box-shadow: 0 0 0 3px var(--gold); }
   /* 도움 표시: 내 손패 아래쪽에 붙는 딱지 */
-  .card .tag { position: absolute; left: 0; right: 0; bottom: 0; padding: 2px 0 1px; font: 700 0.625rem/1.2 "Gothic A1", sans-serif; letter-spacing: -0.02em; text-align: center; color: #FFF; background: rgba(30, 23, 16, 0.82); pointer-events: none; white-space: nowrap; }
+  .card .tag { position: absolute; left: 0; right: 0; bottom: 0; padding: 1px 0; font: 700 0.5rem/1.25 "Gothic A1", sans-serif; letter-spacing: 0; text-align: center; color: #FFF; background: rgba(30, 23, 16, 0.82); pointer-events: none; white-space: nowrap; }
   .card .tag.sure { background: rgba(60, 60, 60, 0.88); color: #F2F2F2; }
   .card .tag.bomb { background: #B4261F; }
   .card .tag.shake { background: #B86A00; }
-  @media (max-width: 640px) { .card .tag { font-size: 0.5625rem; } }
+  @media (max-width: 640px) { .card .tag { font-size: 0.4375rem; } }
   .card:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
 
   /* 상대·나 영역 */

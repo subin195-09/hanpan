@@ -8,7 +8,7 @@
  */
 window.HANPAN_CONFIG = {
   siteName: '한 판 놀이방',
-  adsenseClient: '',
+  adsenseClient: 'ca-pub-2056413145092622',
   adSlots: {
     'hub-bottom': '',     // 놀이방 첫 화면, 게임 목록 아래
     'game-side': ''       // 각 게임 화면, 설정 패널 아래

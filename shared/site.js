@@ -34,9 +34,13 @@
   function ads() {
     const client = cfg.adsenseClient, slots = cfg.adSlots || {};
     if (!client) return;
-    const live = [...document.querySelectorAll('.ad-slot[data-ad]')].filter(el => slots[el.dataset.ad]);
-    if (!live.length) return;
+    // 심사 중에는 광고 단위가 없어도 애드센스가 모든 페이지에서 스크립트·메타 태그를 찾는다
+    const meta = document.createElement('meta');
+    meta.name = 'google-adsense-account';
+    meta.content = client;
+    document.head.appendChild(meta);
     loadScript('https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + encodeURIComponent(client), { crossorigin: 'anonymous' });
+    const live = [...document.querySelectorAll('.ad-slot[data-ad]')].filter(el => slots[el.dataset.ad]);
     for (const el of live) {
       const label = document.createElement('span');
       label.className = 'ad-label';
